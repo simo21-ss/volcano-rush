@@ -21,9 +21,7 @@ build/
 
 # IDE
 .vscode/
-.idea/
 *.code-workspace
-.cursor/
 
 # Secrets
 .env
