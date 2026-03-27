@@ -1,4 +1,4 @@
-# Volcano Rush — Game Rules
+# Volcano Rush - Game Rules
 
 ## Overview
 
@@ -178,7 +178,7 @@ The number of boat parts required to win depends on player count (see [Victory a
 | **Reward** | 1 point per participant |
 | **Bonus** | +1 Boat Part |
 
-#### Fit the Rudder *(Boat Part: Rudder — 7–8 players only)*
+#### Fit the Rudder *(Boat Part: Rudder - 7–8 players only)*
 | Field | Value |
 |---|---|
 | **Requires** | 3 Wood + 1 Stone + 3 Rope + Vessel (tool) |
@@ -228,7 +228,7 @@ Shuffle the Volcano deck before the game, placing **Eruption** on the bottom.
 | **Heat Wave** | Players who choose "Gather" next round draw **0 resources** |
 | **Smoke** | The next mission gives –1 point to participants (minimum 0) |
 | **Earthquake** | All currently Exhausted characters remain Exhausted for **1 additional round** |
-| **Eruption** | Game over — **Loss** |
+| **Eruption** | Game over - **Loss** |
 
 ---
 
@@ -255,28 +255,28 @@ Shuffle the Volcano deck before the game, placing **Eruption** on the bottom.
 
 Each round proceeds in the following order:
 
-**Step 1 — Choose a Mission**
+**Step 1 - Choose a Mission**
 Players collectively choose 1 of the 3 active missions to attempt this round.
 
-**Step 2 — Player Actions** *(each player chooses one)*
+**Step 2 - Player Actions** *(each player chooses one)*
 - **Participate:** Join the mission by contributing at least 1 resource card (only if not Exhausted).
 - **Gather:** Draw 1 random resource card.
   - If the player is the **Gatherer** and they are not Exhausted, they may use their role ability to draw 2 instead, but will become Exhausted.
 
-**Step 3 — Draw Complication**
+**Step 3 - Draw Complication**
 After participants are declared, shuffle the Complication deck and draw 1 card. Apply its effect to this mission.
 
-**Step 4 — Resolution**
+**Step 4 - Resolution**
 Check whether the total resources contributed (after all modifiers) meet the mission requirements:
 - **Success:** Distribute points to all participants. Apply any bonus effect.
 - **Failure:** Draw 1 Volcano card and apply its effect.
 
-**Step 5 — Exhaustion**
+**Step 5 - Exhaustion**
 All players who participated in the mission (regardless of success or failure) become **Exhausted** until the end of the next round. While Exhausted, a player may only take the "Gather" action.
 
 > Exception: missions that explicitly cancel this rule.
 
-**Step 6 — Mission Maintenance**
+**Step 6 - Mission Maintenance**
 - If the mission **succeeded**: remove it and reveal a new one.
 - If the mission **failed**: it remains in the active pool.
 - Always maintain exactly **3 active missions**.

@@ -1,4 +1,4 @@
-# Math Concepts for Developers — Course Project
+# Math Concepts for Developers - Course Project
 
 Volcano Rush - Board Game
 
