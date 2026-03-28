@@ -199,7 +199,7 @@ def _apply_mission_success(
     if point_penalty > 0:
         state.pending_volcano_card = None
 
-    return apply_bonus(mission.bonus_on_success, participants, mission_name, state)
+    return apply_bonus(mission.bonus_on_success, mission_name, state)
 
 
 def _apply_exhaustion_step(

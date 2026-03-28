@@ -55,7 +55,6 @@ def apply_volcano_card(
 
 def apply_bonus(
     bonus:        Optional[BonusEffect],
-    participants: list,
     mission_name: MissionName,
     state:        GameState,
 ) -> bool:
@@ -67,7 +66,6 @@ def apply_bonus(
 
     Args:
         bonus:        The bonus effect to apply, or None if the mission has no bonus.
-        participants: Players who completed the mission (used if the bonus grants no exhaustion).
         mission_name: The completed mission's name (used to register a boat part if applicable).
         state:        Current game state, mutated in place.
 
