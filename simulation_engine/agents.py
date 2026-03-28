@@ -89,10 +89,10 @@ def select_mission(state: GameState) -> Optional[MissionName]:
 
 
 def decide_action(
-    player:                Player,
-    mission:               Mission,
-    n_participants_so_far: int,
-    state:                 GameState,
+    player:                    Player,
+    mission:                   Mission,
+    current_participant_count: int,
+    state:                     GameState,
 ) -> PlayerAction:
     """
     Decide what action a player takes this round: participate, gather, or repair.
@@ -106,10 +106,10 @@ def decide_action(
     6. Otherwise gather.
 
     Args:
-        player:                The player deciding.
-        mission:               The selected mission for this round.
-        n_participants_so_far: Number of players already committed to the mission.
-        state:                 Current game state (tools, players, volcano deck).
+        player:                    The player deciding.
+        mission:                   The selected mission for this round.
+        current_participant_count: Number of players already committed to the mission.
+        state:                     Current game state (tools, players, volcano deck).
 
     Returns:
         The chosen PlayerAction.
@@ -136,7 +136,7 @@ def decide_action(
     if not urgent:
         exhausted_count = sum(1 for p in state.players if p.is_exhausted)
         if exhausted_count > len(state.players) / 2:
-            if n_participants_so_far == mission.players_count:
+            if current_participant_count == mission.players_count:
                 return PlayerAction.GATHER
 
     # Participation check: can contribute share and keep ≥ 1 card
