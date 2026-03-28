@@ -136,7 +136,7 @@ def decide_action(
     if not urgent:
         exhausted_count = sum(1 for p in state.players if p.is_exhausted)
         if exhausted_count > len(state.players) / 2:
-            if n_participants_so_far >= mission.players_count:
+            if n_participants_so_far == mission.players_count:
                 return PlayerAction.GATHER
 
     # Participation check: can contribute share and keep ≥ 1 card
