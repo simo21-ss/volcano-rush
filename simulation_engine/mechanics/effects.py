@@ -1,6 +1,5 @@
 import random
 from typing import Optional
-import numpy as np
 
 from ..models import MissionType, MissionName, VolcanoCardName, GameState, BonusEffect, VolcanoCard, Mission
 from ..deck import draw_mission
@@ -25,12 +24,10 @@ def apply_volcano_card(
 
     if card.each_player_loses_resources > 0:
         for player in state.players:
-            if card.rich_player_loses_threshold is None or player.resources.sum() >= card.rich_player_loses_threshold:
+            if card.rich_player_loses_threshold is None or len(player.resources) >= card.rich_player_loses_threshold:
                 for _ in range(card.each_player_loses_resources):
-                    if player.resources.sum() > 0:
-                        probabilities = player.resources / player.resources.sum()
-                        chosen_index = np.random.choice(3, p = probabilities)
-                        player.resources[chosen_index] -= 1
+                    if player.resources:
+                        player.resources.remove(random.choice(player.resources))
 
     if card.extend_exhaustion_rounds > 0:
         for player in state.players:

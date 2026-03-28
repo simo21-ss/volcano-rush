@@ -4,7 +4,7 @@ import numpy as np
 
 from .models import (
     Character, Resource, Tool, PlayerAction, MissionType, MissionName, ComplicationCardName,
-    GameState, GameRecord, Mission, VolcanoCard, ComplicationCard, RESOURCE_INDEX,
+    GameState, GameRecord, Mission, VolcanoCard, ComplicationCard,
 )
 from .initialization import init_game
 from .deck import draw_resource, draw_complication, draw_volcano, draw_mission
@@ -98,7 +98,7 @@ def _resolve_player_actions(state: GameState, mission: Mission) -> tuple[list, l
                 if tool_state.damaged and tool_state.repair_due is None
             ]
             state.tools[repairable[0]].repair_due = state.round + 2
-            player.resources[RESOURCE_INDEX[Resource.STONE]] -= 1
+            player.resources.remove(Resource.STONE)
             gatherers.append(player)
         elif action == PlayerAction.PARTICIPATE:
             if len(participants) < mission.players_count:
@@ -261,8 +261,7 @@ def _apply_gather_step(state: GameState, gatherers: list) -> None:
         total = base_amount + gather_bonus
 
         for _ in range(total):
-            drawn_resource = draw_resource(state)
-            player.resources[RESOURCE_INDEX[drawn_resource]] += 1
+            player.resources.append(draw_resource(state))
 
         if player.character == Character.GATHERER and base_amount == 2:
             apply_exhaustion([player], state.round)

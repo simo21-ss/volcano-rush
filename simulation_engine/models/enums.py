@@ -16,13 +16,6 @@ class Resource(Enum):
     ROPE  = "rope"
 
 
-RESOURCE_INDEX: dict[Resource, int] = {
-    Resource.WOOD:  0,
-    Resource.STONE: 1,
-    Resource.ROPE:  2,
-}
-
-
 class Tool(Enum):
     KNIFE  = "knife"
     VESSEL = "vessel"
