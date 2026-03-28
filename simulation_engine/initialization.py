@@ -2,7 +2,7 @@ import random
 
 from .models import (
     Character, Resource, Tool, MissionType, MissionName, ComplicationCardName, VolcanoCardName,
-    Player, GameState, ToolState, Mission,
+    Player, GameState, ToolState, Mission, RESOURCE_INDEX,
 )
 
 
@@ -45,7 +45,9 @@ def prepare_players(player_count: int, resource_deck: list[Resource]) -> list[Pl
     players = []
     for char in characters:
         player = Player(character = char)
-        player.resources.extend(resource_deck.pop() for _ in range(INITIAL_RESOURCES_PER_PLAYER))
+        for _ in range(INITIAL_RESOURCES_PER_PLAYER):
+            drawn_resource = resource_deck.pop()
+            player.resources[RESOURCE_INDEX[drawn_resource]] += 1
         players.append(player)
 
     return players

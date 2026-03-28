@@ -1,11 +1,11 @@
 import random
-from collections import Counter
 from typing import Optional
+import numpy as np
 
 from ..models import (
     Character, Resource, MissionType,
     GameState, Player, Mission, ComplicationCard, VolcanoCard,
-    MissionRequirement,
+    MissionRequirement, RESOURCE_INDEX,
 )
 
 
@@ -95,47 +95,43 @@ def check_and_contribute(
         True if requirements can be met and resources were deducted,
         False otherwise (no deduction on failure).
     """
-    # Build available pool per resource (respecting Camp Panic cap)
-    available: dict[Resource, int] = {}
+    # Build available pool as a resource-count array, respecting Camp Panic cap
+    available = np.zeros(3, dtype = np.int32)
     for player in participants:
-        resources_by_type = Counter(player.resources)
-        for resource, count in resources_by_type.items():
-            if max_per_type is not None:
-                count = min(count, max_per_type)
-            available[resource] = available.get(resource, 0) + count
+        if max_per_type is not None:
+            available += np.minimum(player.resources, max_per_type)
+        else:
+            available += player.resources
 
-    # Net surplus per resource after subtracting typed requirements.
-    # Union of both key sets ensures required-but-absent resources yield a negative entry.
-    surplus_by_resource = {
-        resource: available.get(resource, 0) - requirements.typed.get(resource, 0)
-        for resource in set(available) | set(requirements.typed)
-    }
+    # Build required array from typed dict
+    required = np.zeros(3, dtype = np.int32)
+    for resource, amount in requirements.typed.items():
+        required[RESOURCE_INDEX[resource]] = amount
 
     # Negative surplus means a typed requirement is unmet — return without deducting
-    if any(surplus < 0 for surplus in surplus_by_resource.values()):
+    surplus = available - required
+    if np.any(surplus < 0):
         return False
 
     # Total surplus must cover the wildcard any_extra requirement
-    if sum(surplus_by_resource.values()) < requirements.any_extra:
+    if int(surplus.sum()) < requirements.any_extra:
         return False
 
     # Deduct typed requirements, then fill any_extra greedily (prefer most-abundant surplus)
-    to_remove: dict[Resource, int] = dict(requirements.typed)
+    to_remove = required.copy()
     remaining_any = requirements.any_extra
-    for resource in sorted(surplus_by_resource, key = lambda r: -surplus_by_resource[r]):
-        take = min(remaining_any, surplus_by_resource[resource])
-        to_remove[resource] = to_remove.get(resource, 0) + take
+    for index in np.argsort(-surplus):
+        take = min(remaining_any, int(surplus[index]))
+        to_remove[index] += take
         remaining_any -= take
         if remaining_any <= 0:
             break
 
-    # Remove from player hands
-    for resource, total in to_remove.items():
-        left = total
-        for player in participants:
-            while left > 0 and resource in player.resources:
-                player.resources.remove(resource)
-                left -= 1
+    # Remove from player hands in order
+    for player in participants:
+        deduct = np.minimum(player.resources, to_remove)
+        player.resources -= deduct
+        to_remove -= deduct
 
     return True
 

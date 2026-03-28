@@ -6,7 +6,7 @@ from typing import Optional
 
 from .models import (
     Character, Resource, Tool, PlayerAction, MissionType, MissionName,
-    Player, GameState, Mission, VolcanoCard,
+    Player, GameState, Mission, VolcanoCard, RESOURCE_INDEX,
 )
 from .initialization import URGENT_VOLCANO_THRESHOLD
 
@@ -122,14 +122,14 @@ def decide_action(
             tool for tool, tool_state in state.tools.items()
             if tool_state.damaged and tool_state.repair_due is None
         ]
-        if repairable and Resource.STONE in player.resources:
+        if repairable and player.resources[RESOURCE_INDEX[Resource.STONE]] > 0:
             return PlayerAction.REPAIR
 
     if player.is_exhausted:
         return PlayerAction.GATHER
 
     # Low-pressure conservation: 1 card in hand → gather
-    if not urgent and len(player.resources) <= 1:
+    if not urgent and player.resources.sum() <= 1:
         return PlayerAction.GATHER
 
     # Exhaustion spreading: >50% exhausted and mission already has enough participants
@@ -142,14 +142,14 @@ def decide_action(
     # Participation check: can contribute share and keep ≥ 1 card
     total_requirements = sum(mission.required_resources.values())
     share = math.ceil(total_requirements / mission.players_count)
-    if len(player.resources) > share:
+    if player.resources.sum() > share:
         return PlayerAction.PARTICIPATE
 
     return PlayerAction.GATHER
 
 
 def choose_gather_amount(player: Player) -> int:
-    if player.character == Character.GATHERER and not player.is_exhausted and len(player.resources) < 3:
+    if player.character == Character.GATHERER and not player.is_exhausted and player.resources.sum() < 3:
         return 2
 
     return 1

@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from typing import Optional
+import numpy as np
 
 from .enums import Character, Resource, Tool, MissionName, ComplicationCardName, VolcanoCardName
 from .cards import BonusEffect
@@ -14,10 +15,10 @@ class ToolState:
 @dataclass
 class Player:
     character:       Character
-    resources:       list[Resource]  = field(default_factory = list)
-    is_exhausted:    bool            = False
-    exhausted_until: int             = 0
-    score:           int             = 0
+    resources:       np.ndarray = field(default_factory = lambda: np.zeros(3, dtype = np.int32))
+    is_exhausted:    bool       = False
+    exhausted_until: int        = 0
+    score:           int        = 0
 
 
 @dataclass

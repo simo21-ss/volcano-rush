@@ -1,9 +1,10 @@
 import random
 from typing import Optional
+import numpy as np
 
 from .models import (
     Character, Resource, Tool, PlayerAction, MissionType, ComplicationCardName,
-    GameState, GameRecord, Mission, VolcanoCard, ComplicationCard,
+    GameState, GameRecord, Mission, VolcanoCard, ComplicationCard, RESOURCE_INDEX,
 )
 from .initialization import init_game
 from .deck import draw_resource, draw_complication, draw_volcano, draw_mission
@@ -79,7 +80,7 @@ def run_round(state: GameState) -> tuple[bool, bool]:
             if action == PlayerAction.REPAIR:
                 repairable = [tool for tool, tool_state in state.tools.items() if tool_state.damaged and tool_state.repair_due is None]
                 state.tools[repairable[0]].repair_due = state.round + 2
-                player.resources.remove(Resource.STONE)
+                player.resources[RESOURCE_INDEX[Resource.STONE]] -= 1
                 gatherers.append(player)
             elif action == PlayerAction.PARTICIPATE:
                 if len(participants) < mission.players_count:
@@ -157,10 +158,14 @@ def run_round(state: GameState) -> tuple[bool, bool]:
     for player in gatherers:
         if gather_yields_zero:
             continue
+
         base_amount = choose_gather_amount(player)
         total = base_amount + gather_bonus
+
         for _ in range(total):
-            player.resources.append(draw_resource(state))
+            drawn_resource = draw_resource(state)
+            player.resources[RESOURCE_INDEX[drawn_resource]] += 1
+        
         if player.character == Character.GATHERER and base_amount == 2:
             apply_exhaustion([player], state.round)
 
@@ -180,8 +185,6 @@ def run_round(state: GameState) -> tuple[bool, bool]:
     return False, False
 
 
-# ── Game runner ────────────────────────────────────────────────────────────
-
 def run_game(player_count: int) -> GameRecord:
     """
     Run a single complete game and return a record of the outcome.
@@ -190,7 +193,7 @@ def run_game(player_count: int) -> GameRecord:
     or eruption, the result is recorded as a loss.
 
     Args:
-        player_count: Number of players (2–4).
+        player_count: Number of players (4-8).
 
     Returns:
         A GameRecord with the outcome, scores, and game statistics.
@@ -226,7 +229,7 @@ def run_scenario(
     Run multiple games with the same player count and collect the results.
 
     Args:
-        player_count: Number of players per game (2–4).
+        player_count: Number of players per game (4-8).
         n_games:      Number of games to simulate.
         base_seed:    If provided, seeds each game deterministically (base_seed + game_index)
                       for reproducible results.
@@ -238,5 +241,7 @@ def run_scenario(
     for i in range(n_games):
         if base_seed is not None:
             random.seed(base_seed + i)
+            np.random.seed(base_seed + i)
         results.append(run_game(player_count))
+    
     return results
