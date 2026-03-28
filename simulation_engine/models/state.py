@@ -23,20 +23,21 @@ class Player:
 
 @dataclass
 class GameState:
-    players:                list[Player]
-    active_missions:        list[MissionName]
-    resource_deck:          list[Resource]
-    complication_deck:      list[ComplicationCardName]
-    volcano_deck:           list[VolcanoCardName]
-    tools:                  dict[Tool, ToolState]
-    boat_parts_required:    int
-    boat_parts_built:       set[MissionName]            = field(default_factory = set)
-    mission_pool:           list[MissionName]           = field(default_factory = list)
-    round:                  int                         = 0
-    skip_next_complication: bool                        = False
-    protect_next_failure:   bool                        = False
-    pending_volcano_card:   Optional[VolcanoCardName]   = None
-    pending_bonus:          Optional[BonusEffect]       = None
+    players:                  list[Player]
+    active_missions:          list[MissionName]
+    resource_deck:            list[Resource]
+    complication_deck:        list[ComplicationCardName]
+    volcano_deck:             list[VolcanoCardName]
+    tools:                    dict[Tool, ToolState]
+    boat_parts_required:      int
+    boat_parts_built:         set[MissionName]          = field(default_factory = set)
+    mission_pool:             list[MissionName]         = field(default_factory = list)
+    round:                    int                       = 0
+    skip_next_complication:   bool                      = False
+    protect_next_failure:     bool                      = False
+    pending_volcano_card:     Optional[VolcanoCardName] = None
+    pending_bonus:            Optional[BonusEffect]     = None
+    urgent_volcano_threshold: int                       = 4
 
 
 @dataclass(frozen = True)

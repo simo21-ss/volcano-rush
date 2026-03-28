@@ -8,7 +8,6 @@ from .models import (
     Character, Resource, Tool, PlayerAction, MissionType, MissionName,
     Player, GameState, Mission, VolcanoCard, RESOURCE_INDEX,
 )
-from .initialization import URGENT_VOLCANO_THRESHOLD
 
 
 def vote_for_mission(player: Player, state: GameState) -> MissionName:
@@ -35,7 +34,7 @@ def vote_for_mission(player: Player, state: GameState) -> MissionName:
             valid_missions = [mission_name for mission_name in active if Mission.catalog[mission_name].players_count <= cap]
             if valid_missions:
                 active = valid_missions
-    urgent = len(state.volcano_deck) <= URGENT_VOLCANO_THRESHOLD
+    urgent = len(state.volcano_deck) <= state.urgent_volcano_threshold
     boat_options = [mission_name for mission_name in active if Mission.catalog[mission_name].mission_type == MissionType.BOAT]
 
     if urgent and boat_options:
@@ -114,7 +113,7 @@ def decide_action(
     Returns:
         The chosen PlayerAction.
     """
-    urgent = len(state.volcano_deck) <= URGENT_VOLCANO_THRESHOLD
+    urgent = len(state.volcano_deck) <= state.urgent_volcano_threshold
 
     # Craftsman: repair if tool damaged and no repair already in progress
     if player.character == Character.CRAFTSMAN and not player.is_exhausted:

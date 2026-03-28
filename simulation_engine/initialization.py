@@ -6,13 +6,8 @@ from .models import (
 )
 
 
-INITIAL_RESOURCES_PER_PLAYER = 3
-URGENT_VOLCANO_THRESHOLD = 4
-DECK_RESOURCE_COUNT = 20
-
-
-def prepare_resource_deck() -> list[Resource]:
-    resource_deck = ([Resource.WOOD] * DECK_RESOURCE_COUNT + [Resource.STONE] * DECK_RESOURCE_COUNT + [Resource.ROPE] * DECK_RESOURCE_COUNT)
+def prepare_resource_deck(deck_resource_count: int = 20) -> list[Resource]:
+    resource_deck = ([Resource.WOOD] * deck_resource_count + [Resource.STONE] * deck_resource_count + [Resource.ROPE] * deck_resource_count)
     random.shuffle(resource_deck)
 
     return resource_deck
@@ -39,13 +34,13 @@ def assign_characters(player_count: int) -> list[Character]:
     return characters
 
 
-def prepare_players(player_count: int, resource_deck: list[Resource]) -> list[Player]:
+def prepare_players(player_count: int, resource_deck: list[Resource], initial_resources_per_player: int = 3) -> list[Player]:
     characters = assign_characters(player_count)
 
     players = []
     for char in characters:
         player = Player(character = char)
-        for _ in range(INITIAL_RESOURCES_PER_PLAYER):
+        for _ in range(initial_resources_per_player):
             drawn_resource = resource_deck.pop()
             player.resources[RESOURCE_INDEX[drawn_resource]] += 1
         players.append(player)
@@ -96,10 +91,15 @@ def prepare_volcano_deck() -> list[VolcanoCardName]:
     return volcano_deck
 
 
-def init_game(player_count: int) -> GameState:
-    resource_deck = prepare_resource_deck()
+def init_game(
+    player_count:                 int,
+    initial_resources_per_player: int = 3,
+    deck_resource_count:          int = 20,
+    urgent_volcano_threshold:     int = 4,
+) -> GameState:
+    resource_deck = prepare_resource_deck(deck_resource_count = deck_resource_count)
 
-    players = prepare_players(player_count, resource_deck)
+    players = prepare_players(player_count, resource_deck, initial_resources_per_player = initial_resources_per_player)
 
     mission_pool = get_mission_pool(player_count)
     active_missions = [mission_pool.pop() for _ in range(3)]
@@ -113,12 +113,13 @@ def init_game(player_count: int) -> GameState:
     boat_parts_required = len(boat_missions)
 
     return GameState(
-        players              = players,
-        active_missions      = active_missions,
-        resource_deck        = resource_deck,
-        complication_deck    = complication_deck,
-        volcano_deck         = volcano_deck,
-        tools                = tools,
-        boat_parts_required  = boat_parts_required,
-        mission_pool         = mission_pool,
+        players                  = players,
+        active_missions          = active_missions,
+        resource_deck            = resource_deck,
+        complication_deck        = complication_deck,
+        volcano_deck             = volcano_deck,
+        tools                    = tools,
+        boat_parts_required      = boat_parts_required,
+        mission_pool             = mission_pool,
+        urgent_volcano_threshold = urgent_volcano_threshold,
     )
