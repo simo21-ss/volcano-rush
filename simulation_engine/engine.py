@@ -347,6 +347,10 @@ def run_round(state: GameState) -> tuple[bool, bool]:
     if len(state.boat_parts_built) >= state.boat_parts_required:
         return True, True
 
+    # No mission lost check (boat mission discarded with no replacement)
+    if not state.active_missions:
+        return True, False
+
     return False, False
 
 

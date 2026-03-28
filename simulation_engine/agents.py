@@ -73,6 +73,9 @@ def select_mission(state: GameState) -> Optional[MissionName]:
     Returns:
         The selected MissionName for this round, or None if no mission fits the Panic cap.
     """
+    if not state.active_missions:
+        return None
+
     if state.pending_volcano_card is not None:
         cap = VolcanoCard.catalog[state.pending_volcano_card].max_mission_participants
         if cap is not None:
