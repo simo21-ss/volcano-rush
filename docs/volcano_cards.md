@@ -6,7 +6,7 @@ Shuffle the Volcano deck before the game, placing **Eruption** on the bottom.
 
 | Card | Effect |
 |---|---|
-| **Rain and Mud** | The next chosen mission requires +1 Wood |
+| **Rain and Mud** | The next chosen mission requires +2 Wood if the mission requires Wood; otherwise no effect |
 | **Ash in the Air** | All participants in the next mission are Exhausted for **2 rounds** instead of 1 |
 | **Tremor** | Discard 1 active mission and reveal a new one |
 | **Storm** | Each player loses 1 random resource (if they have any) |

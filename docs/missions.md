@@ -14,7 +14,7 @@ Each round, 3 missions are available. Players select one mission, assign partici
 | **Requires** | 2 Wood + 1 Stone |
 | **Participants** | 2 |
 | **Reward** | 2 points per participant |
-| **Bonus** | Next round, this mission requires -1 Wood (one-time) |
+| **Bonus** | Next round, any mission requiring wood will cost -1 Wood (one-time) |
 
 ### Torch for the Night
 | Field | Value |
