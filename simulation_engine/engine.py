@@ -90,8 +90,9 @@ def _resolve_player_actions(state: GameState, mission: Mission) -> tuple[list, l
     participants: list = []
     gatherers: list = []
 
+    random.shuffle(state.players)  # Randomise action order each round
     for player in state.players:
-        action = decide_action(player, mission, len(participants), state)
+        action = decide_action(player, mission, state)
         if action == PlayerAction.REPAIR:
             repairable = [
                 tool for tool, tool_state in state.tools.items()
@@ -420,6 +421,8 @@ def run_game(
         print()
         print(f"Outcome: {'WIN' if outcome == 'win' else 'LOSS'} after {state.round} rounds")
         print(f"Final scores: { {p.character.value: p.score for p in state.players} }")
+        print(f"Boat parts built: {len(state.boat_parts_built)}/{state.boat_parts_required}")
+        print(f"Volcano cards remaining: {len(state.volcano_deck)}")
 
     return GameRecord(
         player_count            = player_count,
@@ -460,7 +463,6 @@ def run_scenario(
     for i in range(n_games):
         if base_seed is not None:
             random.seed(base_seed + i)
-            np.random.seed(base_seed + i)
 
         results.append(run_game(
             player_count,

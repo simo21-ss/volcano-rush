@@ -1,4 +1,4 @@
-import numpy as np
+import random
 from typing import Optional
 
 from .models import Resource, ComplicationCardName, VolcanoCardName, MissionName, GameState
@@ -13,7 +13,7 @@ def draw_resource(state: GameState) -> Resource:
 
 
 def draw_complication(state: GameState) -> ComplicationCardName:
-    return np.random.choice(state.complication_deck)
+    return random.choice(state.complication_deck)
 
 
 def draw_volcano(state: GameState) -> VolcanoCardName:
