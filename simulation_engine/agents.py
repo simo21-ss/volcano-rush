@@ -1,6 +1,5 @@
 import random
 import math
-import numpy as np
 from collections import Counter
 from typing import Optional
 
@@ -56,7 +55,7 @@ def vote_for_mission(player: Player, state: GameState) -> MissionName:
         if boat_options:
             return random.choice(boat_options)
 
-    return np.random.choice(active)
+    return random.choice(active)
 
 
 def select_mission(state: GameState) -> Optional[MissionName]:
@@ -91,10 +90,9 @@ def select_mission(state: GameState) -> Optional[MissionName]:
 
 
 def decide_action(
-    player:                    Player,
-    mission:                   Mission,
-    current_participant_count: int,
-    state:                     GameState,
+    player:  Player,
+    mission: Mission,
+    state:   GameState,
 ) -> PlayerAction:
     """
     Decide what action a player takes this round: participate, gather, or repair.
@@ -103,15 +101,13 @@ def decide_action(
     1. Craftsman repairs a damaged tool if they have stone and a slot is available.
     2. Exhausted players always gather.
     3. Players with ≤ 1 resource gather (conservation, unless urgent).
-    4. Players avoid piling on when >50% of the group is exhausted (unless urgent).
-    5. Players participate if they can cover their share and keep at least 1 resource.
-    6. Otherwise gather.
+    4. Players participate if they can cover their share and keep at least 1 resource.
+    5. Otherwise gather.
 
     Args:
-        player:                    The player deciding.
-        mission:                   The selected mission for this round.
-        current_participant_count: Number of players already committed to the mission.
-        state:                     Current game state (tools, players, volcano deck).
+        player:  The player deciding.
+        mission: The selected mission for this round.
+        state:   Current game state (tools, players, volcano deck).
 
     Returns:
         The chosen PlayerAction.
@@ -133,13 +129,6 @@ def decide_action(
     # Low-pressure conservation: 1 card in hand → gather
     if not urgent and len(player.resources) <= 1:
         return PlayerAction.GATHER
-
-    # Exhaustion spreading: >50% exhausted and mission already has enough participants
-    if not urgent:
-        exhausted_count = sum(1 for p in state.players if p.is_exhausted)
-        if exhausted_count > len(state.players) / 2:
-            if current_participant_count == mission.players_count:
-                return PlayerAction.GATHER
 
     # Participation check: can contribute share and keep ≥ 1 card
     total_requirements = sum(mission.required_resources.values())
