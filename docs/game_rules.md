@@ -4,7 +4,7 @@
 
 | Parameter | Value |
 |---|---|
-| **Players** | 4–8 |
+| **Players** | 6–8 |
 | **Play time** | 30–60 minutes |
 | **Game type** | Strategic semi-cooperative |
 | **Shared objective** | Escape the island together by building a boat |
@@ -44,8 +44,6 @@ Shared tools belong to the entire group and can be used across multiple missions
 
    | Players | Role Assignment Rule |
    |---|---|
-   | 4 | Craftsman is mandatory; remaining 3 roles drawn randomly; no repeats |
-   | 5 | Craftsman is mandatory; remaining 4 roles drawn randomly; no repeats |
    | 6 | All 6 roles used exactly once |
    | 7 | All 6 roles used once + 1 non-Craftsman role repeated (random) |
    | 8 | All 6 roles used once + 2 non-Craftsman roles repeated (random) |
@@ -105,7 +103,6 @@ Apply modifiers in this order:
 
 | Players | Boat Parts Required | Active Boat Missions |
 |---|---|---|
-| 4–5 | 2 | 2 randomly selected from the 4 base missions |
 | 6 | 4 | All 4 base missions |
 | 7–8 | 5 | All 4 base missions + Fit the Rudder |
 

@@ -370,7 +370,7 @@ def run_game(
     or eruption, the result is recorded as a loss.
 
     Args:
-        player_count:                Number of players (4-8).
+        player_count:                Number of players (6-8).
         initial_resources_per_player: Resources dealt to each player at game start.
         deck_resource_count:         Number of each resource type in the deck.
         urgent_volcano_threshold:    Volcano deck size at which agents prioritise boat missions.
@@ -459,7 +459,7 @@ def run_scenario(
     Run multiple games with the same player count and collect the results.
 
     Args:
-        player_count:                Number of players per game (4-8).
+        player_count:                Number of players per game (6-8).
         n_games:                     Number of games to simulate.
         base_seed:                   If provided, seeds each game deterministically (base_seed + game_index)
                                      for reproducible results.

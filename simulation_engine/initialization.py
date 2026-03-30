@@ -14,20 +14,15 @@ def prepare_resource_deck(deck_resource_count: int = 20) -> list[Resource]:
 
 
 def assign_characters(player_count: int) -> list[Character]:
-    required_character = Character.CRAFTSMAN
     all_characters = list(Character)
     all_characters_count = len(all_characters)
 
-    if player_count < all_characters_count:
-        others = [c for c in all_characters if c != required_character]
-        chosen = random.sample(others, player_count - 1)
-        characters = [required_character] + chosen
-    elif player_count == all_characters_count:
+    if player_count == all_characters_count:
         characters = all_characters
     else:
         base_characters = random.sample(all_characters, all_characters_count)
         extras = random.sample(
-            [c for c in all_characters if c != required_character],
+            [c for c in all_characters if c != Character.CRAFTSMAN],
             player_count - all_characters_count,
         )
         characters = base_characters + extras
@@ -50,15 +45,12 @@ def prepare_players(player_count: int, resource_deck: list[Resource], initial_re
 
 
 def get_boat_missions(player_count: int) -> list[MissionName]:
-    all_characters_count = len(list(Character))
     extra_mission = MissionName.FIT_THE_RUDDER
 
     base_boat_missions = [n for n, m in Mission.catalog.items()
             if m.mission_type == MissionType.BOAT and n != extra_mission]
 
-    if player_count < all_characters_count:
-        return random.sample(base_boat_missions, 2)
-    elif player_count == all_characters_count:
+    if player_count == 6:
         return list(base_boat_missions)
     else:
         return list(base_boat_missions) + [extra_mission]
