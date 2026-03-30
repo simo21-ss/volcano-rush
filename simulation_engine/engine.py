@@ -100,6 +100,7 @@ def _resolve_player_actions(state: GameState, mission: Mission) -> tuple[list, l
             ]
             state.tools[repairable[0]].repair_due = state.round + 2
             player.resources.remove(Resource.STONE)
+            player.score += 1
             gatherers.append(player)
         elif action == PlayerAction.PARTICIPATE:
             if len(participants) < mission.players_count:

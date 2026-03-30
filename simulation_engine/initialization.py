@@ -26,7 +26,10 @@ def assign_characters(player_count: int) -> list[Character]:
         characters = all_characters
     else:
         base_characters = random.sample(all_characters, all_characters_count)
-        extras = random.sample(all_characters, player_count - all_characters_count)
+        extras = random.sample(
+            [c for c in all_characters if c != required_character],
+            player_count - all_characters_count,
+        )
         characters = base_characters + extras
 
     random.shuffle(characters)

@@ -47,8 +47,8 @@ Shared tools belong to the entire group and can be used across multiple missions
    | 4 | Craftsman is mandatory; remaining 3 roles drawn randomly; no repeats |
    | 5 | Craftsman is mandatory; remaining 4 roles drawn randomly; no repeats |
    | 6 | All 6 roles used exactly once |
-   | 7 | All 6 roles used once + 1 role repeated (random) |
-   | 8 | All 6 roles used once + 2 roles repeated (random) |
+   | 7 | All 6 roles used once + 1 non-Craftsman role repeated (random) |
+   | 8 | All 6 roles used once + 2 non-Craftsman roles repeated (random) |
 2. Each player draws **3 random resource cards**.
 3. Reveal **3 Mission cards** to form the active mission pool.
 4. Shuffle the **Volcano deck** (11 cards), placing **Eruption** on the bottom.
@@ -116,6 +116,11 @@ Apply modifiers in this order:
 ### Scoring
 
 Points are only counted if the group achieves a **collective victory**. Each participant receives the points listed on the mission card upon success.
+
+**Character bonuses (also only counted on collective victory):**
+- **Fire Starter:** +1 point on fire mission success (for all participants).
+- **Cook:** +1 point on vessel mission success (for all participants).
+- **Craftsman:** +1 point each time the Craftsman chooses to repair a tool.
 
 **Tiebreaker:** If two or more players are tied on points, the player with more unused resources in hand wins.
 
