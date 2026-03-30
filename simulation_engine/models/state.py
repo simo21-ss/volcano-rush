@@ -36,6 +36,7 @@ class GameState:
     pending_volcano_card:          Optional[VolcanoCardName] = None
     pending_bonus:                 Optional[BonusEffect]     = None
     urgent_volcano_threshold:      int                       = 4
+    active_player_index:           int                       = 0
     resources_consumed:            dict[Resource, int]       = field(default_factory = dict)
     mission_failures_by_resource:  dict[Resource, int]       = field(default_factory = dict)
     mission_failures_any_extra:    int                       = 0

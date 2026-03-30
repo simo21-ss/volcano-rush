@@ -1,11 +1,10 @@
 import random
-import math
 from collections import Counter
 from typing import Optional
 
 from .models import (
-    Character, Resource, Tool, PlayerAction, MissionType, MissionName,
-    Player, GameState, Mission, VolcanoCard,
+    Character, Resource, Tool, ActivePlayerAction, MissionType, MissionName,
+    BOAT_PART_ORDER, Player, GameState, Mission, VolcanoCard,
 )
 
 
@@ -58,85 +57,111 @@ def vote_for_mission(player: Player, state: GameState) -> MissionName:
     return random.choice(active)
 
 
-def select_mission(state: GameState) -> Optional[MissionName]:
+def get_next_needed_boat_part(state: GameState) -> Optional[MissionName]:
     """
-    Aggregate all player votes and return the mission with the most support.
+    Return the first boat part in BOAT_PART_ORDER that is reachable but not yet built.
 
-    Players with no preference contribute a random vote. Ties are broken randomly.
-    If a Panic volcano card is pending and no active mission fits within the
-    participant cap, returns None to signal that the round has no valid mission.
+    A boat part is considered reachable if it exists in the active missions, the mission
+    pool, or has already been built (i.e. it is part of this game's boat part set).
+    This filters out parts like FIT_THE_RUDDER that may not be in shorter games.
 
     Args:
-        state: Current game state (players, active missions).
+        state: Current game state.
 
     Returns:
-        The selected MissionName for this round, or None if no mission fits the Panic cap.
+        The next needed MissionName, or None if all reachable boat parts are built.
     """
-    if not state.active_missions:
-        return None
-
-    if state.pending_volcano_card is not None:
-        cap = VolcanoCard.catalog[state.pending_volcano_card].max_mission_participants
-        if cap is not None:
-            valid_missions = [mission_name for mission_name in state.active_missions if Mission.catalog[mission_name].players_count <= cap]
-            if not valid_missions:
-                return None
-
-    votes = Counter(vote_for_mission(player, state) for player in state.players)
-    max_votes = max(votes.values())
-    top_missions = [mission_name for mission_name, vote_count in votes.items() if vote_count == max_votes]
-
-    return random.choice(top_missions)
+    reachable = set(state.active_missions) | set(state.mission_pool) | state.boat_parts_built
+    for mission_name in BOAT_PART_ORDER:
+        if mission_name in reachable and mission_name not in state.boat_parts_built:
+            return mission_name
+    return None
 
 
-def decide_action(
-    player:  Player,
-    mission: Mission,
-    state:   GameState,
-) -> PlayerAction:
+def decide_active_player_action(active_player: Player, state: GameState) -> ActivePlayerAction:
     """
-    Decide what action a player takes this round: participate, gather, or repair.
+    Decide whether the active player runs a mission or shuffles the mission deck.
 
-    Priority order:
-    1. Craftsman repairs a damaged tool if they have stone and a slot is available.
-    2. Exhausted players always gather.
-    3. Players with ≤ 1 resource gather (conservation, unless urgent).
-    4. Players participate if they can cover their share and keep at least 1 resource.
-    5. Otherwise gather.
+    Since shuffling draws a volcano card, the agent avoids shuffling when the
+    volcano deck is at or below the urgent threshold.
+
+    Decision rules in order:
+    1. Required shuffle: all active missions are boat parts AND the next needed boat
+       part is not among them → SHUFFLE_MISSIONS (mandatory), unless the volcano
+       deck is urgent (attempt a mission instead to avoid a guaranteed volcano draw).
+    2. No boat parts visible and volcano deck is not urgent: 25 % chance to
+       voluntarily shuffle (low probability because shuffling now draws a volcano card).
+    3. Otherwise → CHOOSE_MISSION.
+
+    If SHUFFLE_MISSIONS would be chosen but the active player has no resources to pay
+    the cost, falls back to CHOOSE_MISSION.
 
     Args:
-        player:  The player deciding.
-        mission: The selected mission for this round.
-        state:   Current game state (tools, players, volcano deck).
+        active_player: The player whose turn it is to lead this round.
+        state:         Current game state.
 
     Returns:
-        The chosen PlayerAction.
+        The chosen ActivePlayerAction.
     """
-    urgent = len(state.volcano_deck) <= state.urgent_volcano_threshold
+    volcano_is_urgent = len(state.volcano_deck) <= state.urgent_volcano_threshold
 
-    # Craftsman: repair if tool damaged and no repair already in progress
-    if player.character == Character.CRAFTSMAN and not player.is_exhausted:
-        repairable = [
-            tool for tool, tool_state in state.tools.items()
-            if tool_state.damaged and tool_state.repair_due is None
-        ]
-        if repairable and Resource.STONE in player.resources:
-            return PlayerAction.REPAIR
+    active_boat_missions = [
+        mission_name for mission_name in state.active_missions
+        if Mission.catalog[mission_name].mission_type == MissionType.BOAT
+    ]
+    all_active_are_boat_parts = len(active_boat_missions) == len(state.active_missions)
+    next_needed = get_next_needed_boat_part(state)
+    next_needed_not_active = next_needed not in state.active_missions
 
-    if player.is_exhausted:
-        return PlayerAction.GATHER
+    if all_active_are_boat_parts and next_needed_not_active:
+        if active_player.resources and not volcano_is_urgent:
+            return ActivePlayerAction.SHUFFLE_MISSIONS
+        return ActivePlayerAction.CHOOSE_MISSION
 
-    # Low-pressure conservation: 1 card in hand → gather
-    if not urgent and len(player.resources) <= 1:
-        return PlayerAction.GATHER
+    no_boat_parts_visible = len(active_boat_missions) == 0
+    if no_boat_parts_visible and not volcano_is_urgent:
+        if active_player.resources and random.random() < 0.25:
+            return ActivePlayerAction.SHUFFLE_MISSIONS
 
-    # Participation check: can contribute share and keep ≥ 1 card
-    total_requirements = sum(mission.required_resources.values())
-    share = math.ceil(total_requirements / mission.players_count)
-    if len(player.resources) > share:
-        return PlayerAction.PARTICIPATE
+    return ActivePlayerAction.CHOOSE_MISSION
 
-    return PlayerAction.GATHER
+
+def select_participants(active_player: Player, mission: Mission, state: GameState) -> list[Player]:
+    """
+    Select participants for the mission, preferring players with more resources.
+
+    The active player is always selected first if they are in the preferred pool
+    (2+ resources and not exhausted). Remaining slots are filled from the preferred
+    pool (randomly), then the fallback pool (1 resource, randomly). Players with
+    0 resources or exhausted players are excluded entirely.
+
+    Args:
+        active_player: The active player this round (prioritized in the preferred pool).
+        mission:       The mission to staff.
+        state:         Current game state.
+
+    Returns:
+        A list of up to mission.players_count Player objects.
+    """
+    needed = mission.players_count
+
+    active_is_preferred = not active_player.is_exhausted and len(active_player.resources) >= 2
+
+    preferred = [player for player in state.players if player is not active_player and not player.is_exhausted and len(player.resources) >= 2]
+    fallback = [player for player in state.players if not player.is_exhausted and len(player.resources) == 1]
+
+    random.shuffle(preferred)
+    random.shuffle(fallback)
+
+    if active_is_preferred:
+        preferred = [active_player] + preferred
+
+    selected = preferred[:needed]
+    if len(selected) < needed:
+        remaining_slots = needed - len(selected)
+        selected = selected + fallback[:remaining_slots]
+
+    return selected
 
 
 def choose_gather_amount(player: Player) -> int:

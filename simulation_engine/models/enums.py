@@ -27,6 +27,11 @@ class PlayerAction(Enum):
     REPAIR      = "repair"
 
 
+class ActivePlayerAction(Enum):
+    CHOOSE_MISSION   = "choose_mission"
+    SHUFFLE_MISSIONS = "shuffle_missions"
+
+
 class MissionType(Enum):
     FIRE    = "fire"
     SHELTER = "shelter"
@@ -48,6 +53,15 @@ class MissionName(Enum):
     RAISE_THE_MAST      = "raise_the_mast"
     MAKE_THE_SAIL       = "make_the_sail"
     FIT_THE_RUDDER      = "fit_the_rudder"
+
+
+BOAT_PART_ORDER: tuple[MissionName, ...] = (
+    MissionName.CUT_THE_KEEL,
+    MissionName.ASSEMBLE_THE_HULL,
+    MissionName.RAISE_THE_MAST,
+    MissionName.MAKE_THE_SAIL,
+    MissionName.FIT_THE_RUDDER,
+)
 
 
 class ComplicationCardName(Enum):

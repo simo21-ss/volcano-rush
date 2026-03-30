@@ -55,33 +55,71 @@ Shared tools belong to the entire group and can be used across multiple missions
 
 ### Round Structure
 
-Each round proceeds in the following order:
+Each round has a designated **Active Player** who rotates clockwise through the player list. The active player makes key decisions for the round.
 
-**Step 1 - Choose a Mission**
-Players collectively choose 1 of the 3 active missions to attempt this round.
+**Step 1 - Active Player Decision**
+The active player chooses one of the following actions:
 
-**Step 2 - Player Actions** *(each player chooses one)*
-- **Participate:** Join the mission by contributing at least 1 resource card (only if not Exhausted).
-- **Gather:** Draw 1 random resource card.
-  - If the player is the **Gatherer** and they are not Exhausted, they may use their role ability to draw 2 instead, but will become Exhausted.
+- **Choose a Mission:** Select 1 of the 3 active missions to attempt this round. The active player decides unilaterally based on their character preference.
+- **Shuffle Missions:** Shuffle the entire mission deck (excluding completed and currently active missions). This costs the active player **1 resource card** of any type and **1 Volcano card is drawn** (eruption ends the game immediately). The round ends immediately after the shuffle — no mission is attempted and no gathering occurs.
 
-**Step 3 - Draw Complication**
+If the active player cannot take any valid action, 1 Volcano card is drawn as a penalty (equivalent to a mission failure).
+
+**Step 2 - Participant Selection**
+When a mission is chosen, the active player selects participants (they may or may not include themselves):
+- Players with **2 or more resources** are preferred and selected first (randomly within this group).
+- Players with **1 resource** are a last resort — they may not have the right resource types.
+- Players with **0 resources** are never selected.
+
+**Step 3 - Non-Participant Actions**
+Players not selected as participants:
+- **Craftsman** (if not Exhausted, has Stone, and a tool is damaged with no repair in progress): automatically repairs a tool.
+- All other non-participants: **Gather** — draw 1 random resource card.
+  - If the player is the **Gatherer** and they are not Exhausted, they may draw 2 instead, but will become Exhausted.
+
+**Step 4 - Draw Complication**
 After participants are declared, shuffle the Complication deck and draw 1 card. Apply its effect to this mission.
 
-**Step 4 - Resolution**
+**Step 5 - Resolution**
 Check whether the total resources contributed (after all modifiers) meet the mission requirements:
 - **Success:** Distribute points to all participants. Apply any bonus effect.
 - **Failure:** Draw 1 Volcano card and apply its effect.
 
-**Step 5 - Exhaustion**
+**Step 6 - Exhaustion**
 All players who participated in the mission (regardless of success or failure) become **Exhausted** until the end of the next round. While Exhausted, a player may only take the "Gather" action.
 
 > Exception: missions that explicitly cancel this rule.
 
-**Step 6 - Mission Maintenance**
+**Step 7 - Mission Maintenance**
 - If the mission **succeeded**: remove it and reveal a new one.
 - If the mission **failed**: it remains in the active pool.
 - Always maintain exactly **3 active missions**.
+
+**Step 8 - Advance Active Player**
+The active player rotates to the next player in the list.
+
+---
+
+### Boat Part Order
+
+Boat parts must be completed in a fixed construction order:
+
+| Order | Mission |
+|---|---|
+| 1 | Cut the Keel |
+| 2 | Assemble the Hull |
+| 3 | Raise the Mast |
+| 4 | Make the Sail |
+| 5 | Fit the Rudder |
+
+### Shuffle Rules
+
+The active player may choose to shuffle the mission deck instead of attempting a mission. The following rules apply:
+
+- **Voluntary shuffle:** If none of the 3 active missions are boat parts, the active player may choose to shuffle rather than pick a mission.
+- **Required shuffle:** If all 3 active missions are boat parts but the next needed boat part (according to the construction order above) is not among them, the active player **must** shuffle.
+- **Shuffle cost:** The active player discards 1 resource card of any type. If they have no resources, they cannot shuffle.
+- **Volcano draw:** After shuffling, 1 Volcano card is drawn. If it is the Eruption card, the game ends immediately in a loss.
 
 ---
 

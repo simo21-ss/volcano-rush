@@ -3,7 +3,7 @@ from typing import Optional
 import numpy as np
 
 from .models import (
-    Character, Resource, Tool, PlayerAction, MissionType, MissionName, ComplicationCardName,
+    Character, Resource, Tool, ActivePlayerAction, MissionType, MissionName, ComplicationCardName,
     GameState, GameRecord, Mission, VolcanoCard, ComplicationCard,
 )
 from .initialization import init_game
@@ -12,7 +12,10 @@ from .mechanics import (
     update_tool_repairs, refresh_exhaustion, apply_exhaustion,
     resolve_mission, apply_volcano_card, apply_bonus,
 )
-from .agents import select_mission, decide_action, choose_gather_amount
+from .agents import (
+    vote_for_mission, choose_gather_amount,
+    decide_active_player_action, select_participants,
+)
 
 
 def _handle_volcano_draw(state: GameState) -> bool:
@@ -32,13 +35,13 @@ def _handle_volcano_draw(state: GameState) -> bool:
     volcano_card_name = draw_volcano(state)
     if VolcanoCard.get(volcano_card_name).is_eruption:
         return True
-    
+
     if (state.pending_bonus is not None
             and state.pending_bonus.negates_volcano_card == volcano_card_name):
         state.pending_bonus = None
     else:
         apply_volcano_card(volcano_card_name, state)
-    
+
     return False
 
 
@@ -72,45 +75,45 @@ def _handle_panic_cap_round(state: GameState) -> tuple[list, list, bool, bool, b
     return participants, gatherers, success, no_exhaustion, eruption
 
 
-def _resolve_player_actions(state: GameState, mission: Mission) -> tuple[list, list]:
+def _apply_non_participant_actions(state: GameState, non_participants: list) -> list:
     """
-    Assign each player to participate in, gather during, or repair tools this round.
+    Determine the actions of players not selected for the mission.
 
-    Players who choose REPAIR have their stone deducted, queue a tool repair two
-    rounds ahead, and join the gatherers list. Players who choose PARTICIPATE join
-    participants up to the mission's required count; extras fall back to gathering.
+    Craftsman players who are not exhausted, have Stone, and can start a repair
+    do so automatically (deducting 1 Stone, scheduling the repair, awarding 1 point).
+    All other non-participants, including the repairing Craftsman, gather resources.
 
     Args:
-        state:   Current game state, mutated in place (tool repair state, resources).
-        mission: The selected mission for this round.
+        state:            Current game state, mutated in place (tool repair state, resources).
+        non_participants: Players not selected to participate in the mission.
 
     Returns:
-        A (participants, gatherers) tuple of Player lists.
+        The list of gatherers (all non-participants).
     """
-    participants: list = []
-    gatherers: list = []
-
-    random.shuffle(state.players)  # Randomise action order each round
-    for player in state.players:
-        action = decide_action(player, mission, state)
-        if action == PlayerAction.REPAIR:
+    gatherers = []
+    for player in non_participants:
+        if player.character == Character.CRAFTSMAN and not player.is_exhausted:
             repairable = [
                 tool for tool, tool_state in state.tools.items()
                 if tool_state.damaged and tool_state.repair_due is None
             ]
-            state.tools[repairable[0]].repair_due = state.round + 2
-            player.resources.remove(Resource.STONE)
-            player.score += 1
-            gatherers.append(player)
-        elif action == PlayerAction.PARTICIPATE:
-            if len(participants) < mission.players_count:
-                participants.append(player)
-            else:
-                gatherers.append(player)
-        else:
-            gatherers.append(player)
+            if repairable and Resource.STONE in player.resources:
+                state.tools[repairable[0]].repair_due = state.round + 2
+                player.resources.remove(Resource.STONE)
+                player.score += 1
+        gatherers.append(player)
+    return gatherers
 
-    return participants, gatherers
+
+def _apply_shuffle_cost(active_player) -> None:
+    """
+    Deduct one randomly chosen resource from the active player as the shuffle cost.
+
+    Args:
+        active_player: The player paying the cost (must have at least 1 resource).
+    """
+    resource_to_discard = random.choice(active_player.resources)
+    active_player.resources.remove(resource_to_discard)
 
 
 def _draw_complication_card(
@@ -137,7 +140,7 @@ def _draw_complication_card(
     """
     if state.skip_next_complication:
         state.skip_next_complication = False
-        
+
         return ComplicationCard.get(ComplicationCardName.CALM_BREEZE)
 
     if (any(p.character == Character.SAILOR for p in participants)
@@ -146,7 +149,7 @@ def _draw_complication_card(
         second_complication_name = draw_complication(state)
         first_complication_card = ComplicationCard.get(first_complication_name)
         second_complication_card = ComplicationCard.get(second_complication_name)
-        
+
         return (first_complication_card
                 if first_complication_card.severity <= second_complication_card.severity
                 else second_complication_card)
@@ -276,17 +279,23 @@ def run_round(state: GameState) -> tuple[bool, bool]:
     Execute one full round of the game.
 
     Steps in order:
-    1. Mission selection — players vote; the winning mission is selected.
-       If a Panic volcano card is pending, only missions within its participant
-       cap are eligible. If none qualify, the round fails and a volcano card
-       is drawn instead.
-    2. Player actions — each player decides to participate, gather, or repair.
-    3. Complication — a complication card is drawn (Sailor gets best of two on boat missions).
-    4. Resolution — mission is attempted; on success bonuses are applied; on failure a
+    1. Identify the active player for this round.
+    2. Active player decides: shuffle the mission deck or choose a mission.
+       - Shuffle: costs 1 resource, reshuffles mission_pool, draws a volcano card
+         (eruption ends the game), round ends (no gather).
+       - Choose mission: active player picks via their character preference.
+         If a Panic volcano card prevents any valid mission, all players gather and
+         a volcano card is drawn (eruption ends the game).
+    3. Participant selection — active player's choice, preferring players with 2+
+       resources over 1-resource players; 0-resource players excluded.
+    4. Non-participants act: Craftsman auto-repairs if conditions are met; everyone else gathers.
+    5. Complication — a complication card is drawn (Sailor gets best of two on boat missions).
+    6. Resolution — mission is attempted; on success bonuses are applied; on failure a
        volcano card is drawn (eruption ends the game immediately).
-    5. Exhaustion — participants are exhausted; Ash in the Air adds an extra round.
-    6. Gather — gatherers draw resources; Heat Wave cancels gathering.
-    7. Mission maintenance — completed mission is replaced from the pool.
+    7. Exhaustion — participants are exhausted; Ash in the Air adds an extra round.
+    8. Gather — gatherers draw resources; Heat Wave cancels gathering.
+    9. Mission maintenance — completed mission is replaced from the pool.
+   10. Active player index advances.
 
     Args:
         state: Current game state, mutated in place.
@@ -298,8 +307,22 @@ def run_round(state: GameState) -> tuple[bool, bool]:
     update_tool_repairs(state)
     refresh_exhaustion(state)
 
-    # Step 1 — Mission selection
-    mission_name = select_mission(state)
+    # Step 1 — Identify active player before any list mutations
+    active_player = state.players[state.active_player_index]
+
+    # Step 2 — Active player decision
+    action = decide_active_player_action(active_player, state)
+
+    if action == ActivePlayerAction.SHUFFLE_MISSIONS:
+        _apply_shuffle_cost(active_player)
+        random.shuffle(state.mission_pool)
+        if _handle_volcano_draw(state):
+            return True, False
+        state.active_player_index = (state.active_player_index + 1) % len(state.players)
+        return False, False
+
+    # action == ActivePlayerAction.CHOOSE_MISSION
+    mission_name = vote_for_mission(active_player, state)
 
     if mission_name is None:
         participants, gatherers, success, no_exhaustion, eruption = _handle_panic_cap_round(state)
@@ -313,13 +336,17 @@ def run_round(state: GameState) -> tuple[bool, bool]:
                 and VolcanoCard.get(state.pending_volcano_card).max_mission_participants is not None):
             state.pending_volcano_card = None
 
-        # Step 2 — Player actions
-        participants, gatherers = _resolve_player_actions(state, mission)
+        # Step 3 — Participant selection
+        participants = select_participants(active_player, mission, state)
+        non_participants = [player for player in state.players if player not in participants]
 
-        # Step 3 — Complication
+        # Step 4 — Non-participant actions (repair or gather)
+        gatherers = _apply_non_participant_actions(state, non_participants)
+
+        # Step 5 — Complication
         complication = _draw_complication_card(state, participants, mission)
 
-        # Step 4 — Resolution
+        # Step 6 — Resolution
         success = resolve_mission(state, mission, participants, complication)
 
         if success:
@@ -332,13 +359,13 @@ def run_round(state: GameState) -> tuple[bool, bool]:
                 if _handle_volcano_draw(state):
                     return True, False
 
-        # Step 5 — Exhaustion
+        # Step 7 — Exhaustion
         _apply_exhaustion_step(state, participants, no_exhaustion)
 
-    # Step 6 — Gather
+    # Step 8 — Gather
     _apply_gather_step(state, gatherers)
 
-    # Step 7 — Mission maintenance
+    # Step 9 — Mission maintenance
     if success:
         state.active_missions.remove(mission_name)
         new_mission = draw_mission(state)
@@ -352,6 +379,9 @@ def run_round(state: GameState) -> tuple[bool, bool]:
     # No mission lost check (boat mission discarded with no replacement)
     if not state.active_missions:
         return True, False
+
+    # Step 10 — Advance active player
+    state.active_player_index = (state.active_player_index + 1) % len(state.players)
 
     return False, False
 
@@ -396,6 +426,7 @@ def run_game(
         prev_volcano = len(state.volcano_deck)
         prev_missions = list(state.active_missions)
         prev_scores = [p.score for p in state.players]
+        active_player = state.players[state.active_player_index]
 
         game_over, won = run_round(state)
 
@@ -406,7 +437,8 @@ def run_game(
             scores = [p.score for p in state.players]
             score_gains = [scores[i] - prev_scores[i] for i in range(len(scores))]
             print(
-                f"Round {state.round:>2} | mission: {completed:<28} "
+                f"Round {state.round:>2} | active: {active_player.character.value:<12} "
+                f"| mission: {completed:<28} "
                 f"| volcano left: {len(state.volcano_deck):>2} (used {volcano_used}) "
                 f"| boat: {len(state.boat_parts_built)}/{state.boat_parts_required} "
                 f"| scores: {scores} (+{score_gains})"
