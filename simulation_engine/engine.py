@@ -423,16 +423,26 @@ def run_game(
         print(f"Final scores: { {p.character.value: p.score for p in state.players} }")
         print(f"Boat parts built: {len(state.boat_parts_built)}/{state.boat_parts_required}")
         print(f"Volcano cards remaining: {len(state.volcano_deck)}")
+        print(f"Resources consumed: { {r.value: n for r, n in state.resources_consumed.items()} }")
+        failures_by_resource = {r.value: n for r, n in state.mission_failures_by_resource.items()}
+        failures_tool = {t.value: n for t, n in state.mission_failures_tool_damaged.items()}
+        print(f"Mission failures by resource: {failures_by_resource}  (any_extra: {state.mission_failures_any_extra}, tool_damaged: {failures_tool})")
+        print(f"Tool repairs: { {t.value: n for t, n in state.tool_repairs.items()} }")
 
     return GameRecord(
-        player_count            = player_count,
-        characters              = [p.character for p in state.players],
-        outcome                 = outcome,
-        rounds_played           = state.round,
-        final_scores            = {p.character: p.score for p in state.players},
-        boat_parts_built        = len(state.boat_parts_built),
-        boat_parts_required     = state.boat_parts_required,
-        volcano_cards_remaining = len(state.volcano_deck),
+        player_count                  = player_count,
+        characters                    = [p.character for p in state.players],
+        outcome                       = outcome,
+        rounds_played                 = state.round,
+        final_scores                  = {p.character: p.score for p in state.players},
+        boat_parts_built              = len(state.boat_parts_built),
+        boat_parts_required           = state.boat_parts_required,
+        volcano_cards_remaining       = len(state.volcano_deck),
+        resources_consumed            = dict(state.resources_consumed),
+        mission_failures_by_resource  = dict(state.mission_failures_by_resource),
+        mission_failures_any_extra    = state.mission_failures_any_extra,
+        mission_failures_tool_damaged = dict(state.mission_failures_tool_damaged),
+        tool_repairs                  = dict(state.tool_repairs),
     )
 
 

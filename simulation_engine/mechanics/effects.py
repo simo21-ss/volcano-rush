@@ -86,6 +86,7 @@ def apply_bonus(
             if tool_state.damaged:
                 tool_state.damaged = False
                 tool_state.repair_due = None
+                state.tool_repairs[tool] = state.tool_repairs.get(tool, 0) + 1
                 break
 
     if bonus.negates_volcano_card is not None:

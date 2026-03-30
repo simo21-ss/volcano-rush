@@ -13,7 +13,8 @@ def apply_exhaustion(players: list[Player], current_round: int, extra_rounds: in
 
 
 def update_tool_repairs(state: GameState) -> None:
-    for tool_state in state.tools.values():
+    for tool, tool_state in state.tools.items():
         if tool_state.repair_due is not None and tool_state.repair_due <= state.round:
             tool_state.damaged = False
             tool_state.repair_due = None
+            state.tool_repairs[tool] = state.tool_repairs.get(tool, 0) + 1

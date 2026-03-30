@@ -3,7 +3,7 @@ from collections import Counter
 from typing import Optional
 
 from ..models import (
-    Character, Resource, MissionType,
+    Character, Resource, Tool, MissionType,
     GameState, Player, Mission, ComplicationCard, VolcanoCard,
     MissionRequirement,
 )
@@ -80,6 +80,7 @@ def check_and_contribute(
     participants:  list[Player],
     requirements:  MissionRequirement,
     max_per_type:  Optional[int],
+    state:         GameState,
 ) -> bool:
     """
     Check if participants can meet the typed and any_extra resource requirements,
@@ -113,10 +114,16 @@ def check_and_contribute(
 
     # Negative surplus means a typed requirement is unmet — return without deducting
     if any(surplus < 0 for surplus in surplus_by_resource.values()):
+        for resource, surplus in surplus_by_resource.items():
+            if surplus < 0:
+                state.mission_failures_by_resource[resource] = (
+                    state.mission_failures_by_resource.get(resource, 0) + 1
+                )
         return False
 
     # Total surplus must cover the wildcard any_extra requirement
     if sum(surplus_by_resource.values()) < requirements.any_extra:
+        state.mission_failures_any_extra += 1
         return False
 
     # Deduct typed requirements, then fill any_extra greedily (prefer most-abundant surplus)
@@ -136,6 +143,9 @@ def check_and_contribute(
             while left > 0 and resource in player.resources:
                 player.resources.remove(resource)
                 left -= 1
+
+    for resource, amount in to_remove.items():
+        state.resources_consumed[resource] = state.resources_consumed.get(resource, 0) + amount
 
     return True
 
@@ -168,6 +178,9 @@ def resolve_mission(
     # Tool availability
     for tool in mission.required_tools:
         if state.tools[tool].damaged:
+            state.mission_failures_tool_damaged[tool] = (
+                state.mission_failures_tool_damaged.get(tool, 0) + 1
+            )
             return False
 
     # Night Anxiety: need 1 non-participant, non-exhausted helper
@@ -182,6 +195,7 @@ def resolve_mission(
         participants = participants,
         requirements = requirements,
         max_per_type = complication.max_resource_per_type,
+        state        = state,
     )
 
     if success and complication.damages_tool_on_success is not None:
