@@ -136,16 +136,29 @@ def check_and_contribute(
         if remaining_any <= 0:
             break
 
-    # Remove from player hands
+    # Remove from player hands, ensuring each participant pays at least 1 resource.
+    # Take from players with fewer resources first — they are constrained to specific
+    # types, while players with more resources have flexibility to pay different types.
+    participants_by_resources = sorted(participants, key = lambda player: len(player.resources))
+
+    paid_players: set[int] = set()
     for resource, total in to_remove.items():
         left = total
-        for player in participants:
+        for player in participants_by_resources:
             while left > 0 and resource in player.resources:
                 player.resources.remove(resource)
+                paid_players.add(id(player))
                 left -= 1
 
     for resource, amount in to_remove.items():
         state.resources_consumed[resource] = state.resources_consumed.get(resource, 0) + amount
+
+    # Each participant must pay at least 1 resource (participation cost).
+    # Players not yet charged pay 1 resource of any type.
+    for player in participants_by_resources:
+        if id(player) not in paid_players:
+            resource = player.resources.pop(0)
+            state.resources_consumed[resource] = state.resources_consumed.get(resource, 0) + 1
 
     return True
 
@@ -173,6 +186,10 @@ def resolve_mission(
     """
     # Exact participant count
     if len(participants) != mission.players_count:
+        return False
+
+    # Every participant must hold at least 1 resource
+    if any(len(player.resources) == 0 for player in participants):
         return False
 
     # Tool availability

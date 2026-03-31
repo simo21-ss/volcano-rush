@@ -60,21 +60,18 @@ Each round has a designated **Active Player** who rotates clockwise through the 
 **Step 1 - Active Player Decision**
 The active player chooses one of the following actions:
 
-- **Choose a Mission:** Select 1 of the 3 active missions to attempt this round. The active player decides unilaterally based on their character preference.
+- **Choose a Mission:** Select 1 of the 3 active missions to attempt this round.
 - **Shuffle Missions:** Shuffle the entire mission deck (excluding completed and currently active missions). This costs the active player **1 resource card** of any type and **1 Volcano card is drawn** (eruption ends the game immediately). The round ends immediately after the shuffle — no mission is attempted and no gathering occurs.
 
 If the active player cannot take any valid action, 1 Volcano card is drawn as a penalty (equivalent to a mission failure).
 
 **Step 2 - Participant Selection**
-When a mission is chosen, the active player selects participants (they may or may not include themselves):
-- Players with **2 or more resources** are preferred and selected first (randomly within this group).
-- Players with **1 resource** are a last resort — they may not have the right resource types.
-- Players with **0 resources** are never selected.
+When a mission is chosen, the active player selects participants (they may or may not include themselves). Each mission requires a specific number of participants. Every participant must pay at least 1 resource card.
 
 **Step 3 - Non-Participant Actions**
 Players not selected as participants:
-- **Craftsman** (if not Exhausted, has Stone, and a tool is damaged with no repair in progress): automatically repairs a tool.
-- All other non-participants: **Gather** — draw 1 random resource card.
+- **Craftsman** may repair a damaged tool (costs 1 Stone from their hand). The tool becomes available again after one full round of repair.
+- All other non-participants: **Gather** - draw 1 random resource card.
   - If the player is the **Gatherer** and they are not Exhausted, they may draw 2 instead, but will become Exhausted.
 
 **Step 4 - Draw Complication**
@@ -116,8 +113,6 @@ Boat parts must be completed in a fixed construction order:
 
 The active player may choose to shuffle the mission deck instead of attempting a mission. The following rules apply:
 
-- **Voluntary shuffle:** If none of the 3 active missions are boat parts, the active player may choose to shuffle rather than pick a mission.
-- **Required shuffle:** If all 3 active missions are boat parts but the next needed boat part (according to the construction order above) is not among them, the active player **must** shuffle.
 - **Shuffle cost:** The active player discards 1 resource card of any type. If they have no resources, they cannot shuffle.
 - **Volcano draw:** After shuffling, 1 Volcano card is drawn. If it is the Eruption card, the game ends immediately in a loss.
 
