@@ -141,3 +141,15 @@ class Mission:
     required_tools:     list[Tool]           = field(default_factory = list)  # has default
     is_boat_mission:    bool                 = False                           # has default
 ```
+
+## Markdown Text
+
+### Special characters
+Use plain hyphens (`-`) instead of em-dashes or en-dashes in all markdown text:
+```markdown
+# Correct
+scores high on average - they score well but inconsistently
+
+# Wrong
+scores high on average — they score well but inconsistently
+```
