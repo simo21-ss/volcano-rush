@@ -8,11 +8,11 @@ class CraftsmanStrategy(CharacterStrategy):
     def character(self) -> Character:
         return Character.CRAFTSMAN
 
-    def non_participant_action(
+    def take_gathering_action(
         self,
         player: Player,
         state:  GameState,
-    ) -> None:
+    ) -> bool:
         if not player.is_exhausted:
             repairable = [
                 tool for tool, tool_state in state.tools.items()
@@ -22,3 +22,5 @@ class CraftsmanStrategy(CharacterStrategy):
                 state.tools[repairable[0]].repair_due = state.round + 2
                 player.resources.remove(Resource.STONE)
                 player.score += 1
+                return False
+        return True

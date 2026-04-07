@@ -60,10 +60,10 @@ def decide_active_player_action(active_player: Player, state: GameState) -> Acti
         The chosen ActivePlayerAction.
     """
     strategy = get_strategy(active_player.character)
-    return strategy.decide_action(active_player, state)
+    return strategy.active_player_decide_action(active_player, state)
 
 
-def select_participants(active_player: Player, mission: Mission, state: GameState) -> list[Player]:
+def active_player_select_participants(active_player: Player, mission: Mission, state: GameState) -> list[Player]:
     """
     Select participants for the mission, preferring players with more resources.
 
@@ -80,7 +80,7 @@ def select_participants(active_player: Player, mission: Mission, state: GameStat
         A list of up to mission.players_count Player objects.
     """
     strategy = get_strategy(active_player.character)
-    return strategy.select_participants(active_player, mission, state)
+    return strategy.active_player_select_participants(active_player, mission, state)
 
 
 def choose_gather_amount(player: Player) -> int:

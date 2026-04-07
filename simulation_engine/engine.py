@@ -13,7 +13,7 @@ from .mechanics import (
 )
 from .agents import (
     vote_for_mission, choose_gather_amount,
-    decide_active_player_action, select_participants,
+    decide_active_player_action, active_player_select_participants,
 )
 
 
@@ -78,22 +78,25 @@ def _apply_non_participant_actions(state: GameState, non_participants: list) -> 
     """
     Determine the actions of players not selected for the mission.
 
-    Craftsman players who are not exhausted, have Stone, and can start a repair
-    do so automatically (deducting 1 Stone, scheduling the repair, awarding 1 point).
-    All other non-participants, including the repairing Craftsman, gather resources.
+    Each non-participant's character strategy decides what to do via
+    take_gathering_action(). If the strategy returns True the player gathers
+    from the resource deck as normal. If it returns False the player used a
+    special ability instead (Craftsman repairs a tool, Thief steals from
+    other players) and skips the deck draw.
 
     Args:
-        state:            Current game state, mutated in place (tool repair state, resources).
+        state:            Current game state, mutated in place.
         non_participants: Players not selected to participate in the mission.
 
     Returns:
-        The list of gatherers (all non-participants).
+        The list of gatherers (non-participants who should draw from the deck).
     """
     gatherers = []
     for player in non_participants:
         strategy = get_strategy(player.character)
-        strategy.non_participant_action(player, state)
-        gatherers.append(player)
+        should_gather = strategy.take_gathering_action(player, state)
+        if should_gather:
+            gatherers.append(player)
     return gatherers
 
 
@@ -236,8 +239,7 @@ def _apply_gather_step(state: GameState, gatherers: list) -> None:
 
     Checks for a Heat Wave pending volcano card (which zeroes all gathering) and
     reads any gather bonus from state.pending_bonus. Each gatherer draws resources
-    equal to their base amount plus the bonus. A Gatherer character who draws 2
-    resources is exhausted afterward. Clears state.pending_bonus at the end.
+    equal to their base amount plus the bonus. Clears state.pending_bonus at the end.
 
     Args:
         state:     Current game state, mutated in place.
@@ -332,7 +334,7 @@ def run_round(state: GameState) -> tuple[bool, bool]:
             state.pending_volcano_card = None
 
         # Step 3 — Participant selection
-        participants = select_participants(active_player, mission, state)
+        participants = active_player_select_participants(active_player, mission, state)
         non_participants = [player for player in state.players if player not in participants]
 
         # Step 4 — Non-participant actions (repair or gather)

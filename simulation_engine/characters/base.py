@@ -28,7 +28,7 @@ class CharacterStrategy(ABC):
     def preferred_mission(self, active_missions: list[MissionName]) -> Optional[MissionName]:
         return None
 
-    def decide_action(
+    def active_player_decide_action(
         self,
         active_player: Player,
         state:         GameState,
@@ -55,7 +55,7 @@ class CharacterStrategy(ABC):
 
         return ActivePlayerAction.CHOOSE_MISSION
 
-    def select_participants(
+    def active_player_select_participants(
         self,
         active_player: Player,
         mission:       Mission,
@@ -84,12 +84,12 @@ class CharacterStrategy(ABC):
     def gather_amount(self, player: Player) -> int:
         return 1
 
-    def non_participant_action(
+    def take_gathering_action(
         self,
         player: Player,
         state:  GameState,
-    ) -> None:
-        pass
+    ) -> bool:
+        return True
 
     # ── Mission participation modifiers ─────────────────────────────
 
