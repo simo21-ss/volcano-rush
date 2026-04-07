@@ -1,11 +1,10 @@
 import random
 from typing import Optional
-import numpy as np
-
 from .models import (
-    Character, Resource, Tool, ActivePlayerAction, MissionType, MissionName, ComplicationCardName,
+    ActivePlayerAction, MissionName, ComplicationCardName,
     GameState, GameRecord, Mission, VolcanoCard, ComplicationCard,
 )
+from .characters import get_strategy
 from .initialization import init_game
 from .deck import draw_resource, draw_complication, draw_volcano, draw_mission
 from .mechanics import (
@@ -92,15 +91,8 @@ def _apply_non_participant_actions(state: GameState, non_participants: list) -> 
     """
     gatherers = []
     for player in non_participants:
-        if player.character == Character.CRAFTSMAN and not player.is_exhausted:
-            repairable = [
-                tool for tool, tool_state in state.tools.items()
-                if tool_state.damaged and tool_state.repair_due is None
-            ]
-            if repairable and Resource.STONE in player.resources:
-                state.tools[repairable[0]].repair_due = state.round + 2
-                player.resources.remove(Resource.STONE)
-                player.score += 1
+        strategy = get_strategy(player.character)
+        strategy.non_participant_action(player, state)
         gatherers.append(player)
     return gatherers
 
@@ -143,8 +135,12 @@ def _draw_complication_card(
 
         return ComplicationCard.get(ComplicationCardName.CALM_BREEZE)
 
-    if (any(p.character == Character.SAILOR for p in participants)
-            and mission.mission_type == MissionType.BOAT):
+    max_draws = max(
+        get_strategy(player.character).complication_draw_count(mission)
+        for player in participants
+    ) if participants else 1
+
+    if max_draws >= 2:
         first_complication_name = draw_complication(state)
         second_complication_name = draw_complication(state)
         first_complication_card = ComplicationCard.get(first_complication_name)
@@ -181,14 +177,13 @@ def _apply_mission_success(
         False otherwise.
     """
     base_points = mission.points
-    fire_bonus = (
-        any(p.character == Character.FIRE_STARTER for p in participants)
-        and mission.mission_type == MissionType.FIRE
-    )
-    cook_bonus = (
-        any(p.character == Character.COOK for p in participants)
-        and Tool.VESSEL in mission.required_tools
-    )
+    seen_characters = set()
+    bonus_points = 0
+    for player in participants:
+        if player.character not in seen_characters:
+            seen_characters.add(player.character)
+            bonus_points += get_strategy(player.character).mission_success_bonus_points(mission)
+
     point_penalty = (
         VolcanoCard.get(state.pending_volcano_card).mission_point_penalty
         if state.pending_volcano_card is not None
@@ -196,7 +191,7 @@ def _apply_mission_success(
     )
 
     for player in participants:
-        points = base_points + (1 if fire_bonus else 0) + (1 if cook_bonus else 0)
+        points = base_points + bonus_points
         if point_penalty > 0:
             points = max(0, points - point_penalty)
         player.score += points
@@ -268,7 +263,7 @@ def _apply_gather_step(state: GameState, gatherers: list) -> None:
         for _ in range(total):
             player.resources.append(draw_resource(state))
 
-        if player.character == Character.GATHERER and base_amount == 2:
+        if get_strategy(player.character).post_gather_exhaustion(base_amount):
             apply_exhaustion([player], state.round)
 
     state.pending_bonus = None

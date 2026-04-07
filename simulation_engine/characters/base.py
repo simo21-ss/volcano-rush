@@ -1,0 +1,110 @@
+import random
+from abc import ABC, abstractmethod
+from typing import Optional
+
+from ..models import (
+    Character, ActivePlayerAction, MissionType, MissionName,
+    BOAT_PART_ORDER, Player, GameState, Mission, MissionRequirement,
+)
+
+
+def get_next_needed_boat_part(state: GameState) -> Optional[MissionName]:
+    reachable = set(state.active_missions) | set(state.mission_pool) | state.boat_parts_built
+    for mission_name in BOAT_PART_ORDER:
+        if mission_name in reachable and mission_name not in state.boat_parts_built:
+            return mission_name
+    return None
+
+
+class CharacterStrategy(ABC):
+
+    @property
+    @abstractmethod
+    def character(self) -> Character:
+        ...
+
+    # ── Individual player decisions ─────────────────────────────────
+
+    def preferred_mission(self, active_missions: list[MissionName]) -> Optional[MissionName]:
+        return None
+
+    def decide_action(
+        self,
+        active_player: Player,
+        state:         GameState,
+    ) -> ActivePlayerAction:
+        volcano_is_urgent = len(state.volcano_deck) <= state.urgent_volcano_threshold
+
+        active_boat_missions = [
+            mission_name for mission_name in state.active_missions
+            if Mission.catalog[mission_name].mission_type == MissionType.BOAT
+        ]
+        all_active_are_boat_parts = len(active_boat_missions) == len(state.active_missions)
+        next_needed = get_next_needed_boat_part(state)
+        next_needed_not_active = next_needed not in state.active_missions
+
+        if all_active_are_boat_parts and next_needed_not_active:
+            if active_player.resources and not volcano_is_urgent:
+                return ActivePlayerAction.SHUFFLE_MISSIONS
+            return ActivePlayerAction.CHOOSE_MISSION
+
+        no_boat_parts_visible = len(active_boat_missions) == 0
+        if no_boat_parts_visible and not volcano_is_urgent:
+            if active_player.resources and random.random() < 0.25:
+                return ActivePlayerAction.SHUFFLE_MISSIONS
+
+        return ActivePlayerAction.CHOOSE_MISSION
+
+    def select_participants(
+        self,
+        active_player: Player,
+        mission:       Mission,
+        state:         GameState,
+    ) -> list[Player]:
+        needed = mission.players_count
+
+        active_is_preferred = not active_player.is_exhausted and len(active_player.resources) >= 2
+
+        preferred = [player for player in state.players if player is not active_player and not player.is_exhausted and len(player.resources) >= 2]
+        fallback = [player for player in state.players if not player.is_exhausted and len(player.resources) == 1]
+
+        random.shuffle(preferred)
+        random.shuffle(fallback)
+
+        if active_is_preferred:
+            preferred = [active_player] + preferred
+
+        selected = preferred[:needed]
+        if len(selected) < needed:
+            remaining_slots = needed - len(selected)
+            selected = selected + fallback[:remaining_slots]
+
+        return selected
+
+    def gather_amount(self, player: Player) -> int:
+        return 1
+
+    def non_participant_action(
+        self,
+        player: Player,
+        state:  GameState,
+    ) -> None:
+        pass
+
+    # ── Mission participation modifiers ─────────────────────────────
+
+    def requirement_discount(
+        self,
+        mission:      Mission,
+        requirements: MissionRequirement,
+    ) -> MissionRequirement:
+        return requirements
+
+    def complication_draw_count(self, mission: Mission) -> int:
+        return 1
+
+    def mission_success_bonus_points(self, mission: Mission) -> int:
+        return 0
+
+    def post_gather_exhaustion(self, base_amount: int) -> bool:
+        return False

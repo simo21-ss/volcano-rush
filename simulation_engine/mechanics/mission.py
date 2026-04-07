@@ -3,10 +3,11 @@ from collections import Counter
 from typing import Optional
 
 from ..models import (
-    Character, Resource, Tool, MissionType,
+    Resource,
     GameState, Player, Mission, ComplicationCard, VolcanoCard,
     MissionRequirement,
 )
+from ..characters import get_strategy
 
 
 def compute_requirements(
@@ -61,19 +62,16 @@ def compute_requirements(
             resource_requirements[resource] = resource_requirements.get(resource, 0) - amount
         any_extra -= bonus.resource_discount_any
 
+    requirements = MissionRequirement(typed = resource_requirements, any_extra = any_extra)
     for player in participants:
-        if player.character == Character.BUILDER:
-            if resource_requirements.get(Resource.WOOD, 0) >= 2:
-                resource_requirements[Resource.WOOD] = resource_requirements[Resource.WOOD] - 1
-        elif player.character == Character.FIRE_STARTER:
-            if mission.mission_type == MissionType.FIRE:
-                any_extra -= 1
+        strategy = get_strategy(player.character)
+        requirements = strategy.requirement_discount(mission, requirements)
 
     # Clamp
-    resource_requirements = {resource: max(0, value) for resource, value in resource_requirements.items()}
-    any_extra = max(0, any_extra)
-
-    return MissionRequirement(typed = resource_requirements, any_extra = any_extra)
+    return MissionRequirement(
+        typed     = {resource: max(0, value) for resource, value in requirements.typed.items()},
+        any_extra = max(0, requirements.any_extra),
+    )
 
 
 def check_and_contribute(
