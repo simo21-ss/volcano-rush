@@ -8,7 +8,8 @@ from simulation_engine.models.enums import (
     ComplicationCardName, VolcanoCardName,
 )
 from simulation_engine.models.cards import Mission, ComplicationCard, VolcanoCard, BonusEffect
-from simulation_engine.models.state import Player, GameState, ToolState, MissionRequirement
+from simulation_engine.models.state import Player, GameState, ToolState
+from simulation_engine.models.records import MissionRequirement
 from simulation_engine.mechanics.mission import compute_requirements, check_and_contribute, resolve_mission
 
 

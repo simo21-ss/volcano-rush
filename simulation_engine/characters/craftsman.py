@@ -22,5 +22,6 @@ class CraftsmanStrategy(CharacterStrategy):
                 state.tools[repairable[0]].repair_due = state.round + 2
                 player.resources.remove(Resource.STONE)
                 player.score += 1
+                player.contribution.tools_repaired += 1
                 return False
         return True

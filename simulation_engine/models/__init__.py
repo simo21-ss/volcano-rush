@@ -4,4 +4,6 @@ from .enums import (
     BOAT_PART_ORDER,
 )
 from .cards import BonusEffect, Mission, ComplicationCard, VolcanoCard
-from .state import ToolState, Player, GameState, MissionRequirement, GameRecord
+from .contribution import CharacterContribution
+from .state import ToolState, Player, GameState
+from .records import MissionRequirement, GameRecord

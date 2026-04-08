@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 from .enums import Character, Resource, Tool, MissionName, ComplicationCardName, VolcanoCardName
 from .cards import BonusEffect
+from .contribution import CharacterContribution
 
 
 @dataclass
@@ -13,10 +14,11 @@ class ToolState:
 @dataclass
 class Player:
     character:       Character
-    resources:       list[Resource] = field(default_factory = list)
-    is_exhausted:    bool           = False
-    exhausted_until: int            = 0
-    score:           int            = 0
+    resources:       list[Resource]        = field(default_factory = list)
+    is_exhausted:    bool                  = False
+    exhausted_until: int                   = 0
+    score:           int                   = 0
+    contribution:    CharacterContribution = field(default_factory = CharacterContribution)
 
 
 @dataclass
@@ -42,26 +44,3 @@ class GameState:
     mission_failures_any_extra:    int                       = 0
     mission_failures_tool_damaged: dict[Tool, int]           = field(default_factory = dict)
     tool_repairs:                  dict[Tool, int]           = field(default_factory = dict)
-
-
-@dataclass(frozen = True)
-class MissionRequirement:
-    typed:     dict[Resource, int]
-    any_extra: int
-
-
-@dataclass
-class GameRecord:
-    player_count:                  int
-    characters:                    list[Character]
-    outcome:                       str
-    rounds_played:                 int
-    final_scores:                  dict[Character, int]
-    boat_parts_built:              int
-    boat_parts_required:           int
-    volcano_cards_remaining:       int
-    resources_consumed:            dict[Resource, int]
-    mission_failures_by_resource:  dict[Resource, int]
-    mission_failures_any_extra:    int
-    mission_failures_tool_damaged: dict[Tool, int]
-    tool_repairs:                  dict[Tool, int]
