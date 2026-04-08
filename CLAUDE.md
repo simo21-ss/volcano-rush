@@ -142,6 +142,11 @@ class Mission:
     is_boat_mission:    bool                 = False                           # has default
 ```
 
+## Git
+
+### Commit messages
+Never add "Co-Authored-By" or any similar attribution lines to commit messages.
+
 ## Markdown Text
 
 ### Special characters
