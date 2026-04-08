@@ -4,7 +4,7 @@ from .builder import BuilderStrategy
 from .fire_starter import FireStarterStrategy
 from .craftsman import CraftsmanStrategy
 from .cook import CookStrategy
-from .gatherer import GathererStrategy
+from .thief import ThiefStrategy
 from .sailor import SailorStrategy
 
 
@@ -13,7 +13,7 @@ _STRATEGY_REGISTRY: dict[Character, CharacterStrategy] = {
     Character.FIRE_STARTER: FireStarterStrategy(),
     Character.CRAFTSMAN:    CraftsmanStrategy(),
     Character.COOK:         CookStrategy(),
-    Character.GATHERER:     GathererStrategy(),
+    Character.THIEF:        ThiefStrategy(),
     Character.SAILOR:       SailorStrategy(),
 }
 

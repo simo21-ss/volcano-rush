@@ -6,7 +6,7 @@ class Character(Enum):
     FIRE_STARTER  = "fire_starter"
     CRAFTSMAN     = "craftsman"
     COOK          = "cook"
-    GATHERER      = "gatherer"
+    THIEF         = "thief"
     SAILOR        = "sailor"
 
 

@@ -71,6 +71,9 @@ class CharacterStrategy(ABC):
         random.shuffle(preferred)
         random.shuffle(fallback)
 
+        if random.random() < 0.5:
+            preferred.sort(key = lambda player: player.character != Character.THIEF)
+
         if active_is_preferred:
             preferred = [active_player] + preferred
 

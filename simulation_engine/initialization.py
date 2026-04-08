@@ -22,7 +22,7 @@ def assign_characters(player_count: int) -> list[Character]:
     else:
         base_characters = random.sample(all_characters, all_characters_count)
         extras = random.sample(
-            [c for c in all_characters if c != Character.CRAFTSMAN],
+            [c for c in all_characters if c not in (Character.CRAFTSMAN, Character.THIEF)],
             player_count - all_characters_count,
         )
         characters = base_characters + extras

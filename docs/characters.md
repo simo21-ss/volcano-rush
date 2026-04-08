@@ -22,10 +22,10 @@ Missions requiring 2+ Wood have their Wood requirement reduced by **-1 Wood**.
 ### Cook
 In missions that use the **Vessel** tool: on success, **every participant** receives **+1 point** bonus (that mission only).
 
-### Gatherer
-- When choosing the "Gather" action: draws **2 resources** instead of 1.
+### Thief
+- When not participating in a mission and not Exhausted: **steals 1 resource** from each of **2 different players** who have at least 1 resource.
 - Becomes **Exhausted** afterwards.
-- Cannot use this ability again while Exhausted.
+- Cannot use this ability while Exhausted.
 
 ### Sailor
 In "Boat" missions: **draw 2 Complication cards** and choose the lesser of the two.

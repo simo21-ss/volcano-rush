@@ -71,8 +71,8 @@ When a mission is chosen, the active player selects participants (they may or ma
 **Step 3 - Non-Participant Actions**
 Players not selected as participants:
 - **Craftsman** may repair a damaged tool (costs 1 Stone from their hand). The tool becomes available again after one full round of repair.
+- **Thief** may steal 1 resource from each of 2 different players (who have at least 1 resource) instead of gathering, if not Exhausted. The Thief becomes Exhausted after stealing.
 - All other non-participants: **Gather** - draw 1 random resource card.
-  - If the player is the **Gatherer** and they are not Exhausted, they may draw 2 instead, but will become Exhausted.
 
 **Step 4 - Draw Complication**
 After participants are declared, shuffle the Complication deck and draw 1 card. Apply its effect to this mission.
