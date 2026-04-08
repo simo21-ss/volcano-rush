@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Optional
 from .enums import Character, Resource, Tool, MissionName, ComplicationCardName, VolcanoCardName
-from .cards import BonusEffect
+from .bonus_effects import BonusEffect
 from .contribution import CharacterContribution
 
 

@@ -7,7 +7,7 @@ from simulation_engine.models.enums import (
     Character, Resource, Tool, MissionName,
     ComplicationCardName, VolcanoCardName,
 )
-from simulation_engine.models.cards import BonusEffect
+from simulation_engine.models.bonus_effects import BonusEffect
 from simulation_engine.models.state import Player, GameState, ToolState
 
 from simulation_engine.mechanics.exhaustion import refresh_exhaustion, apply_exhaustion, update_tool_repairs
