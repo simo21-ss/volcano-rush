@@ -65,9 +65,10 @@ def compute_requirements(
     requirements = MissionRequirement(typed = resource_requirements, any_extra = any_extra)
     for player in participants:
         strategy = get_strategy(player.character)
-        before = requirements
+        typed_before = dict(requirements.typed)
+        any_extra_before = requirements.any_extra
         requirements = strategy.requirement_discount(mission, requirements)
-        if requirements is not before:
+        if requirements.typed != typed_before or requirements.any_extra != any_extra_before:
             player.contribution.requirement_discounts_used += 1
 
     # Clamp

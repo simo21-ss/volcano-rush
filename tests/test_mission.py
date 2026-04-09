@@ -102,6 +102,22 @@ class TestComputeRequirements:
 
         assert result.typed[Resource.WOOD] == 1
 
+    def test_builder_discount_increments_contribution_counter(self):
+        builder = make_player(Character.BUILDER, [Resource.WOOD])
+        state = make_state([builder])
+
+        compute_requirements(LIGHT_A_FIRE, [builder], CALM_BREEZE, state)
+
+        assert builder.contribution.requirement_discounts_used == 1
+
+    def test_builder_no_discount_when_wood_below_2(self):
+        builder = make_player(Character.BUILDER, [Resource.STONE])
+        state = make_state([builder])
+
+        compute_requirements(HUNT, [builder], CALM_BREEZE, state)
+
+        assert builder.contribution.requirement_discounts_used == 0
+
     def test_fire_starter_discount_on_fire_mission(self):
         players = [make_player(Character.FIRE_STARTER, [Resource.WOOD])]
         state = make_state(players)
@@ -110,6 +126,31 @@ class TestComputeRequirements:
         result = compute_requirements(LIGHT_A_FIRE, players, slippery_rocks, state)
 
         assert result.any_extra == 1
+
+    def test_fire_starter_discount_increments_contribution_counter(self):
+        fire_starter = make_player(Character.FIRE_STARTER, [Resource.WOOD])
+        state = make_state([fire_starter])
+        slippery_rocks = ComplicationCard.get(ComplicationCardName.SLIPPERY_ROCKS)
+
+        compute_requirements(LIGHT_A_FIRE, [fire_starter], slippery_rocks, state)
+
+        assert fire_starter.contribution.requirement_discounts_used == 1
+
+    def test_fire_starter_no_discount_on_non_fire_mission(self):
+        fire_starter = make_player(Character.FIRE_STARTER, [Resource.STONE])
+        state = make_state([fire_starter])
+
+        compute_requirements(HUNT, [fire_starter], CALM_BREEZE, state)
+
+        assert fire_starter.contribution.requirement_discounts_used == 0
+
+    def test_no_discount_for_non_discount_character(self):
+        cook = make_player(Character.COOK, [Resource.WOOD])
+        state = make_state([cook])
+
+        compute_requirements(LIGHT_A_FIRE, [cook], CALM_BREEZE, state)
+
+        assert cook.contribution.requirement_discounts_used == 0
 
 
 # ── check_and_contribute ─────────────────────────────────────────────────────
