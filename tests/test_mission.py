@@ -7,8 +7,12 @@ from simulation_engine.models.enums import (
     Character, Resource, Tool, MissionType, MissionName,
     ComplicationCardName, VolcanoCardName,
 )
-from simulation_engine.models.cards import Mission, ComplicationCard, VolcanoCard, BonusEffect
-from simulation_engine.models.state import Player, GameState, ToolState, MissionRequirement
+from simulation_engine.models.bonus_effects import BonusEffect
+from simulation_engine.models.missions import Mission
+from simulation_engine.models.complications import ComplicationCard
+from simulation_engine.models.volcano import VolcanoCard
+from simulation_engine.models.state import Player, GameState, ToolState
+from simulation_engine.models.records import MissionRequirement
 from simulation_engine.mechanics.mission import compute_requirements, check_and_contribute, resolve_mission
 
 

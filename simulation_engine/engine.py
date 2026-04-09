@@ -1,8 +1,8 @@
 import random
 from typing import Optional
 from .models import (
-    ActivePlayerAction, MissionName, ComplicationCardName,
-    GameState, GameRecord, Mission, VolcanoCard, ComplicationCard,
+    ActivePlayerAction, MissionName, MissionType, ComplicationCardName,
+    CharacterContribution, GameState, GameRecord, Mission, VolcanoCard, ComplicationCard,
 )
 from .characters import get_strategy
 from .initialization import init_game
@@ -144,6 +144,9 @@ def _draw_complication_card(
     ) if participants else 1
 
     if max_draws >= 2:
+        for player in participants:
+            if get_strategy(player.character).complication_draw_count(mission) >= 2:
+                player.contribution.lesser_evil_uses += 1
         first_complication_name = draw_complication(state)
         second_complication_name = draw_complication(state)
         first_complication_card = ComplicationCard.get(first_complication_name)
@@ -271,6 +274,10 @@ def _apply_gather_step(state: GameState, gatherers: list) -> None:
     state.pending_bonus = None
 
 
+def _compute_group_win_effects(players: list) -> None:
+    CharacterContribution.compute_group_win_effects([player.contribution for player in players])
+
+
 def run_round(state: GameState) -> tuple[bool, bool]:
     """
     Execute one full round of the game.
@@ -347,6 +354,10 @@ def run_round(state: GameState) -> tuple[bool, bool]:
         success = resolve_mission(state, mission, participants, complication)
 
         if success:
+            for player in participants:
+                player.contribution.missions_participated += 1
+                if mission.mission_type == MissionType.BOAT:
+                    player.contribution.boat_missions_participated += 1
             no_exhaustion = _apply_mission_success(state, mission, mission_name, participants)
         else:
             no_exhaustion = False
@@ -447,6 +458,9 @@ def run_game(
     else:
         outcome = "loss"
 
+    if outcome == "win":
+        _compute_group_win_effects(state.players)
+
     if verbose:
         print()
         print(f"Outcome: {'WIN' if outcome == 'win' else 'LOSS'} after {state.round} rounds")
@@ -458,6 +472,10 @@ def run_game(
         failures_tool = {t.value: n for t, n in state.mission_failures_tool_damaged.items()}
         print(f"Mission failures by resource: {failures_by_resource}  (any_extra: {state.mission_failures_any_extra}, tool_damaged: {failures_tool})")
         print(f"Tool repairs: { {t.value: n for t, n in state.tool_repairs.items()} }")
+        if outcome == "win":
+            print(f"Group win effects: { {p.character.value: round(p.contribution.group_win_effect, 3) for p in state.players} }")
+
+    contributions = {p.character: p.contribution for p in state.players} if outcome == "win" else {}
 
     return GameRecord(
         player_count                  = player_count,
@@ -473,6 +491,7 @@ def run_game(
         mission_failures_any_extra    = state.mission_failures_any_extra,
         mission_failures_tool_damaged = dict(state.mission_failures_tool_damaged),
         tool_repairs                  = dict(state.tool_repairs),
+        contributions                 = contributions,
     )
 
 
