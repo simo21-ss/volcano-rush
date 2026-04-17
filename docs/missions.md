@@ -110,7 +110,7 @@ The number of boat parts required to win depends on player count (see game_rules
 | **Reward** | 1 point per participant |
 | **Bonus** | +1 Boat Part |
 
-### Fit the Rudder *(Boat Part: Rudder - 7-8 players only)*
+### Fit the Rudder *(Boat Part: Rudder - 8 players only)*
 | Field | Value |
 |---|---|
 | **Requires (per player)** | 1 Wood + 1 Stone + 1 Rope + Vessel (tool) |

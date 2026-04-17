@@ -138,8 +138,8 @@ Apply modifiers in this order:
 
 | Players | Boat Parts Required | Active Boat Missions |
 |---|---|---|
-| 6 | 4 | All 4 base missions |
-| 7–8 | 5 | All 4 base missions + Fit the Rudder |
+| 6-7 | 4 | All 4 base missions |
+| 8 | 5 | All 4 base missions + Fit the Rudder |
 
 **Loss:** The **Eruption** Volcano card is revealed.
 
