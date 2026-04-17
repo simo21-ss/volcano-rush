@@ -12,7 +12,7 @@ class BuilderStrategy(CharacterStrategy):
 
     def preferred_mission(self, active_missions: list[MissionName]) -> Optional[MissionName]:
         for mission_name in active_missions:
-            if Mission.catalog[mission_name].required_resources.get(Resource.WOOD, 0) >= 2:
+            if Mission.catalog[mission_name].required_resources.get(Resource.WOOD, 0) >= 1:
                 return mission_name
         return None
 
@@ -21,7 +21,7 @@ class BuilderStrategy(CharacterStrategy):
         mission:      Mission,
         requirements: MissionRequirement,
     ) -> MissionRequirement:
-        if requirements.typed.get(Resource.WOOD, 0) >= 2:
+        if requirements.typed.get(Resource.WOOD, 0) >= 1:
             updated = dict(requirements.typed)
             updated[Resource.WOOD] -= 1
             return MissionRequirement(typed = updated, any_extra = requirements.any_extra)

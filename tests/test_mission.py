@@ -187,6 +187,27 @@ class TestCheckAndContribute:
         assert result is False
         assert player.resources == original_resources
 
+    def test_builder_discount_applied_per_player(self):
+        builder = make_player(Character.BUILDER, [Resource.STONE])
+        state = make_state([builder])
+        requirements = MissionRequirement(typed = {Resource.WOOD: 1}, any_extra = 0)
+
+        result = check_and_contribute([builder], requirements, NO_EXTRAS, None, state, LIGHT_A_FIRE)
+
+        assert result is True
+        assert builder.resources == [Resource.STONE]
+        assert builder.contribution.requirement_discounts_used == 1
+
+    def test_builder_discount_does_not_affect_other_players(self):
+        builder = make_player(Character.BUILDER, [Resource.STONE])
+        cook = make_player(Character.COOK, [Resource.ROPE])
+        state = make_state([builder, cook])
+        requirements = MissionRequirement(typed = {Resource.WOOD: 1}, any_extra = 0)
+
+        result = check_and_contribute([builder, cook], requirements, NO_EXTRAS, None, state, LIGHT_A_FIRE)
+
+        assert result is False
+
     def test_fire_starter_discount_on_fire_mission(self):
         fire_starter = make_player(Character.FIRE_STARTER, [Resource.WOOD, Resource.STONE, Resource.ROPE])
         state = make_state([fire_starter])
@@ -264,3 +285,42 @@ class TestResolveMission:
         result = resolve_mission(state, LIGHT_A_FIRE, [player_one, player_two], CALM_BREEZE)
 
         assert result is False
+
+
+# ── Cook bonus points ───────────────────────────────────────────────────────
+
+from simulation_engine.characters import CookStrategy
+
+RAISE_THE_MAST = Mission.get(MissionName.RAISE_THE_MAST)
+
+
+class TestCookBonusPoints:
+
+    def test_cook_bonus_on_food_mission(self):
+        cook_strategy = CookStrategy()
+
+        assert cook_strategy.mission_success_bonus_points(HUNT) == 1
+
+    def test_cook_no_bonus_on_vessel_boat_mission(self):
+        cook_strategy = CookStrategy()
+
+        assert cook_strategy.mission_success_bonus_points(RAISE_THE_MAST) == 0
+
+    def test_cook_no_bonus_on_fire_mission(self):
+        cook_strategy = CookStrategy()
+
+        assert cook_strategy.mission_success_bonus_points(LIGHT_A_FIRE) == 0
+
+    def test_cook_prefers_food_mission(self):
+        cook_strategy = CookStrategy()
+
+        preferred = cook_strategy.preferred_mission([MissionName.LIGHT_A_FIRE, MissionName.HUNT])
+
+        assert preferred == MissionName.HUNT
+
+    def test_cook_no_preference_without_food_mission(self):
+        cook_strategy = CookStrategy()
+
+        preferred = cook_strategy.preferred_mission([MissionName.LIGHT_A_FIRE, MissionName.RAISE_THE_MAST])
+
+        assert preferred is None

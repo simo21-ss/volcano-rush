@@ -5,7 +5,7 @@ Each player is assigned one visible character card. Characters provide passive o
 > Any player who participates in a mission becomes **Exhausted** and cannot participate in a mission the following round.
 
 ### Builder
-Missions requiring 2+ Wood have their Wood requirement reduced by **-1 Wood**.
+Missions requiring 1+ Wood have their Wood requirement reduced by **-1 Wood** (per player).
 
 ### Fire Starter
 - Missions "Light a Fire" or "Torch": requires **-1 resource** (any type).
@@ -20,10 +20,10 @@ Missions requiring 2+ Wood have their Wood requirement reduced by **-1 Wood**.
 - Only **1 tool** can be under repair at a time.
 
 ### Cook
-In missions that use the **Vessel** tool: on success, **every participant** receives **+1 point** bonus (that mission only).
+In **Food** missions: on success, **every participant** receives **+1 point** bonus (that mission only).
 
 ### Gatherer
-- When choosing the "Gather" action: draws **2 resources** instead of 1.
+- When choosing the "Gather" action: draws **3 resources** instead of 1.
 - Becomes **Exhausted** afterwards.
 - Cannot use this ability again while Exhausted.
 

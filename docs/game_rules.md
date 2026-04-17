@@ -72,7 +72,7 @@ When a mission is chosen, the active player selects participants (they may or ma
 Players not selected as participants:
 - **Craftsman** may repair a damaged tool (costs 1 Stone from their hand). The tool becomes available again after one full round of repair.
 - All other non-participants: **Gather** - draw 1 random resource card.
-  - If the player is the **Gatherer** and they are not Exhausted, they may draw 2 instead, but will become Exhausted.
+  - If the player is the **Gatherer** and they are not Exhausted, they may draw 3 instead, but will become Exhausted.
 
 **Step 4 - Draw Complication**
 After participants are declared, shuffle the Complication deck and draw 1 card. Apply its effect to this mission.
