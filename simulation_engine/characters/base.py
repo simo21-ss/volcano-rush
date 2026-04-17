@@ -1,5 +1,6 @@
 import random
 from abc import ABC, abstractmethod
+from collections import Counter
 from typing import Optional
 
 from ..models import (
@@ -63,18 +64,30 @@ class CharacterStrategy(ABC):
     ) -> list[Player]:
         needed = mission.players_count
 
-        active_is_preferred = not active_player.is_exhausted and len(active_player.resources) >= 2
+        def can_afford(player: Player) -> bool:
+            resources_by_type = Counter(player.resources)
+            for resource, amount in mission.required_resources.items():
+                if resources_by_type.get(resource, 0) < amount:
+                    return False
+            return True
 
-        preferred = [player for player in state.players if player is not active_player and not player.is_exhausted and len(player.resources) >= 2]
-        fallback = [player for player in state.players if not player.is_exhausted and len(player.resources) == 1]
+        affordable = [
+            player for player in state.players
+            if player is not active_player and not player.is_exhausted and can_afford(player)
+        ]
+        fallback = [
+            player for player in state.players
+            if player is not active_player and not player.is_exhausted
+            and not can_afford(player) and len(player.resources) >= 1
+        ]
 
-        random.shuffle(preferred)
+        random.shuffle(affordable)
         random.shuffle(fallback)
 
-        if active_is_preferred:
-            preferred = [active_player] + preferred
+        if not active_player.is_exhausted and can_afford(active_player):
+            affordable = [active_player] + affordable
 
-        selected = preferred[:needed]
+        selected = affordable[:needed]
         if len(selected) < needed:
             remaining_slots = needed - len(selected)
             selected = selected + fallback[:remaining_slots]

@@ -25,7 +25,7 @@ class Mission:
 Mission.catalog = {
     MissionName.LIGHT_A_FIRE: Mission(
         name               = MissionName.LIGHT_A_FIRE,
-        required_resources = {Resource.WOOD: 2, Resource.STONE: 1},
+        required_resources = {Resource.WOOD: 1},
         players_count      = 2,
         points             = 2,
         mission_type       = MissionType.FIRE,
@@ -33,7 +33,7 @@ Mission.catalog = {
     ),
     MissionName.TORCH_FOR_THE_NIGHT: Mission(
         name               = MissionName.TORCH_FOR_THE_NIGHT,
-        required_resources = {Resource.WOOD: 2, Resource.ROPE: 1},
+        required_resources = {Resource.WOOD: 1, Resource.ROPE: 1},
         players_count      = 3,
         points             = 3,
         mission_type       = MissionType.FIRE,
@@ -41,7 +41,7 @@ Mission.catalog = {
     ),
     MissionName.FETCH_WATER: Mission(
         name               = MissionName.FETCH_WATER,
-        required_resources = {Resource.ROPE: 2, Resource.WOOD: 1},
+        required_resources = {Resource.ROPE: 1, Resource.WOOD: 1},
         players_count      = 3,
         points             = 3,
         mission_type       = MissionType.FOOD,
@@ -50,7 +50,7 @@ Mission.catalog = {
     ),
     MissionName.HUNT: Mission(
         name               = MissionName.HUNT,
-        required_resources = {Resource.STONE: 2, Resource.ROPE: 2},
+        required_resources = {Resource.STONE: 1, Resource.ROPE: 1},
         players_count      = 3,
         points             = 3,
         mission_type       = MissionType.FOOD,
@@ -59,7 +59,7 @@ Mission.catalog = {
     ),
     MissionName.PREPARE_FOOD: Mission(
         name               = MissionName.PREPARE_FOOD,
-        required_resources = {Resource.WOOD: 1, Resource.STONE: 1},
+        required_resources = {Resource.WOOD: 1},
         players_count      = 3,
         points             = 3,
         mission_type       = MissionType.FOOD,
@@ -68,7 +68,7 @@ Mission.catalog = {
     ),
     MissionName.BUILD_A_SHELTER: Mission(
         name               = MissionName.BUILD_A_SHELTER,
-        required_resources = {Resource.WOOD: 2, Resource.ROPE: 1, Resource.STONE: 1},
+        required_resources = {Resource.WOOD: 1, Resource.STONE: 1},
         players_count      = 4,
         points             = 4,
         mission_type       = MissionType.SHELTER,
@@ -77,7 +77,7 @@ Mission.catalog = {
     ),
     MissionName.FORTIFY_THE_CAMP: Mission(
         name               = MissionName.FORTIFY_THE_CAMP,
-        required_resources = {Resource.ROPE: 2, Resource.WOOD: 1},
+        required_resources = {Resource.ROPE: 1},
         players_count      = 2,
         points             = 2,
         mission_type       = MissionType.SHELTER,
@@ -86,7 +86,7 @@ Mission.catalog = {
     ),
     MissionName.GATHER_MATERIALS: Mission(
         name               = MissionName.GATHER_MATERIALS,
-        required_resources = {Resource.WOOD: 1, Resource.STONE: 2, Resource.ROPE: 2},
+        required_resources = {Resource.WOOD: 1, Resource.STONE: 1, Resource.ROPE: 1},
         players_count      = 3,
         points             = 2,
         mission_type       = MissionType.SHELTER,
@@ -94,7 +94,7 @@ Mission.catalog = {
     ),
     MissionName.CUT_THE_KEEL: Mission(
         name               = MissionName.CUT_THE_KEEL,
-        required_resources = {Resource.WOOD: 3, Resource.ROPE: 2},
+        required_resources = {Resource.WOOD: 1, Resource.ROPE: 1},
         players_count      = 3,
         points             = 1,
         mission_type       = MissionType.BOAT,
@@ -103,7 +103,7 @@ Mission.catalog = {
     ),
     MissionName.ASSEMBLE_THE_HULL: Mission(
         name               = MissionName.ASSEMBLE_THE_HULL,
-        required_resources = {Resource.WOOD: 2, Resource.STONE: 2},
+        required_resources = {Resource.WOOD: 1, Resource.STONE: 1},
         players_count      = 3,
         points             = 1,
         mission_type       = MissionType.BOAT,
@@ -111,7 +111,7 @@ Mission.catalog = {
     ),
     MissionName.RAISE_THE_MAST: Mission(
         name               = MissionName.RAISE_THE_MAST,
-        required_resources = {Resource.WOOD: 2, Resource.ROPE: 2},
+        required_resources = {Resource.WOOD: 1, Resource.ROPE: 1},
         players_count      = 3,
         points             = 1,
         mission_type       = MissionType.BOAT,
@@ -120,7 +120,7 @@ Mission.catalog = {
     ),
     MissionName.MAKE_THE_SAIL: Mission(
         name               = MissionName.MAKE_THE_SAIL,
-        required_resources = {Resource.WOOD: 2, Resource.ROPE: 3},
+        required_resources = {Resource.WOOD: 1, Resource.ROPE: 1},
         players_count      = 2,
         points             = 1,
         mission_type       = MissionType.BOAT,
@@ -128,7 +128,7 @@ Mission.catalog = {
     ),
     MissionName.FIT_THE_RUDDER: Mission(
         name               = MissionName.FIT_THE_RUDDER,
-        required_resources = {Resource.WOOD: 3, Resource.STONE: 1, Resource.ROPE: 3},
+        required_resources = {Resource.WOOD: 1, Resource.STONE: 1, Resource.ROPE: 1},
         players_count      = 4,
         points             = 1,
         mission_type       = MissionType.BOAT,

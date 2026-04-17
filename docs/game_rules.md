@@ -66,7 +66,7 @@ The active player chooses one of the following actions:
 If the active player cannot take any valid action, 1 Volcano card is drawn as a penalty (equivalent to a mission failure).
 
 **Step 2 - Participant Selection**
-When a mission is chosen, the active player selects participants (they may or may not include themselves). Each mission requires a specific number of participants. Every participant must pay at least 1 resource card.
+When a mission is chosen, the active player selects participants (they may or may not include themselves). Each mission requires a specific number of participants. Each participant must individually have resources that meet the mission's per-player requirement. The active player should prioritize selecting players whose resources match the mission's needs.
 
 **Step 3 - Non-Participant Actions**
 Players not selected as participants:
@@ -78,7 +78,7 @@ Players not selected as participants:
 After participants are declared, shuffle the Complication deck and draw 1 card. Apply its effect to this mission.
 
 **Step 5 - Resolution**
-Check whether the total resources contributed (after all modifiers) meet the mission requirements:
+Check whether each participant individually meets the per-player resource requirements (after all modifiers). Each player's character discount applies to their own requirement.
 - **Success:** Distribute points to all participants. Apply any bonus effect.
 - **Failure:** Draw 1 Volcano card and apply its effect.
 
@@ -120,13 +120,15 @@ The active player may choose to shuffle the mission deck instead of attempting a
 
 ### Resource Calculation for Missions
 
+Each participant must individually meet the base mission requirement (per player). Complication and volcano card extras are paid once by the group from pooled surplus resources.
+
 Apply modifiers in this order:
 
-1. Base mission requirement
-2. Volcano card modifiers
-3. Complication card modifiers
-4. Character ability modifiers
-5. Players pay resources
+1. Base mission requirement (per player) with pending bonus discounts
+2. Character ability discounts (per player)
+3. Volcano card extras (one-time group total)
+4. Complication card extras (one-time group total)
+5. Each player pays their individual cost, then group extras are deducted from surplus
 
 ---
 
