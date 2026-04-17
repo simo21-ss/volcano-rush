@@ -1,3 +1,8 @@
+---
+name: regression-testing
+description: Test protocol for changes to simulation_engine/. Run pytest tests/ -v after every change under that package. For pure refactoring (no rule change), additionally run a seeded benchmark before and after and verify the outputs are bit-identical. Invoke whenever any file under simulation_engine/ is modified.
+---
+
 # Regression Testing Instructions
 
 ## When Any Change Touches `simulation_engine/`

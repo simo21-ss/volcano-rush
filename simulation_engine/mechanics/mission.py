@@ -3,164 +3,235 @@ from collections import Counter
 from typing import Optional
 
 from ..models import (
-    Resource,
     GameState, Player, Mission, ComplicationCard, VolcanoCard,
     MissionRequirement,
 )
 from ..characters import get_strategy
 
 
-def compute_requirements(
-    mission:      Mission,
-    participants: list[Player],
-    complication: ComplicationCard,
-    state:        GameState,
+def compute_per_player_requirements(
+    mission: Mission,
+    state:   GameState,
 ) -> MissionRequirement:
     """
-    Compute the total mission requirements for a mission attempt.
+    Compute the base per-player mission requirements.
 
-    Applies all active modifiers in order:
-    1. Base mission requirements
-    2. Pending volcano card extra resources
-    3. Complication card extra resources and per-participant surcharges
-    4. Pending bonus discounts and character ability discounts
-
-    Mission requirements are clamped to zero — discounts cannot go negative.
+    Applies only mission base cost and pending bonus discounts.
+    Character ability discounts are applied per-player in check_and_contribute().
 
     Args:
-        mission:      The mission being attempted.
-        participants: Players participating in the mission.
-        complication: The complication card drawn for this attempt.
-        state:        Current game state (pending bonus, pending volcano card, etc.).
+        mission: The mission being attempted.
+        state:   Current game state (pending bonus, etc.).
 
     Returns:
-        Mission requirements with typed resource costs and a wildcard any_extra count.
-        typed resources must be paid with the exact resource type;
-        any_extra may be paid with any resource type.
+        Per-player base requirements. Each participant must individually meet these.
     """
     resource_requirements = dict(mission.required_resources)
     any_extra = 0
 
-    # Apply pending volcano card extra resources
-    if state.pending_volcano_card is not None:
-        volcano_card = VolcanoCard.get(state.pending_volcano_card)
-        for resource, amount in volcano_card.extra_resources.items():
-            if volcano_card.conditional_on_resource is None or volcano_card.conditional_on_resource in resource_requirements:
-                resource_requirements[resource] = resource_requirements.get(resource, 0) + amount
-
-    # Apply complication card extras
-    for resource, amount in complication.extra_resources.items():
-        if complication.conditional_on_resource is None or complication.conditional_on_resource in resource_requirements:
-            resource_requirements[resource] = resource_requirements.get(resource, 0) + amount
-    any_extra += complication.extra_resources_any
-    any_extra += complication.extra_per_participant * len(participants)
-
-    # Apply pending bonus discounts and character ability discounts
+    # Apply pending bonus discounts
     if state.pending_bonus is not None:
         bonus = state.pending_bonus
         for resource, amount in bonus.resource_discount.items():
             resource_requirements[resource] = resource_requirements.get(resource, 0) - amount
         any_extra -= bonus.resource_discount_any
 
-    requirements = MissionRequirement(typed = resource_requirements, any_extra = any_extra)
-    for player in participants:
-        strategy = get_strategy(player.character)
-        typed_before = dict(requirements.typed)
-        any_extra_before = requirements.any_extra
-        requirements = strategy.requirement_discount(mission, requirements)
-        if requirements.typed != typed_before or requirements.any_extra != any_extra_before:
-            player.contribution.requirement_discounts_used += 1
-
     # Clamp
     return MissionRequirement(
-        typed     = {resource: max(0, value) for resource, value in requirements.typed.items()},
-        any_extra = max(0, requirements.any_extra),
+        typed     = {resource: max(0, value) for resource, value in resource_requirements.items()},
+        any_extra = max(0, any_extra),
     )
 
 
-def check_and_contribute(
-    participants:  list[Player],
-    requirements:  MissionRequirement,
-    max_per_type:  Optional[int],
-    state:         GameState,
-) -> bool:
+def compute_group_extras(
+    mission:      Mission,
+    complication: ComplicationCard,
+    participants: list[Player],
+    state:        GameState,
+) -> MissionRequirement:
     """
-    Check if participants can meet the typed and any_extra resource requirements,
-    respecting max_per_type limits, and if so, deduct the resources from their hands.
+    Compute the one-time group extras from complication and volcano cards.
+
+    These extras are paid once by the group as a whole from pooled surplus resources,
+    not by every player individually.
 
     Args:
-        participants: Players attempting the mission.
-        requirements: Mission requirements with typed resource costs and a wildcard any_extra count.
-        max_per_type: If set, limits the number of resources of the same type that can be
-                      contributed per player (e.g. Camp Panic cap).
+        mission:      The mission being attempted.
+        complication: The complication card drawn for this attempt.
+        participants: Players participating (needed for extra_per_participant).
+        state:        Current game state (pending volcano card, etc.).
 
     Returns:
-        True if requirements can be met and resources were deducted,
+        One-time group extras with typed resource costs and a wildcard any_extra count.
+    """
+    resource_requirements: dict = {}
+    any_extra = 0
+
+    # Apply pending volcano card extra resources
+    base_resources = mission.required_resources
+    if state.pending_volcano_card is not None:
+        volcano_card = VolcanoCard.get(state.pending_volcano_card)
+        for resource, amount in volcano_card.extra_resources.items():
+            if volcano_card.conditional_on_resource is None or volcano_card.conditional_on_resource in base_resources:
+                resource_requirements[resource] = resource_requirements.get(resource, 0) + amount
+
+    # Apply complication card extras
+    for resource, amount in complication.extra_resources.items():
+        if complication.conditional_on_resource is None or complication.conditional_on_resource in base_resources:
+            resource_requirements[resource] = resource_requirements.get(resource, 0) + amount
+    any_extra += complication.extra_resources_any
+    any_extra += complication.extra_per_participant * len(participants)
+
+    return MissionRequirement(typed = resource_requirements, any_extra = any_extra)
+
+
+def check_and_contribute(
+    participants:        list[Player],
+    per_player_requirements: MissionRequirement,
+    group_extras:        MissionRequirement,
+    max_per_type:        Optional[int],
+    state:               GameState,
+    mission:             Mission,
+) -> bool:
+    """
+    Check if each participant individually meets the per-player requirements and the group
+    can collectively cover the one-time extras, then deduct resources.
+
+    Phase 1: Apply character discounts and check each player against per-player requirements.
+    Phase 2: Check if the group's pooled surplus can cover the one-time group extras.
+    Phase 3: Deduct per-player costs, then deduct group extras from surplus.
+
+    Args:
+        participants:            Players attempting the mission.
+        per_player_requirements: Base per-player requirements (before character discounts).
+        group_extras:            One-time group extras from complications/volcano.
+        max_per_type:            If set, limits resources of the same type per player (Camp Panic).
+        state:                   Current game state for tracking consumption and failures.
+        mission:                 The mission being attempted (needed for character discount logic).
+
+    Returns:
+        True if all requirements are met and resources were deducted,
         False otherwise (no deduction on failure).
     """
-    # Build available pool per resource (respecting Camp Panic cap)
-    available: dict[Resource, int] = {}
+    # Phase 1: Compute per-player requirements with individual character discounts
+    player_requirements: list[tuple[Player, MissionRequirement]] = []
     for player in participants:
+        strategy = get_strategy(player.character)
+        typed_before = dict(per_player_requirements.typed)
+        any_extra_before = per_player_requirements.any_extra
+        personal = strategy.requirement_discount(mission, per_player_requirements)
+        if personal.typed != typed_before or personal.any_extra != any_extra_before:
+            player.contribution.requirement_discounts_used += 1
+        personal = MissionRequirement(
+            typed     = {resource: max(0, value) for resource, value in personal.typed.items()},
+            any_extra = max(0, personal.any_extra),
+        )
+        player_requirements.append((player, personal))
+
+    # Phase 2a: Check each player individually against per-player requirements
+    for player, personal in player_requirements:
         resources_by_type = Counter(player.resources)
-        for resource, count in resources_by_type.items():
-            if max_per_type is not None:
-                count = min(count, max_per_type)
-            available[resource] = available.get(resource, 0) + count
+        if max_per_type is not None:
+            resources_by_type = Counter({resource: min(count, max_per_type) for resource, count in resources_by_type.items()})
 
-    # Net surplus per resource after subtracting typed requirements.
-    # Union of both key sets ensures required-but-absent resources yield a negative entry.
-    surplus_by_resource = {
-        resource: available.get(resource, 0) - requirements.typed.get(resource, 0)
-        for resource in set(available) | set(requirements.typed)
-    }
-
-    # Negative surplus means a typed requirement is unmet — return without deducting
-    if any(surplus < 0 for surplus in surplus_by_resource.values()):
-        for resource, surplus in surplus_by_resource.items():
-            if surplus < 0:
+        for resource, needed in personal.typed.items():
+            if needed > 0 and resources_by_type.get(resource, 0) < needed:
                 state.mission_failures_by_resource[resource] = (
                     state.mission_failures_by_resource.get(resource, 0) + 1
                 )
-        return False
+                return False
 
-    # Total surplus must cover the wildcard any_extra requirement
-    if sum(surplus_by_resource.values()) < requirements.any_extra:
-        state.mission_failures_any_extra += 1
-        return False
+        total_surplus = sum(
+            resources_by_type.get(resource, 0) - personal.typed.get(resource, 0)
+            for resource in set(resources_by_type) | set(personal.typed)
+        )
+        if total_surplus < personal.any_extra:
+            state.mission_failures_any_extra += 1
+            return False
 
-    # Deduct typed requirements, then fill any_extra greedily (prefer most-abundant surplus)
-    to_remove: dict[Resource, int] = dict(requirements.typed)
-    remaining_any = requirements.any_extra
-    for resource in sorted(surplus_by_resource, key = lambda r: -surplus_by_resource[r]):
-        take = min(remaining_any, surplus_by_resource[resource])
-        to_remove[resource] = to_remove.get(resource, 0) + take
-        remaining_any -= take
-        if remaining_any <= 0:
-            break
+    # Phase 2b: Check group extras from pooled surplus after per-player costs
+    if group_extras.typed or group_extras.any_extra > 0:
+        pooled_surplus: Counter = Counter()
+        for player, personal in player_requirements:
+            resources_by_type = Counter(player.resources)
+            if max_per_type is not None:
+                resources_by_type = Counter({resource: min(count, max_per_type) for resource, count in resources_by_type.items()})
+            for resource in set(resources_by_type) | set(personal.typed):
+                surplus = resources_by_type.get(resource, 0) - personal.typed.get(resource, 0) - personal.any_extra
+                if surplus > 0:
+                    pooled_surplus[resource] += surplus
+            # Subtract any_extra that will consume from surplus (approximate - prefer most abundant)
+            remaining_any = personal.any_extra
+            for resource in sorted(resources_by_type, key = lambda r: -resources_by_type[r]):
+                available = resources_by_type.get(resource, 0) - personal.typed.get(resource, 0)
+                if available > 0 and remaining_any > 0:
+                    take = min(remaining_any, available)
+                    remaining_any -= take
 
-    # Remove from player hands, ensuring each participant pays at least 1 resource.
-    # Take from players with fewer resources first — they are constrained to specific
-    # types, while players with more resources have flexibility to pay different types.
-    participants_by_resources = sorted(participants, key = lambda player: len(player.resources))
+        # Check typed group extras
+        for resource, needed in group_extras.typed.items():
+            if needed > 0 and pooled_surplus.get(resource, 0) < needed:
+                state.mission_failures_by_resource[resource] = (
+                    state.mission_failures_by_resource.get(resource, 0) + 1
+                )
+                return False
+            pooled_surplus[resource] -= needed
 
-    paid_players: set[int] = set()
-    for resource, total in to_remove.items():
-        left = total
-        for player in participants_by_resources:
-            while left > 0 and resource in player.resources:
+        # Check any_extra group extras
+        total_pool = sum(max(0, v) for v in pooled_surplus.values())
+        if total_pool < group_extras.any_extra:
+            state.mission_failures_any_extra += 1
+            return False
+
+    # Phase 3a: Deduct per-player costs from each player
+    for player, personal in player_requirements:
+        for resource, needed in personal.typed.items():
+            for _ in range(needed):
                 player.resources.remove(resource)
-                paid_players.add(id(player))
-                left -= 1
+            state.resources_consumed[resource] = state.resources_consumed.get(resource, 0) + needed
 
-    for resource, amount in to_remove.items():
-        state.resources_consumed[resource] = state.resources_consumed.get(resource, 0) + amount
+        remaining_any = personal.any_extra
+        if remaining_any > 0:
+            resources_by_type = Counter(player.resources)
+            for resource in sorted(resources_by_type, key = lambda r: -resources_by_type[r]):
+                take = min(remaining_any, resources_by_type[resource])
+                for _ in range(take):
+                    player.resources.remove(resource)
+                state.resources_consumed[resource] = state.resources_consumed.get(resource, 0) + take
+                remaining_any -= take
+                if remaining_any <= 0:
+                    break
 
-    # Each participant must pay at least 1 resource (participation cost).
-    # Players not yet charged pay 1 resource of any type.
-    for player in participants_by_resources:
-        if id(player) not in paid_players:
-            resource = player.resources.pop(0)
-            state.resources_consumed[resource] = state.resources_consumed.get(resource, 0) + 1
+    # Phase 3b: Deduct group extras from participants with most remaining resources
+    if group_extras.typed or group_extras.any_extra > 0:
+        to_remove: dict = dict(group_extras.typed)
+        remaining_any = group_extras.any_extra
+
+        participants_by_resources = sorted(participants, key = lambda p: -len(p.resources))
+
+        # Deduct typed group extras
+        for resource, total in to_remove.items():
+            left = total
+            for player in participants_by_resources:
+                while left > 0 and resource in player.resources:
+                    player.resources.remove(resource)
+                    left -= 1
+            state.resources_consumed[resource] = state.resources_consumed.get(resource, 0) + total
+
+        # Deduct any_extra group extras greedily
+        if remaining_any > 0:
+            for player in participants_by_resources:
+                resources_by_type = Counter(player.resources)
+                for resource in sorted(resources_by_type, key = lambda r: -resources_by_type[r]):
+                    take = min(remaining_any, resources_by_type[resource])
+                    for _ in range(take):
+                        player.resources.remove(resource)
+                    state.resources_consumed[resource] = state.resources_consumed.get(resource, 0) + take
+                    remaining_any -= take
+                    if remaining_any <= 0:
+                        break
+                if remaining_any <= 0:
+                    break
 
     return True
 
@@ -174,8 +245,8 @@ def resolve_mission(
     """
     Attempt to resolve a mission with the given participants and complication card.
 
-    Checks all preconditions (participant count, tool availability, complication helper
-    requirement), computes the final resource requirements, and deducts resources on success.
+    Each participant must individually meet the per-player resource requirements.
+    Complication and volcano card extras are paid once by the group from pooled surplus.
 
     Args:
         state:        Current game state (tools, players, pending effects).
@@ -188,10 +259,6 @@ def resolve_mission(
     """
     # Exact participant count
     if len(participants) != mission.players_count:
-        return False
-
-    # Every participant must hold at least 1 resource
-    if any(len(player.resources) == 0 for player in participants):
         return False
 
     # Tool availability
@@ -208,13 +275,16 @@ def resolve_mission(
         if not helpers:
             return False
 
-    requirements = compute_requirements(mission, participants, complication, state)
+    per_player = compute_per_player_requirements(mission, state)
+    group_extras = compute_group_extras(mission, complication, participants, state)
 
     success = check_and_contribute(
-        participants = participants,
-        requirements = requirements,
-        max_per_type = complication.max_resource_per_type,
-        state        = state,
+        participants        = participants,
+        per_player_requirements = per_player,
+        group_extras        = group_extras,
+        max_per_type        = complication.max_resource_per_type,
+        state               = state,
+        mission             = mission,
     )
 
     if success and complication.damages_tool_on_success is not None:

@@ -50,7 +50,7 @@ def get_boat_missions(player_count: int) -> list[MissionName]:
     base_boat_missions = [n for n, m in Mission.catalog.items()
             if m.mission_type == MissionType.BOAT and n != extra_mission]
 
-    if player_count == 6:
+    if player_count <= 7:
         return list(base_boat_missions)
     else:
         return list(base_boat_missions) + [extra_mission]
