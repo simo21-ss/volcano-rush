@@ -1,160 +1,43 @@
-# Claude Code Instructions
+# Volcano Rush
 
-## Python Formatting
+Cooperative/semi-competitive survival board game simulation for 6-8 players. The group is stranded on a volcanic island and must complete missions to build a boat before the volcano erupts.
 
-### Keyword arguments
-Always use spaces around `=` in keyword arguments and decorator arguments:
-```python
-# Correct
-@dataclass(frozen = True)
-field(default_factory = dict)
-BonusEffect(boat_part = True)
-Mission(name = MissionName.HUNT, players_count = 3)
+## Game domain
 
-# Wrong
-@dataclass(frozen=True)
-field(default_factory=dict)
-```
+### Resources (personal hand)
+Wood, Stone, Rope. Three types only, held in each player's personal hand. Total deck: 60 cards (20 of each type). Starting hand: 3 cards per player.
 
-### Dataclass field definitions
-Align field names, type annotations, and default values in columns:
-```python
-@dataclass(frozen = True)
-class BonusEffect:
-    resource_discount:      dict[Resource, int]       = field(default_factory = dict)
-    resource_discount_any:  int                       = 0
-    skip_next_complication: bool                      = False
-    negates_volcano_card:   Optional[VolcanoCardName] = None
-```
+### Shared tools (camp)
+Knife, Vessel. Tools can be damaged by complications or volcano cards. A damaged tool must be repaired by a Craftsman (costs 1 Stone, takes one round). Only one tool can be under repair at a time.
 
-### Multi-line constructor calls
-Align `=` signs within a single multi-line call:
-```python
-Mission(
-    name               = MissionName.FETCH_WATER,
-    required_resources = {Resource.ROPE: 2, Resource.WOOD: 1},
-    players_count      = 3,
-    required_tools     = [Tool.VESSEL],
-)
-```
+### Characters
+Builder, Fire Starter, Craftsman, Cook, Gatherer, Sailor. Each player gets one visible character card providing passive or active abilities. Role distribution by player count:
+- 6 players: all 6 roles used exactly once
+- 7 players: all 6 roles + 1 non-Craftsman role repeated at random
+- 8 players: all 6 roles + 2 non-Craftsman roles repeated at random
 
-### Variable assignments
-No column alignment for variable assignments anywhere (function bodies, module level, notebook cells, loop bodies) — just one space around `=`. This applies even when variables have inline comments:
-```python
-# Correct
-mission_name = select_mission(state)
-mission = MISSIONS[mission_name]
+### Missions
+13 missions in the catalog, split by `MissionType`: `FIRE`, `FOOD`, `SHELTER`, `BOAT`. Each round, 3 non-boat missions are active.
 
-BASE_MINUTES_PER_ROUND = 2.0   # fixed overhead
-MINUTES_PER_PLAYER = 0.5   # per player
+**Resource requirement model:** mission requirements are **per participant**, not pooled. Each participant must individually hold the per-player cost (after applying their own character's discount). Complication and volcano-card extras are paid once by the group from pooled surplus after per-player costs are deducted. See `simulation_engine/mechanics/mission.py` - `compute_per_player_requirements`, `compute_group_extras`, `check_and_contribute`.
 
-resource_labels = [r.name.title() for r in RESOURCES]
-consumed_means = [data[f"consumed_{r.name}"].mean() for r in RESOURCES]
-consumed_stds = [data[f"consumed_{r.name}"].std() for r in RESOURCES]
+### Boat scaling
+- 6-7 players: 4 boat parts required (Keel, Hull, Mast, Sail)
+- 8 players: 5 boat parts required (+ Fit the Rudder)
 
-# Wrong — padding to align = signs or inline comments across rows
-mission_name = select_mission(state)
-mission      = MISSIONS[mission_name]
+### Exhaustion
+Any mission participant becomes Exhausted for the following round and cannot participate. The Prepare Food bonus can suppress this (one-time).
 
-BASE_MINUTES_PER_ROUND = 2.0   # fixed overhead
-MINUTES_PER_PLAYER     = 0.5   # per player
+### Win / loss
+- **Win:** all required boat parts are built before the volcano erupts.
+- **Loss:** the Eruption volcano card is drawn (or the volcano tracker reaches its terminal state).
 
-resource_labels = [r.name.title() for r in RESOURCES]
-consumed_means  = [data[f"consumed_{r.name}"].mean() for r in RESOURCES]
-consumed_stds   = [data[f"consumed_{r.name}"].std() for r in RESOURCES]
-```
-
-Column alignment is only allowed in **dataclass field definitions** and **multi-line constructor calls** (see above).
-
-### Single-line constructor calls
-No padding between arguments — just one space after each comma. Never add spaces to align arguments across different calls:
-```python
-# Correct
-VolcanoCard(name = VolcanoCardName.TREMOR, discard_mission = True)
-VolcanoCard(name = VolcanoCardName.ASH_IN_THE_AIR, extra_exhaustion_rounds = 1)
-
-# Wrong — padding to align the second argument across rows
-VolcanoCard(name = VolcanoCardName.TREMOR,         discard_mission = True)
-VolcanoCard(name = VolcanoCardName.ASH_IN_THE_AIR, extra_exhaustion_rounds = 1)
-```
-
-### Dict and list literals
-Prefer `{}` over `dict(...)` and `[]` over `list(...)` for literal construction:
-```python
-# Correct
-{"facecolor": "#a8d5a2", "color": "black"}
-[]
-
-# Wrong
-dict(facecolor = "#a8d5a2", color = "black")
-list()
-```
-
-### Dict keys
-No padding on dict keys — just one space after the colon:
-```python
-MISSIONS: dict[MissionName, Mission] = {
-    MissionName.LIGHT_A_FIRE: Mission(...),
-    MissionName.TORCH_FOR_THE_NIGHT: Mission(...),
-    MissionName.HUNT: Mission(...),
-}
-```
-
-### Mutable defaults in dataclasses
-Always use `field(default_factory = ...)` for mutable defaults — never bare `[]` or `{}`:
-```python
-# Correct
-resources:       list[Resource]     = field(default_factory = list)
-extra_resources: dict[Resource, int] = field(default_factory = dict)
-
-# Wrong
-resources:       list[Resource]     = []
-extra_resources: dict[Resource, int] = {}
-```
-
-### Variable naming
-Never use abbreviations in variable names. Write full, descriptive names so code reads naturally without needing to decode shorthand. The only exception is loop iterators in `for` statements:
-```python
-# Correct
-resource_requirements = dict(mission.required_resources)
-points = base_pts + (1 if fire_bonus else 0)
-is_ash_in_the_air = state.pending_volcano_card == VolcanoCardName.ASH_IN_THE_AIR
-
-for res in resources:     # loop iterator — short name fine
-    ...
-
-# Wrong — abbreviations
-req = dict(mission.required_resources)
-pts = base_pts + (1 if fire_bonus else 0)
-ash = state.pending_volcano_card == VolcanoCardName.ASH_IN_THE_AIR
-```
-
-### Field ordering in dataclasses
-Fields without defaults must come before fields with defaults:
-```python
-# Correct
-@dataclass(frozen = True)
-class Mission:
-    name:               MissionName          # no default
-    required_resources: dict[Resource, int]  # no default
-    players_count:      int                  # no default
-    required_tools:     list[Tool]           = field(default_factory = list)  # has default
-    is_boat_mission:    bool                 = False                           # has default
-```
-
-## Git
-
-### Commit messages
-Never add "Co-Authored-By" or any similar attribution lines to commit messages.
-
-## Markdown Text
-
-### Special characters
-Use plain hyphens (`-`) instead of em-dashes or en-dashes in all markdown text:
-```markdown
-# Correct
-scores high on average - they score well but inconsistently
-
-# Wrong
-scores high on average — they score well but inconsistently
-```
+## Simulation engine layout
+- `simulation_engine/models/` - enums, dataclasses (missions, complications, volcano cards, state, records)
+- `simulation_engine/mechanics/` - resolution logic (`mission.py`, `effects.py`, `exhaustion.py`)
+- `simulation_engine/characters/` - one strategy class per file, all implementing `CharacterStrategy` from `base.py`
+- `simulation_engine/engine.py` - `run_game`, `run_scenario` orchestration
+- `simulation_engine/initialization.py` - deck, player, tool, volcano, mission-pool setup
+- `tests/` - pytest suite
+- `notebooks/` - analysis (player-count balance, character balance, resource efficiency)
+- `docs/` - human-facing rulebook (characters, missions, game_rules)
