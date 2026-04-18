@@ -11,7 +11,7 @@ from simulation_engine.models.bonus_effects import BonusEffect
 from simulation_engine.models.state import Player, GameState, ToolState
 
 from simulation_engine.mechanics.exhaustion import apply_exhaustion
-from simulation_engine.mechanics.effects import apply_bonus
+from simulation_engine.mechanics.effects import apply_mission_bonus
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -76,7 +76,7 @@ class TestApplyBonus:
         state = make_state([])
         bonus = BonusEffect(boat_part = True)
 
-        apply_bonus(bonus, MissionName.CUT_THE_KEEL, state)
+        apply_mission_bonus(bonus, MissionName.CUT_THE_KEEL, state)
 
         assert MissionName.CUT_THE_KEEL in state.boat_parts_built
 
@@ -85,7 +85,7 @@ class TestApplyBonus:
         state.tools[Tool.KNIFE].damaged = True
         bonus = BonusEffect(repair_tool = True)
 
-        apply_bonus(bonus, MissionName.GATHER_MATERIALS, state)
+        apply_mission_bonus(bonus, MissionName.GATHER_MATERIALS, state)
 
         assert state.tools[Tool.KNIFE].damaged is False
         assert state.tool_repairs.get(Tool.KNIFE, 0) == 1
@@ -94,6 +94,6 @@ class TestApplyBonus:
         state = make_state([], pending_volcano_card = VolcanoCardName.RAIN_AND_MUD)
         bonus = BonusEffect(negates_volcano_card = VolcanoCardName.RAIN_AND_MUD)
 
-        apply_bonus(bonus, MissionName.BUILD_A_SHELTER, state)
+        apply_mission_bonus(bonus, MissionName.BUILD_A_SHELTER, state)
 
         assert state.pending_volcano_card is None

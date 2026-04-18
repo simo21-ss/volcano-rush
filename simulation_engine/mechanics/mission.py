@@ -17,7 +17,7 @@ def compute_per_player_requirements(mission: Mission, state: GameState) -> Missi
 
     Args:
         mission: The mission being attempted.
-        state:   Current game state (pending bonus, etc.).
+        state: Current game state (pending bonus, etc.).
 
     Returns:
         Per-player base requirements. Each participant must individually meet these.
@@ -41,7 +41,7 @@ def compute_per_player_requirements(mission: Mission, state: GameState) -> Missi
 
 def compute_group_extras(
         mission: Mission,
-        complication: ComplicationCard,
+        complication: Optional[ComplicationCard],
         participants: list[Player],
         state: GameState,
 ) -> MissionRequirement:
@@ -52,10 +52,11 @@ def compute_group_extras(
     not by every player individually.
 
     Args:
-        mission:      The mission being attempted.
-        complication: The complication card drawn for this attempt.
+        mission: The mission being attempted.
+        complication: The complication card drawn for this attempt, or None if
+                      no complication was drawn (e.g. skip_next_complication).
         participants: Players participating (needed for extra_per_participant).
-        state:        Current game state (pending volcano card, etc.).
+        state: Current game state (pending volcano card, etc.).
 
     Returns:
         One-time group extras with typed resource costs and a wildcard any_extra count.
@@ -71,12 +72,13 @@ def compute_group_extras(
             if volcano_card.conditional_on_resource is None or volcano_card.conditional_on_resource in base_resources:
                 resource_requirements[resource] = resource_requirements.get(resource, 0) + amount
 
-    # Apply complication card extras
-    for resource, amount in complication.extra_resources.items():
-        if complication.conditional_on_resource is None or complication.conditional_on_resource in base_resources:
-            resource_requirements[resource] = resource_requirements.get(resource, 0) + amount
-    any_extra += complication.extra_resources_any
-    any_extra += complication.extra_per_participant * len(participants)
+    # Apply complication card extras (no-op when no complication was drawn)
+    if complication is not None:
+        for resource, amount in complication.extra_resources.items():
+            if complication.conditional_on_resource is None or complication.conditional_on_resource in base_resources:
+                resource_requirements[resource] = resource_requirements.get(resource, 0) + amount
+        any_extra += complication.extra_resources_any
+        any_extra += complication.extra_per_participant * len(participants)
 
     return MissionRequirement(typed = resource_requirements, any_extra = any_extra)
 
@@ -95,15 +97,15 @@ def check_and_contribute(
 
     Phase 1: Apply character discounts and check each player against per-player requirements.
     Phase 2: Check if the group's pooled surplus can cover the one-time group extras.
-    Phase 3: Deduct per-player costs, then deduct group extras from surplus.
+    Phase 3: Deduct per-player costs, then deduct group extras from the surplus.
 
     Args:
-        participants:            Players attempting the mission.
+        participants: Players attempting the mission.
         per_player_requirements: Base per-player requirements (before character discounts).
-        group_extras:            One-time group extras from complications/volcano.
-        max_per_type:            If set, limits resources of the same type per player (Camp Panic).
-        state:                   Current game state for tracking consumption and failures.
-        mission:                 The mission being attempted (needed for character discount logic).
+        group_extras: One-time group extras from complications/volcano.
+        max_per_type: If set, limits resources of the same type per player (Camp Panic).
+        state: Current game state for tracking consumption and failures.
+        mission: The mission being attempted (needed for character discount logic).
 
     Returns:
         True if all requirements are met and resources were deducted,
@@ -236,19 +238,21 @@ def resolve_mission(
         state: GameState,
         mission: Mission,
         participants: list[Player],
-        complication: ComplicationCard,
+        complication: Optional[ComplicationCard],
 ) -> bool:
     """
     Attempt to resolve a mission with the given participants and complication card.
 
     Each participant must individually meet the per-player resource requirements.
-    Complication and volcano card extras are paid once by the group from pooled surplus.
+    Complication and volcano card extras are paid once by the group from pooled
+    surplus. `complication` may be None when the round has no complication
+    (e.g. skip_next_complication was set).
 
     Args:
-        state:        Current game state (tools, players, pending effects).
-        mission:      The mission being attempted.
+        state: Current game state (tools, players, pending effects).
+        mission: The mission being attempted.
         participants: Players contributing resources to the mission.
-        complication: The complication card drawn for this attempt.
+        complication: The complication card drawn for this attempt, or None.
 
     Returns:
         True if the mission succeeds and resources are deducted, False otherwise.
@@ -266,7 +270,7 @@ def resolve_mission(
             return False
 
     # Night Anxiety: need 1 non-participant, non-exhausted helper
-    if complication.requires_extra_helper:
+    if complication is not None and complication.requires_extra_helper:
         helpers = [p for p in state.players if p not in participants and not p.is_exhausted]
         if not helpers:
             return False
@@ -278,12 +282,12 @@ def resolve_mission(
         participants = participants,
         per_player_requirements = per_player,
         group_extras = group_extras,
-        max_per_type = complication.max_resource_per_type,
+        max_per_type = complication.max_resource_per_type if complication is not None else None,
         state = state,
         mission = mission,
     )
 
-    if success and complication.damages_tool_on_success is not None:
+    if success and complication is not None and complication.damages_tool_on_success is not None:
         state.tools[complication.damages_tool_on_success].damaged = True
 
     return success

@@ -4,7 +4,7 @@ from ..models import (
     MissionType, MissionName,
     Player, GameState, Mission, GameOutcome,
 )
-from ..actions import PlayerAction, ShuffleMissionsAction
+from ..actions import PlayerAction, ShuffleMissionsAction, GatherAction, RepairAction
 from ..mechanics.mission import resolve_mission
 from ..deck import draw_mission
 from ..agents import (
@@ -12,7 +12,7 @@ from ..agents import (
 )
 from .phases import (
     handle_volcano_draw,
-    apply_non_participant_actions,
+    decide_non_participant_actions,
     draw_complication_card, apply_mission_success,
     apply_exhaustion_step, apply_gather_step,
 )
@@ -68,10 +68,21 @@ def _run_mission_round(active_player: Player, mission_name: MissionName, state: 
     mission = Mission.get(mission_name)
 
     participants = active_player_select_participants(active_player, mission, state)
-    non_participants = [player for player in state.players if player not in participants]
-    gather_actions = apply_non_participant_actions(state, non_participants)
 
-    complication = draw_complication_card(state, participants, mission)
+
+    non_participants = [player for player in state.players if player not in participants]
+
+    decisions = decide_non_participant_actions(state, non_participants)
+    for player, action in decisions:
+        if isinstance(action, RepairAction):
+            action.execute(player, state)
+
+    gather_actions = [(player, action) for player, action in decisions if isinstance(action, GatherAction)]
+
+    # No-one could be staffed: mission will fail on participant count; skip
+    # the complication draw so draw_complication_card can assume non-empty
+    # participants.
+    complication = draw_complication_card(state, participants, mission) if participants else None
     success = resolve_mission(state, mission, participants, complication)
 
     if success:

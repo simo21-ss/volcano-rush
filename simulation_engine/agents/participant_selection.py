@@ -7,12 +7,53 @@ from ..models import (
 from ..mechanics.mission import compute_per_player_requirements
 from .feasibility import player_afford_level
 
-
 _CHARACTER_BONUS_MISSION_TYPES: dict[Character, MissionType] = {
-    Character.COOK:         MissionType.FOOD,
+    Character.COOK: MissionType.FOOD,
     Character.FIRE_STARTER: MissionType.FIRE,
-    Character.SAILOR:       MissionType.BOAT,
+    Character.SAILOR: MissionType.BOAT,
 }
+
+
+def active_player_select_participants(active_player: Player, mission: Mission, state: GameState) -> list[Player]:
+    """
+    Select participants for the mission using a deterministic scoring heuristic.
+
+    Each non-exhausted, non-active candidate is scored by _participant_score and
+    the top-N are taken (N = mission.players_count). Ties are broken by the
+    candidate's original index in state.players for stable, reproducible selection.
+    The active player is prepended to the shortlist when their score is non-negative,
+    matching the behaviour that the captain usually joins their own mission.
+
+    Args:
+        active_player: The player whose turn it is to lead this round.
+        mission: The mission to staff.
+        state: Current game state.
+
+    Returns:
+        A list of up to mission.players_count Player objects.
+    """
+    needed = mission.players_count
+    base_requirement = compute_per_player_requirements(mission, state)
+    apply_competition = random.random() < _COMPETITION_WEIGHT_PROBABILITY
+
+    scored: list[tuple[int, int, Player]] = []
+    for index, player in enumerate(state.players):
+        if player is active_player or player.is_exhausted:
+            continue
+        score = _participant_score(player, mission, state, base_requirement, active_player, apply_competition)
+        if score is None:
+            continue
+        scored.append((score, index, player))
+
+    scored.sort(key = lambda entry: (-entry[0], entry[1]))
+    ranked = [player for _, _, player in scored]
+
+    if not active_player.is_exhausted:
+        active_afford = player_afford_level(active_player, mission, base_requirement)
+        if active_afford in ("exact", "surplus"):
+            ranked = [active_player] + ranked
+
+    return ranked[:needed]
 
 
 def _character_bonus_applies(character: Character, mission: Mission) -> bool:
@@ -21,13 +62,13 @@ def _character_bonus_applies(character: Character, mission: Mission) -> bool:
     expected_type = _CHARACTER_BONUS_MISSION_TYPES.get(character)
     return expected_type is not None and mission.mission_type == expected_type
 
-
 _AFFORD_SCORE = {
-    "exact":   5,
+    "exact": 5,
     "surplus": 3,
 }
-
 _COMPETITION_WEIGHT_PROBABILITY = 0.75
+
+
 _COMPETITION_WEIGHT_FLOOR = -4
 
 
@@ -45,12 +86,12 @@ def _competition_penalty(candidate: Player, active_player: Player) -> int:
 
 
 def _participant_score(
-    player:                Player,
-    mission:               Mission,
-    state:                 GameState,
-    base_requirement:      MissionRequirement,
-    active_player:         Player,
-    apply_competition:     bool,
+        player: Player,
+        mission: Mission,
+        state: GameState,
+        base_requirement: MissionRequirement,
+        active_player: Player,
+        apply_competition: bool,
 ) -> Optional[int]:
     """
     Score a candidate participant for mission staffing.
@@ -92,49 +133,3 @@ def _participant_score(
         score += _competition_penalty(player, active_player)
 
     return score
-
-
-def active_player_select_participants(
-    active_player: Player,
-    mission:       Mission,
-    state:         GameState,
-) -> list[Player]:
-    """
-    Select participants for the mission using a deterministic scoring heuristic.
-
-    Each non-exhausted, non-active candidate is scored by _participant_score and
-    the top-N are taken (N = mission.players_count). Ties are broken by the
-    candidate's original index in state.players for stable, reproducible selection.
-    The active player is prepended to the shortlist when their score is non-negative,
-    matching the behaviour that the captain usually joins their own mission.
-
-    Args:
-        active_player: The player whose turn it is to lead this round.
-        mission:       The mission to staff.
-        state:         Current game state.
-
-    Returns:
-        A list of up to mission.players_count Player objects.
-    """
-    needed = mission.players_count
-    base_requirement = compute_per_player_requirements(mission, state)
-    apply_competition = random.random() < _COMPETITION_WEIGHT_PROBABILITY
-
-    scored: list[tuple[int, int, Player]] = []
-    for index, player in enumerate(state.players):
-        if player is active_player or player.is_exhausted:
-            continue
-        score = _participant_score(player, mission, state, base_requirement, active_player, apply_competition)
-        if score is None:
-            continue
-        scored.append((score, index, player))
-
-    scored.sort(key = lambda entry: (-entry[0], entry[1]))
-    ranked = [player for _, _, player in scored]
-
-    if not active_player.is_exhausted:
-        active_afford = player_afford_level(active_player, mission, base_requirement)
-        if active_afford in ("exact", "surplus"):
-            ranked = [active_player] + ranked
-
-    return ranked[:needed]

@@ -1,11 +1,14 @@
+import random
+from typing import Optional
+
 from ..models import (
-    ComplicationCardName, MissionName,
+    MissionName,
     Player, GameState, Mission, VolcanoCard, ComplicationCard,
 )
-from ..actions import PlayerAction, GatherAction
+from ..actions import GatherAction, NonParticipantAction
 from ..characters import get_strategy
 from ..deck import draw_complication, draw_volcano
-from ..mechanics import apply_exhaustion, apply_volcano_card, apply_bonus
+from ..mechanics import apply_exhaustion, apply_volcano_card, apply_mission_bonus
 
 
 def handle_volcano_draw(state: GameState) -> bool:
@@ -35,40 +38,28 @@ def handle_volcano_draw(state: GameState) -> bool:
     return False
 
 
-def apply_non_participant_actions(state: GameState, non_participants: list[Player]) -> list[tuple[Player, GatherAction]]:
+def decide_non_participant_actions(state: GameState, non_participants: list[Player]) -> list[tuple[Player, NonParticipantAction]]:
     """
-    Determine the actions of players not selected for the mission.
-
-    Each non-participant's strategy picks a NonParticipantAction via
-    choose_non_participant_action(). REPAIR actions execute immediately (Craftsman
-    spends a Stone to schedule a tool repair). GATHER actions are deferred so they
-    benefit from any mission-success gather bonus set later this round.
-
-    Args:
-        state: Current game state, mutated in place.
-        non_participants: Players not selected to participate in the mission.
-
-    Returns:
-        A list of (player, GatherAction) pairs to be executed by apply_gather_step.
+    Ask each non-participant's strategy what they'll do this round. Pure -
+    no side effects. Dispatch (execute REPAIRs now, defer GATHERs to the
+    gather step) is the caller's job.
     """
-    gather_actions: list[tuple[Player, GatherAction]] = []
-    for player in non_participants:
-        action = get_strategy(player.character).choose_non_participant_action(player, state)
-        if action.action_type == PlayerAction.REPAIR:
-            action.execute(player, state)
-        else:
-            gather_actions.append((player, action))
-    return gather_actions
+    return [
+        (player, get_strategy(player.character).choose_non_participant_action(player, state))
+        for player in non_participants
+    ]
 
 
-def draw_complication_card(state: GameState, participants: list, mission: Mission) -> ComplicationCard:
+def draw_complication_card(state: GameState, participants: list, mission: Mission) -> Optional[ComplicationCard]:
     """
     Draw the complication card for this round's mission attempt.
 
     Three cases apply in order:
-    1. If skip_next_complication is set, use CALM_BREEZE and clear the flag.
-    2. If a Sailor is participating in a boat mission, draw two cards and keep
-       the one with lower severity (best outcome for players).
+    1. If skip_next_complication is set, return None (no complication this round)
+       and clear the flag.
+    2. If any participant's strategy offers more than one draw (Sailor on a boat
+       mission draws two), draw that many distinct cards and keep the one with
+       the lowest severity - the best outcome for players.
     3. Otherwise, draw one card normally.
 
     Args:
@@ -77,40 +68,32 @@ def draw_complication_card(state: GameState, participants: list, mission: Missio
         mission: The selected mission for this round.
 
     Returns:
-        The ComplicationCard to use for mission resolution.
+        The ComplicationCard to use for mission resolution, or None if the round
+        has no complication.
     """
     if state.skip_next_complication:
         state.skip_next_complication = False
 
-        return ComplicationCard.get(ComplicationCardName.CALM_BREEZE)
+        return None
 
-    max_draws = max(
-        get_strategy(player.character).complication_draw_count(mission)
-        for player in participants
-    ) if participants else 1
+    max_draws = max((get_strategy(player.character).complication_draw_count(mission) for player in participants))
 
-    if max_draws >= 2:
+    if max_draws > 1:
         for player in participants:
-            if get_strategy(player.character).complication_draw_count(mission) >= 2:
+            if get_strategy(player.character).complication_draw_count(mission) > 1:
                 player.contribution.lesser_evil_uses += 1
-        first_complication_name = draw_complication(state)
-        second_complication_name = draw_complication(state)
-        first_complication_card = ComplicationCard.get(first_complication_name)
-        second_complication_card = ComplicationCard.get(second_complication_name)
 
-        return (first_complication_card
-                if first_complication_card.severity <= second_complication_card.severity
-                else second_complication_card)
+        drawn_names = random.sample(state.complication_deck, max_draws)
+
+        return min(
+            (ComplicationCard.get(name) for name in drawn_names),
+            key = lambda card: card.severity,
+        )
 
     return ComplicationCard.get(draw_complication(state))
 
 
-def apply_mission_success(
-        state: GameState,
-        mission: Mission,
-        mission_name: MissionName,
-        participants: list,
-) -> bool:
+def apply_mission_success(state: GameState, mission: Mission, mission_name: MissionName, participants: list) -> bool:
     """
     Apply scoring and bonus effects after a mission succeeds.
 
@@ -142,23 +125,18 @@ def apply_mission_success(
         else 0
     )
 
-    for player in participants:
-        points = base_points + bonus_points
-        if point_penalty > 0:
-            points = max(0, points - point_penalty)
-        player.score += points
-
     if point_penalty > 0:
         state.pending_volcano_card = None
 
-    return apply_bonus(mission.bonus_on_success, mission_name, state)
+    points_per_player = max(0, base_points + bonus_points - point_penalty)
+
+    for player in participants:
+        player.score += points_per_player
+
+    return apply_mission_bonus(mission.bonus_on_success, mission_name, state)
 
 
-def apply_exhaustion_step(
-        state: GameState,
-        participants: list,
-        no_exhaustion: bool,
-) -> None:
+def apply_exhaustion_step(state: GameState, participants: list, no_exhaustion: bool) -> None:
     """
     Apply exhaustion to mission participants at the end of the mission phase.
 
@@ -176,16 +154,15 @@ def apply_exhaustion_step(
         if state.pending_volcano_card is not None
         else 0
     )
+
     if extra_exhaustion > 0:
         state.pending_volcano_card = None
+
     if not no_exhaustion:
         apply_exhaustion(participants, state.round, extra_rounds = extra_exhaustion)
 
 
-def apply_gather_step(
-        state: GameState,
-        gather_actions: list[tuple[Player, GatherAction]],
-) -> None:
+def apply_gather_step(state: GameState, gather_actions: list[tuple[Player, GatherAction]]) -> None:
     """
     Execute the bucketed gather actions.
 
@@ -195,20 +172,19 @@ def apply_gather_step(
 
     Args:
         state: Current game state, mutated in place.
-        gather_actions: (player, GatherAction) pairs produced by
-                        apply_non_participant_actions.
+        gather_actions: (player, GatherAction) pairs collected by
+                        run_round after decide_non_participant_actions.
     """
     gather_yields_zero = (
         VolcanoCard.get(state.pending_volcano_card).gather_yields_zero
         if state.pending_volcano_card is not None
         else False
     )
+
     if gather_yields_zero:
         state.pending_volcano_card = None
-
-    for player, action in gather_actions:
-        if gather_yields_zero:
-            continue
-        action.execute(player, state)
+    else:
+        for player, action in gather_actions:
+            action.execute(player, state)
 
     state.pending_bonus = None

@@ -5,10 +5,7 @@ from ..models import MissionType, MissionName, VolcanoCardName, GameState, Bonus
 from ..deck import draw_mission
 
 
-def apply_volcano_card(
-    volcano_card_name: VolcanoCardName,
-    state:             GameState,
-) -> None:
+def apply_volcano_card(volcano_card_name: VolcanoCardName, state: GameState) -> None:
     """
     Apply the immediate effect of a volcano card drawn after a mission failure.
 
@@ -18,7 +15,7 @@ def apply_volcano_card(
 
     Args:
         volcano_card_name: The name of the drawn volcano card.
-        state:             Current game state, mutated in place.
+        state: Current game state, mutated in place.
     """
     card = VolcanoCard.get(volcano_card_name)
 
@@ -49,21 +46,17 @@ def apply_volcano_card(
         state.pending_volcano_card = volcano_card_name
 
 
-def apply_bonus(
-    bonus:        Optional[BonusEffect],
-    mission_name: MissionName,
-    state:        GameState,
-) -> bool:
+def apply_mission_bonus(bonus: Optional[BonusEffect], mission_name: MissionName, state: GameState) -> bool:
     """
     Apply a mission success bonus effect to the game state.
 
     Handles all bonus types: boat part registration, complication skip, failure protection,
-    tool repair, volcano card negation, and resource discounts / gather bonuses for next round.
+    tool repair, volcano card negation, and resource discounts / gather bonuses for the next round.
 
     Args:
-        bonus:        The bonus effect to apply, or None if the mission has no bonus.
+        bonus: The bonus effect to apply, or None if the mission has no bonus.
         mission_name: The completed mission's name (used to register a boat part if applicable).
-        state:        Current game state, mutated in place.
+        state: Current game state, mutated in place.
 
     Returns:
         True if participants should skip exhaustion this round, False otherwise.

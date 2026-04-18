@@ -1,10 +1,11 @@
-from typing import Optional
+from typing import ClassVar, Optional
 
 from .base import CharacterStrategy
 from ..models import Character, MissionType, MissionName, BOAT_PART_ORDER, Mission
 
 
 class SailorStrategy(CharacterStrategy):
+    BOAT_COMPLICATION_DRAWS: ClassVar[int] = 2
 
     @property
     def character(self) -> Character:
@@ -22,4 +23,7 @@ class SailorStrategy(CharacterStrategy):
         return None
 
     def complication_draw_count(self, mission: Mission) -> int:
-        return 2 if mission.mission_type == MissionType.BOAT else 1
+        if mission.mission_type == MissionType.BOAT:
+            return self.BOAT_COMPLICATION_DRAWS
+
+        return super().complication_draw_count(mission)
