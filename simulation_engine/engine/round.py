@@ -5,7 +5,6 @@ from ..models import (
     Player, GameState, Mission, GameOutcome,
 )
 from ..actions import PlayerAction, ShuffleMissionsAction
-from ..mechanics import refresh_exhaustion, update_tool_repairs
 from ..mechanics.mission import resolve_mission
 from ..deck import draw_mission
 from ..agents import (
@@ -37,11 +36,7 @@ def run_round(state: GameState) -> Optional[GameOutcome]:
 
     Returns the GameOutcome if the game ends this round, else None.
     """
-    state.round += 1
-    update_tool_repairs(state)
-    refresh_exhaustion(state)
-
-    active_player = state.players[state.active_player_index]
+    active_player = state.begin_round()
 
     action = decide_mission_action(active_player, state)
     if action == PlayerAction.SHUFFLE_MISSIONS:
@@ -60,7 +55,7 @@ def _run_shuffle_round(active_player: Player, state: GameState) -> Optional[Game
     if handle_volcano_draw(state):
         return GameOutcome.LOSS
 
-    state.advance_active_player()
+    state.end_round()
     return None
 
 
@@ -74,7 +69,7 @@ def _run_forfeit_round(state: GameState) -> Optional[GameOutcome]:
         state.protect_next_failure = False
     elif handle_volcano_draw(state):
         return GameOutcome.LOSS
-    state.advance_active_player()
+    state.end_round()
     return None
 
 
@@ -133,11 +128,12 @@ def _run_mission_round(
     if len(state.boat_parts_built) >= state.boat_parts_required:
         return GameOutcome.WIN
 
-    # No mission lost check (boat mission discarded with no replacement)
+    # No-mission-left check: all three slots completed or discarded without the
+    # pool having any replacement to draw.
     if not state.active_missions:
         return GameOutcome.LOSS
 
     # Step 10 - Advance active player
-    state.advance_active_player()
+    state.end_round()
 
     return None

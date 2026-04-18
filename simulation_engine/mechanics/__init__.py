@@ -1,2 +1,2 @@
-from .exhaustion import refresh_exhaustion, apply_exhaustion, update_tool_repairs
+from .exhaustion import apply_exhaustion
 from .effects import apply_volcano_card, apply_bonus

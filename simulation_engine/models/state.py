@@ -46,5 +46,33 @@ class GameState:
     mission_failures_tool_damaged: dict[Tool, int] = field(default_factory = dict)
     tool_repairs: dict[Tool, int] = field(default_factory = dict)
 
-    def advance_active_player(self) -> None:
+    def begin_round(self) -> Player:
+        """
+        Start-of-round housekeeping: bump the round counter, complete any tool
+        repairs that finish this round, and refresh each player's is_exhausted
+        flag from their exhausted_until timestamp. Returns the active player
+        for this round.
+        """
+        self.round += 1
+        self.update_tool_repairs()
+        self.refresh_exhaustion()
+
+        return self.players[self.active_player_index]
+
+    def update_tool_repairs(self) -> None:
+        for tool, tool_state in self.tools.items():
+            if tool_state.repair_due is not None and tool_state.repair_due <= self.round:
+                tool_state.damaged = False
+                tool_state.repair_due = None
+                self.tool_repairs[tool] = self.tool_repairs.get(tool, 0) + 1
+
+    def refresh_exhaustion(self) -> None:
+        for player in self.players:
+            player.is_exhausted = self.round <= player.exhausted_until
+
+    def end_round(self) -> None:
+        """
+        End-of-round housekeeping: rotate the active player to the next seat.
+        Additional end-of-round steps can be bundled here as needed.
+        """
         self.active_player_index = (self.active_player_index + 1) % len(self.players)

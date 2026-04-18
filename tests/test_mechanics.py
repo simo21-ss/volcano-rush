@@ -10,7 +10,7 @@ from simulation_engine.models.enums import (
 from simulation_engine.models.bonus_effects import BonusEffect
 from simulation_engine.models.state import Player, GameState, ToolState
 
-from simulation_engine.mechanics.exhaustion import refresh_exhaustion, apply_exhaustion, update_tool_repairs
+from simulation_engine.mechanics.exhaustion import apply_exhaustion
 from simulation_engine.mechanics.effects import apply_bonus
 
 
@@ -52,7 +52,7 @@ class TestExhaustion:
         player.is_exhausted = True
         state = make_state([player], round = 4)
 
-        refresh_exhaustion(state)
+        state.refresh_exhaustion()
 
         assert player.is_exhausted is False
 
@@ -61,7 +61,7 @@ class TestExhaustion:
         state.tools[Tool.KNIFE].damaged = True
         state.tools[Tool.KNIFE].repair_due = 5
 
-        update_tool_repairs(state)
+        state.update_tool_repairs()
 
         assert state.tools[Tool.KNIFE].damaged is False
         assert state.tools[Tool.KNIFE].repair_due is None
