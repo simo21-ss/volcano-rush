@@ -22,17 +22,10 @@ def run_round(state: GameState) -> Optional[GameOutcome]:
     """
     Execute one full round of the game.
 
-    Steps in order:
-     1. Identify the active player.
-     2. Active player decides: shuffle the mission deck or choose a mission.
-     3. Participant selection.
-     4. Non-participants act (gather or repair).
-     5. Complication.
-     6. Mission resolution.
-     7. Exhaustion.
-     8. Gather.
-     9. Mission maintenance.
-    10. Advance active player.
+    The active player either shuffles the mission pool or picks a mission.
+    Shuffle rounds and Panic-forfeit rounds end with a volcano draw. Mission
+    rounds pick participants, draw a complication, resolve the mission, then
+    handle exhaustion, non-participant gather, and mission maintenance.
 
     Returns the GameOutcome if the game ends this round, else None.
     """
@@ -71,24 +64,14 @@ def _run_forfeit_round(state: GameState) -> Optional[GameOutcome]:
     return state.end_round()
 
 
-def _run_mission_round(
-        active_player: Player,
-        mission_name: MissionName,
-        state: GameState,
-) -> Optional[GameOutcome]:
+def _run_mission_round(active_player: Player, mission_name: MissionName, state: GameState) -> Optional[GameOutcome]:
     mission = Mission.get(mission_name)
 
-    # Step 3 - Participant selection
     participants = active_player_select_participants(active_player, mission, state)
     non_participants = [player for player in state.players if player not in participants]
-
-    # Step 4 - Non-participant actions (repair or gather)
     gather_actions = apply_non_participant_actions(state, non_participants)
 
-    # Step 5 - Complication
     complication = draw_complication_card(state, participants, mission)
-
-    # Step 6 - Resolution
     success = resolve_mission(state, mission, participants, complication)
 
     if success:
@@ -105,18 +88,13 @@ def _run_mission_round(
             if handle_volcano_draw(state):
                 return GameOutcome.LOSS
 
-    # Step 7 - Exhaustion
     apply_exhaustion_step(state, participants, no_exhaustion)
-
-    # Step 8 - Gather
     apply_gather_step(state, gather_actions)
 
-    # Step 9 - Mission maintenance
     if success:
         state.active_missions.remove(mission_name)
         new_mission = draw_mission(state)
         if new_mission:
             state.active_missions.append(new_mission)
 
-    # Step 10 - End round (consumes Panic, checks win, advances active player)
     return state.end_round()
