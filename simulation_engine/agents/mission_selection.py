@@ -1,10 +1,11 @@
 import random
-from typing import Optional
+from typing import ClassVar, Optional
 
 from ..models import (
-    ActivePlayerAction, MissionType, MissionName, BOAT_PART_ORDER,
+    MissionType, MissionName, BOAT_PART_ORDER,
     Player, GameState, Mission, VolcanoCard,
 )
+from ..actions import PlayerAction, ActivePlayerAction
 from ..characters import get_strategy
 from .feasibility import team_can_afford
 
@@ -69,7 +70,7 @@ def vote_for_mission(player: Player, state: GameState) -> Optional[MissionName]:
     return random.choice(candidates)
 
 
-def decide_active_player_action(active_player: Player, state: GameState) -> ActivePlayerAction:
+def decide_mission_action(active_player: Player, state: GameState) -> PlayerAction:
     """
     Decide whether the active player runs a mission or shuffles the mission deck.
 
@@ -89,7 +90,7 @@ def decide_active_player_action(active_player: Player, state: GameState) -> Acti
         state:         Current game state.
 
     Returns:
-        The chosen ActivePlayerAction.
+        The chosen PlayerAction (CHOOSE_MISSION or SHUFFLE_MISSIONS).
     """
     volcano_is_urgent = len(state.volcano_deck) <= state.urgent_volcano_threshold
     has_shuffle_cost = bool(active_player.resources)
@@ -104,6 +105,21 @@ def decide_active_player_action(active_player: Player, state: GameState) -> Acti
 
     if all_active_are_boat_parts and next_needed_not_active:
         if has_shuffle_cost and not volcano_is_urgent:
-            return ActivePlayerAction.SHUFFLE_MISSIONS
+            return PlayerAction.SHUFFLE_MISSIONS
 
-    return ActivePlayerAction.CHOOSE_MISSION
+    return PlayerAction.CHOOSE_MISSION
+
+
+class ChooseMissionAction(ActivePlayerAction):
+    action_type: ClassVar[PlayerAction] = PlayerAction.CHOOSE_MISSION
+
+    def execute(self, active_player: Player, state: GameState) -> Optional[MissionName]:
+        mission_name = vote_for_mission(active_player, state)
+        if mission_name is not None:
+            pending_is_panic = (
+                state.pending_volcano_card is not None
+                and VolcanoCard.get(state.pending_volcano_card).max_mission_participants is not None
+            )
+            if pending_is_panic:
+                state.pending_volcano_card = None
+        return mission_name

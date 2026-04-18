@@ -1,4 +1,5 @@
 from ..models import Character, Resource, Player, GameState
+from ..actions import NonParticipantAction, GatherAction, RepairAction
 from .base import CharacterStrategy
 
 
@@ -8,20 +9,16 @@ class CraftsmanStrategy(CharacterStrategy):
     def character(self) -> Character:
         return Character.CRAFTSMAN
 
-    def take_gathering_action(
+    def choose_non_participant_action(
         self,
         player: Player,
-        state:  GameState,
-    ) -> bool:
+        state: GameState,
+    ) -> NonParticipantAction:
         if not player.is_exhausted:
-            repairable = [
-                tool for tool, tool_state in state.tools.items()
-                if tool_state.damaged and tool_state.repair_due is None
-            ]
-            if repairable and Resource.STONE in player.resources:
-                state.tools[repairable[0]].repair_due = state.round + 2
-                player.resources.remove(Resource.STONE)
-                player.score += 1
-                player.contribution.tools_repaired += 1
-                return False
-        return True
+            any_repairable = any(
+                tool_state.damaged and tool_state.repair_due is None
+                for tool_state in state.tools.values()
+            )
+            if any_repairable and Resource.STONE in player.resources:
+                return RepairAction()
+        return GatherAction()

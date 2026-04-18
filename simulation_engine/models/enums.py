@@ -26,17 +26,6 @@ class Tool(Enum):
     VESSEL = "vessel"
 
 
-class PlayerAction(Enum):
-    PARTICIPATE = "participate"
-    GATHER      = "gather"
-    REPAIR      = "repair"
-
-
-class ActivePlayerAction(Enum):
-    CHOOSE_MISSION   = "choose_mission"
-    SHUFFLE_MISSIONS = "shuffle_missions"
-
-
 class MissionType(Enum):
     FIRE    = "fire"
     SHELTER = "shelter"

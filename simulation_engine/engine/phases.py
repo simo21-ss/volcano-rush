@@ -1,13 +1,11 @@
-import random
-
 from ..models import (
     ComplicationCardName, MissionName,
-    GameState, Mission, VolcanoCard, ComplicationCard,
+    Player, GameState, Mission, VolcanoCard, ComplicationCard,
 )
+from ..actions import PlayerAction, GatherAction
 from ..characters import get_strategy
-from ..deck import draw_resource, draw_complication, draw_volcano
+from ..deck import draw_complication, draw_volcano
 from ..mechanics import apply_exhaustion, apply_volcano_card, apply_bonus
-from ..agents import choose_gather
 
 
 def handle_volcano_draw(state: GameState) -> bool:
@@ -41,20 +39,23 @@ def handle_panic_cap_round(state: GameState) -> tuple[list, list, bool, bool, bo
     """
     Handle a round where the Panic volcano card prevents any valid mission.
 
-    Clears the pending Panic card, marks the round as a failure with all players
-    gathering, and (unless failure is protected) draws a volcano card.
+    Clears the pending Panic card, marks the round as a failure, and (unless
+    failure is protected) draws a volcano card. Every player runs their standard
+    non-participant action: Gatherer fires their ability if eligible, Craftsman
+    repairs a damaged tool if they have a Stone, everyone else gathers.
 
     Args:
         state: Current game state, mutated in place.
 
     Returns:
-        A (participants, gatherers, success, no_exhaustion, eruption) tuple.
-        eruption is True if a drawn volcano card is_eruption; the caller must
-        return (True, False) immediately in that case.
+        A (participants, gather_actions, success, no_exhaustion, eruption) tuple.
+        gather_actions is a list of (player, GatherAction) pairs to be executed
+        by apply_gather_step. eruption is True if a drawn volcano card is_eruption;
+        the caller must return (True, False) immediately in that case.
     """
     state.pending_volcano_card = None
     participants = []
-    gatherers = list(state.players)
+    gather_actions = apply_non_participant_actions(state, state.players)
     success = False
     no_exhaustion = False
 
@@ -64,43 +65,36 @@ def handle_panic_cap_round(state: GameState) -> tuple[list, list, bool, bool, bo
     else:
         eruption = handle_volcano_draw(state)
 
-    return participants, gatherers, success, no_exhaustion, eruption
+    return participants, gather_actions, success, no_exhaustion, eruption
 
 
-def apply_non_participant_actions(state: GameState, non_participants: list) -> list:
+def apply_non_participant_actions(
+    state: GameState,
+    non_participants: list[Player],
+) -> list[tuple[Player, GatherAction]]:
     """
     Determine the actions of players not selected for the mission.
 
-    Each non-participant's character strategy decides what to do via
-    take_gathering_action(). If the strategy returns True the player gathers
-    from the resource deck as normal. If it returns False the player used a
-    special ability instead (Craftsman repairs a tool) and skips the deck draw.
+    Each non-participant's strategy picks a NonParticipantAction via
+    choose_non_participant_action(). REPAIR actions execute immediately (Craftsman
+    spends a Stone to schedule a tool repair). GATHER actions are deferred so they
+    benefit from any mission-success gather bonus set later this round.
 
     Args:
         state:            Current game state, mutated in place.
         non_participants: Players not selected to participate in the mission.
 
     Returns:
-        The list of gatherers (non-participants who should draw from the deck).
+        A list of (player, GatherAction) pairs to be executed by apply_gather_step.
     """
-    gatherers = []
+    gather_actions: list[tuple[Player, GatherAction]] = []
     for player in non_participants:
-        strategy = get_strategy(player.character)
-        should_gather = strategy.take_gathering_action(player, state)
-        if should_gather:
-            gatherers.append(player)
-    return gatherers
-
-
-def apply_shuffle_cost(active_player) -> None:
-    """
-    Deduct one randomly chosen resource from the active player as the shuffle cost.
-
-    Args:
-        active_player: The player paying the cost (must have at least 1 resource).
-    """
-    resource_to_discard = random.choice(active_player.resources)
-    active_player.resources.remove(resource_to_discard)
+        action = get_strategy(player.character).choose_non_participant_action(player, state)
+        if action.action_type == PlayerAction.REPAIR:
+            action.execute(player, state)
+        else:
+            gather_actions.append((player, action))
+    return gather_actions
 
 
 def draw_complication_card(
@@ -228,17 +222,21 @@ def apply_exhaustion_step(
         apply_exhaustion(participants, state.round, extra_rounds = extra_exhaustion)
 
 
-def apply_gather_step(state: GameState, gatherers: list) -> None:
+def apply_gather_step(
+    state: GameState,
+    gather_actions: list[tuple[Player, GatherAction]],
+) -> None:
     """
-    Distribute gathered resources to all players in the gatherers list.
+    Execute the bucketed gather actions.
 
     Checks for a Heat Wave pending volcano card (which zeroes all gathering) and
-    reads any gather bonus from state.pending_bonus. Each gatherer draws resources
-    equal to their base amount plus the bonus. Clears state.pending_bonus at the end.
+    then dispatches each GatherAction, which reads state.pending_bonus for the
+    per-player gather bonus. Clears state.pending_bonus at the end.
 
     Args:
-        state:     Current game state, mutated in place.
-        gatherers: Players who are gathering resources this round.
+        state:          Current game state, mutated in place.
+        gather_actions: (player, GatherAction) pairs produced by
+                        apply_non_participant_actions or handle_panic_cap_round.
     """
     gather_yields_zero = (
         VolcanoCard.get(state.pending_volcano_card).gather_yields_zero
@@ -248,19 +246,9 @@ def apply_gather_step(state: GameState, gatherers: list) -> None:
     if gather_yields_zero:
         state.pending_volcano_card = None
 
-    gather_bonus = state.pending_bonus.gather_bonus if state.pending_bonus else 0
-
-    for player in gatherers:
+    for player, action in gather_actions:
         if gather_yields_zero:
             continue
-
-        decision = choose_gather(player)
-        total = decision.amount + gather_bonus
-
-        for _ in range(total):
-            player.resources.append(draw_resource(state))
-
-        if decision.causes_exhaustion:
-            apply_exhaustion([player], state.round)
+        action.execute(player, state)
 
     state.pending_bonus = None

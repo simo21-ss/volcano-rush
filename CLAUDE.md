@@ -37,7 +37,7 @@ Any mission participant becomes Exhausted for the following round and cannot par
 - `simulation_engine/models/` - enums, dataclasses (missions, complications, volcano cards, state, records)
 - `simulation_engine/mechanics/` - resolution logic (`mission.py`, `effects.py`, `exhaustion.py`)
 - `simulation_engine/characters/` - one strategy class per file, all implementing `CharacterStrategy` from `base.py`
-- `simulation_engine/agents/` - team-level decision functions called from the engine: `feasibility.py` (affordability helpers), `mission_selection.py` (vote_for_mission, decide_active_player_action), `participant_selection.py` (scored participant picking)
+- `simulation_engine/agents/` - team-level decision functions called from the engine: `feasibility.py` (affordability helpers), `mission_selection.py` (vote_for_mission, decide_mission_action), `participant_selection.py` (scored participant picking)
 - `simulation_engine/engine.py` - `run_game`, `run_scenario` orchestration
 - `simulation_engine/initialization.py` - deck, player, tool, volcano, mission-pool setup
 - `tests/` - pytest suite

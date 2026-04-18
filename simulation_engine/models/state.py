@@ -44,3 +44,6 @@ class GameState:
     mission_failures_any_extra:    int                       = 0
     mission_failures_tool_damaged: dict[Tool, int]           = field(default_factory = dict)
     tool_repairs:                  dict[Tool, int]           = field(default_factory = dict)
+
+    def advance_active_player(self) -> None:
+        self.active_player_index = (self.active_player_index + 1) % len(self.players)
