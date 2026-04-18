@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from .enums import Character, Resource, Tool
+from .enums import Character, Resource, Tool, GameOutcome
 from .contribution import CharacterContribution
 
 
@@ -13,7 +13,7 @@ class MissionRequirement:
 class GameRecord:
     player_count:                  int
     characters:                    list[Character]
-    outcome:                       str
+    outcome:                       GameOutcome
     rounds_played:                 int
     final_scores:                  dict[Character, int]
     boat_parts_built:              int

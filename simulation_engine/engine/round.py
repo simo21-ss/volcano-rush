@@ -1,8 +1,9 @@
 import random
+from typing import Optional
 
 from ..models import (
     ActivePlayerAction, MissionType,
-    GameState, Mission, VolcanoCard,
+    GameState, Mission, VolcanoCard, GameOutcome,
 )
 from ..mechanics import refresh_exhaustion, update_tool_repairs, resolve_mission
 from ..deck import draw_mission
@@ -17,7 +18,7 @@ from .phases import (
 )
 
 
-def run_round(state: GameState) -> tuple[bool, bool]:
+def run_round(state: GameState) -> Optional[GameOutcome]:
     """
     Execute one full round of the game.
 
@@ -44,7 +45,7 @@ def run_round(state: GameState) -> tuple[bool, bool]:
         state: Current game state, mutated in place.
 
     Returns:
-        A (game_over, won) tuple. game_over is True when the game ends (win or eruption loss).
+        The GameOutcome when the game ends this round (win or eruption loss), or None if the game continues.
     """
     state.round += 1
     update_tool_repairs(state)
@@ -59,10 +60,12 @@ def run_round(state: GameState) -> tuple[bool, bool]:
     if action == ActivePlayerAction.SHUFFLE_MISSIONS:
         apply_shuffle_cost(active_player)
         random.shuffle(state.mission_pool)
+
         if handle_volcano_draw(state):
-            return True, False
+            return GameOutcome.LOSS
+
         state.active_player_index = (state.active_player_index + 1) % len(state.players)
-        return False, False
+        return None
 
     # action == ActivePlayerAction.CHOOSE_MISSION
     mission_name = vote_for_mission(active_player, state)
@@ -70,7 +73,7 @@ def run_round(state: GameState) -> tuple[bool, bool]:
     if mission_name is None:
         participants, gatherers, success, no_exhaustion, eruption = handle_panic_cap_round(state)
         if eruption:
-            return True, False
+            return GameOutcome.LOSS
     else:
         mission = Mission.get(mission_name)
 
@@ -104,7 +107,7 @@ def run_round(state: GameState) -> tuple[bool, bool]:
                 state.protect_next_failure = False
             else:
                 if handle_volcano_draw(state):
-                    return True, False
+                    return GameOutcome.LOSS
 
         # Step 7 - Exhaustion
         apply_exhaustion_step(state, participants, no_exhaustion)
@@ -121,13 +124,13 @@ def run_round(state: GameState) -> tuple[bool, bool]:
 
     # Win check
     if len(state.boat_parts_built) >= state.boat_parts_required:
-        return True, True
+        return GameOutcome.WIN
 
     # No mission lost check (boat mission discarded with no replacement)
     if not state.active_missions:
-        return True, False
+        return GameOutcome.LOSS
 
     # Step 10 - Advance active player
     state.active_player_index = (state.active_player_index + 1) % len(state.players)
 
-    return False, False
+    return None

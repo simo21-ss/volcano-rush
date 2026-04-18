@@ -1,6 +1,11 @@
 from enum import Enum
 
 
+class GameOutcome(str, Enum):
+    WIN  = "win"
+    LOSS = "loss"
+
+
 class Character(Enum):
     BUILDER       = "builder"
     FIRE_STARTER  = "fire_starter"
