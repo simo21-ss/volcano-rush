@@ -11,7 +11,7 @@ Shuffle the Volcano deck before the game, placing **Eruption** on the bottom.
 | **Tremor** | Discard 1 non-boat active mission and reveal a new one. If all active missions are boat parts, no effect |
 | **Storm** | Each player loses 1 random resource (if they have any) |
 | **Lava Flow** | The next mission requires +1 Rope |
-| **Panic** | Next round, no more than 3 players may participate in a mission |
+| **Panic** | Next round, boat missions cannot be chosen |
 | **Collapse** | Every player with 3+ resources loses 1 |
 | **Heat Wave** | Players who choose "Gather" next round draw **0 resources** |
 | **Smoke** | The next mission gives -1 point to participants (minimum 0) |

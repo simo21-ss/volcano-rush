@@ -2,8 +2,8 @@ import random
 from typing import Optional
 
 from ..models import (
-    MissionType, MissionName, BOAT_PART_ORDER,
-    Player, GameState, Mission, VolcanoCard,
+    MissionType, MissionName, VolcanoCardName, BOAT_PART_ORDER,
+    Player, GameState, Mission,
 )
 from ..actions import PlayerAction
 from ..characters import get_strategy
@@ -12,11 +12,12 @@ from .feasibility import team_can_afford
 
 def decide_mission_action(active_player: Player, state: GameState) -> Optional[PlayerAction]:
     """
-    Return PlayerAction.SHUFFLE_MISSIONS when the team is stuck on the wrong boat
-    parts: all active missions are boat parts, the next-needed boat part (first
-    unbuilt in BOAT_PART_ORDER) is not among them, and the active player can pay
-    the shuffle cost. Otherwise return None to signal the default choose-mission
-    path.
+    Return PlayerAction.SHUFFLE_MISSIONS when the active player should reshuffle
+    the mission pool: (a) Panic is pending and all active missions are boat parts
+    (boats are banned), or (b) all active missions are boat parts but the
+    next-needed boat part is not among them. Both require the active player to
+    have a resource to pay the shuffle cost. Otherwise return None to signal the
+    default choose-mission path.
     """
     all_active_are_boat_parts = all(
         Mission.catalog[mission_name].mission_type == MissionType.BOAT
@@ -25,12 +26,17 @@ def decide_mission_action(active_player: Player, state: GameState) -> Optional[P
     if not all_active_are_boat_parts:
         return None
 
+    has_shuffle_cost = bool(active_player.resources)
+
+    if state.pending_volcano_card == VolcanoCardName.PANIC and has_shuffle_cost:
+        return PlayerAction.SHUFFLE_MISSIONS
+
     next_needed = next(
         (boat_part for boat_part in BOAT_PART_ORDER if boat_part not in state.boat_parts_built),
         None,
     )
     stuck_on_wrong_boats = (
-            active_player.resources
+            has_shuffle_cost
             and next_needed is not None
             and next_needed not in state.active_missions
     )
@@ -40,17 +46,18 @@ def decide_mission_action(active_player: Player, state: GameState) -> Optional[P
 
 def vote_for_mission(player: Player, state: GameState) -> Optional[MissionName]:
     """
-    Return this player's preferred mission, or None if no mission is available.
+    Return this player's preferred mission, or None if no mission can be chosen.
 
-    Active missions are first filtered by any Panic participant cap, then by
-    team feasibility (falls back to the unfiltered list if nothing is feasible so
-    the engine can still progress). Under volcano urgency, if a boat mission is
-    feasible the next-needed boat part from BOAT_PART_ORDER is chosen. Otherwise
-    the character's own preference is applied, with a random tiebreak as fallback.
+    Active missions are first filtered by any pending Panic card (boat missions
+    are banned while Panic is pending), then by team feasibility (falls back to
+    the unfiltered list if nothing is feasible so the engine can still progress).
+    Under volcano urgency, if a boat mission is feasible the next-needed boat
+    part from BOAT_PART_ORDER is chosen. Otherwise the character's own preference
+    is applied, with a random tiebreak as fallback.
 
-    Returns None when there are simply no missions to vote on (an edge case where
-    active_missions or the Panic-filtered list is empty); the engine treats this
-    as a failed round via handle_panic_cap_round.
+    Returns None when no mission is legal - under Panic this happens when all
+    three active missions are boat parts and the active player had no resource
+    to shuffle them away; `run_round` handles that as a forfeited round.
 
     Args:
         player: The player casting a vote.
@@ -60,12 +67,8 @@ def vote_for_mission(player: Player, state: GameState) -> Optional[MissionName]:
         The preferred MissionName, or None if no mission can be chosen.
     """
     active = state.active_missions
-    if state.pending_volcano_card is not None:
-        cap = VolcanoCard.catalog[state.pending_volcano_card].max_mission_participants
-        if cap is not None:
-            valid_missions = [mission_name for mission_name in active if Mission.catalog[mission_name].players_count <= cap]
-            if valid_missions:
-                active = valid_missions
+    if state.pending_volcano_card == VolcanoCardName.PANIC:
+        active = [mission_name for mission_name in active if Mission.catalog[mission_name].mission_type != MissionType.BOAT]
 
     if not active:
         return None

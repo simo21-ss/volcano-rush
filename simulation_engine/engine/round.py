@@ -1,8 +1,8 @@
 from typing import Optional
 
 from ..models import (
-    MissionType,
-    GameState, Mission, VolcanoCard, GameOutcome,
+    MissionType, VolcanoCardName,
+    GameState, Mission, GameOutcome,
 )
 from ..actions import PlayerAction, ShuffleMissionsAction
 from ..mechanics import refresh_exhaustion, update_tool_repairs
@@ -12,7 +12,7 @@ from ..agents import (
     decide_mission_action, vote_for_mission, active_player_select_participants,
 )
 from .phases import (
-    handle_volcano_draw, handle_panic_cap_round,
+    handle_volcano_draw,
     apply_non_participant_actions,
     draw_complication_card, apply_mission_success,
     apply_exhaustion_step, apply_gather_step,
@@ -59,46 +59,51 @@ def run_round(state: GameState) -> Optional[GameOutcome]:
     mission_name = vote_for_mission(active_player, state)
 
     if mission_name is None:
-        participants, gather_actions, success, no_exhaustion, eruption = handle_panic_cap_round(state)
-        if eruption:
+        # Panic pending, all active missions are boats, no resources to shuffle:
+        # no legal mission, round forfeits.
+        state.pending_volcano_card = None
+        if state.protect_next_failure:
+            state.protect_next_failure = False
+        elif handle_volcano_draw(state):
             return GameOutcome.LOSS
+        state.advance_active_player()
+        return None
+
+    mission = Mission.get(mission_name)
+
+    # Clear pending Panic card (we chose a non-boat under the ban)
+    if state.pending_volcano_card == VolcanoCardName.PANIC:
+        state.pending_volcano_card = None
+
+    # Step 3 - Participant selection
+    participants = active_player_select_participants(active_player, mission, state)
+    non_participants = [player for player in state.players if player not in participants]
+
+    # Step 4 - Non-participant actions (repair or gather)
+    gather_actions = apply_non_participant_actions(state, non_participants)
+
+    # Step 5 - Complication
+    complication = draw_complication_card(state, participants, mission)
+
+    # Step 6 - Resolution
+    success = resolve_mission(state, mission, participants, complication)
+
+    if success:
+        for player in participants:
+            player.contribution.missions_participated += 1
+            if mission.mission_type == MissionType.BOAT:
+                player.contribution.boat_missions_participated += 1
+        no_exhaustion = apply_mission_success(state, mission, mission_name, participants)
     else:
-        mission = Mission.get(mission_name)
-
-        # Clear pending Panic card (we chose a valid mission under its cap)
-        if (state.pending_volcano_card is not None
-                and VolcanoCard.get(state.pending_volcano_card).max_mission_participants is not None):
-            state.pending_volcano_card = None
-
-        # Step 3 - Participant selection
-        participants = active_player_select_participants(active_player, mission, state)
-        non_participants = [player for player in state.players if player not in participants]
-
-        # Step 4 - Non-participant actions (repair or gather)
-        gather_actions = apply_non_participant_actions(state, non_participants)
-
-        # Step 5 - Complication
-        complication = draw_complication_card(state, participants, mission)
-
-        # Step 6 - Resolution
-        success = resolve_mission(state, mission, participants, complication)
-
-        if success:
-            for player in participants:
-                player.contribution.missions_participated += 1
-                if mission.mission_type == MissionType.BOAT:
-                    player.contribution.boat_missions_participated += 1
-            no_exhaustion = apply_mission_success(state, mission, mission_name, participants)
+        no_exhaustion = False
+        if state.protect_next_failure:
+            state.protect_next_failure = False
         else:
-            no_exhaustion = False
-            if state.protect_next_failure:
-                state.protect_next_failure = False
-            else:
-                if handle_volcano_draw(state):
-                    return GameOutcome.LOSS
+            if handle_volcano_draw(state):
+                return GameOutcome.LOSS
 
-        # Step 7 - Exhaustion
-        apply_exhaustion_step(state, participants, no_exhaustion)
+    # Step 7 - Exhaustion
+    apply_exhaustion_step(state, participants, no_exhaustion)
 
     # Step 8 - Gather
     apply_gather_step(state, gather_actions)

@@ -35,39 +35,6 @@ def handle_volcano_draw(state: GameState) -> bool:
     return False
 
 
-def handle_panic_cap_round(state: GameState) -> tuple[list, list, bool, bool, bool]:
-    """
-    Handle a round where the Panic volcano card prevents any valid mission.
-
-    Clears the pending Panic card, marks the round as a failure, and (unless
-    failure is protected) draws a volcano card. Every player runs their standard
-    non-participant action: Gatherer fires their ability if eligible, Craftsman
-    repairs a damaged tool if they have a Stone, everyone else gathers.
-
-    Args:
-        state: Current game state, mutated in place.
-
-    Returns:
-        A (participants, gather_actions, success, no_exhaustion, eruption) tuple.
-        gather_actions is a list of (player, GatherAction) pairs to be executed
-        by apply_gather_step. eruption is True if a drawn volcano card is_eruption;
-        the caller must return (True, False) immediately in that case.
-    """
-    state.pending_volcano_card = None
-    participants = []
-    gather_actions = apply_non_participant_actions(state, state.players)
-    success = False
-    no_exhaustion = False
-
-    if state.protect_next_failure:
-        state.protect_next_failure = False
-        eruption = False
-    else:
-        eruption = handle_volcano_draw(state)
-
-    return participants, gather_actions, success, no_exhaustion, eruption
-
-
 def apply_non_participant_actions(
     state: GameState,
     non_participants: list[Player],
@@ -236,7 +203,7 @@ def apply_gather_step(
     Args:
         state:          Current game state, mutated in place.
         gather_actions: (player, GatherAction) pairs produced by
-                        apply_non_participant_actions or handle_panic_cap_round.
+                        apply_non_participant_actions.
     """
     gather_yields_zero = (
         VolcanoCard.get(state.pending_volcano_card).gather_yields_zero
