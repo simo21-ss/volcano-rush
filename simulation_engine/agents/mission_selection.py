@@ -10,12 +10,31 @@ from ..characters import get_strategy
 from .feasibility import team_can_afford
 
 
-def _get_next_needed_boat_part(state: GameState) -> Optional[MissionName]:
-    reachable = set(state.active_missions) | set(state.mission_pool) | state.boat_parts_built
-    for mission_name in BOAT_PART_ORDER:
-        if mission_name in reachable and mission_name not in state.boat_parts_built:
-            return mission_name
-    return None
+def decide_mission_action(active_player: Player, state: GameState) -> PlayerAction:
+    """
+    Shuffle the mission pool when the team is stuck on the wrong boat parts:
+    all active missions are boat parts, the next-needed boat part (first unbuilt
+    in BOAT_PART_ORDER) is not among them, and the active player can pay the
+    shuffle cost. Otherwise, choose a mission.
+    """
+    all_active_are_boat_parts = all(
+        Mission.catalog[mission_name].mission_type == MissionType.BOAT
+        for mission_name in state.active_missions
+    )
+    if not all_active_are_boat_parts:
+        return PlayerAction.CHOOSE_MISSION
+
+    next_needed = next(
+        (boat_part for boat_part in BOAT_PART_ORDER if boat_part not in state.boat_parts_built),
+        None,
+    )
+    stuck_on_wrong_boats = (
+            active_player.resources
+            and next_needed is not None
+            and next_needed not in state.active_missions
+    )
+
+    return PlayerAction.SHUFFLE_MISSIONS if stuck_on_wrong_boats else PlayerAction.CHOOSE_MISSION
 
 
 def vote_for_mission(player: Player, state: GameState) -> Optional[MissionName]:
@@ -68,46 +87,6 @@ def vote_for_mission(player: Player, state: GameState) -> Optional[MissionName]:
         return preferred
 
     return random.choice(candidates)
-
-
-def decide_mission_action(active_player: Player, state: GameState) -> PlayerAction:
-    """
-    Decide whether the active player runs a mission or shuffles the mission deck.
-
-    Shuffles only when all three active missions are boat parts but the next-needed
-    boat part is not among them. In that case progress toward the boat is impossible
-    so the pool must be refreshed. Shuffling requires the active player to have a
-    resource to pay and only runs when the volcano deck is not at the urgent threshold.
-
-    Shuffling to escape a round where no mission is feasible turns out to be worse
-    than attempting one: failed missions consume no resources (resolve_mission
-    returns before deduction), so the only cost of a failed attempt is one volcano
-    draw plus exhaustion. Shuffling costs the same volcano draw plus one resource
-    permanently burned from the active player's hand.
-
-    Args:
-        active_player: The player whose turn it is to lead this round.
-        state:         Current game state.
-
-    Returns:
-        The chosen PlayerAction (CHOOSE_MISSION or SHUFFLE_MISSIONS).
-    """
-    volcano_is_urgent = len(state.volcano_deck) <= state.urgent_volcano_threshold
-    has_shuffle_cost = bool(active_player.resources)
-
-    active_boat_missions = [
-        mission_name for mission_name in state.active_missions
-        if Mission.catalog[mission_name].mission_type == MissionType.BOAT
-    ]
-    all_active_are_boat_parts = len(active_boat_missions) == len(state.active_missions)
-    next_needed = _get_next_needed_boat_part(state)
-    next_needed_not_active = next_needed not in state.active_missions
-
-    if all_active_are_boat_parts and next_needed_not_active:
-        if has_shuffle_cost and not volcano_is_urgent:
-            return PlayerAction.SHUFFLE_MISSIONS
-
-    return PlayerAction.CHOOSE_MISSION
 
 
 class ChooseMissionAction(ActivePlayerAction):

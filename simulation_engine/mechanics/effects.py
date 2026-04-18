@@ -36,9 +36,8 @@ def apply_volcano_card(
 
     if card.discard_mission:
         non_boat_missions = [m for m in state.active_missions if Mission.catalog[m].mission_type != MissionType.BOAT]
-        candidates = non_boat_missions if non_boat_missions else list(state.active_missions)
-        if candidates:
-            discarded = random.choice(candidates)
+        if non_boat_missions:
+            discarded = random.choice(non_boat_missions)
             state.active_missions.remove(discarded)
 
             replacement = draw_mission(state)
