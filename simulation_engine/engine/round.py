@@ -2,14 +2,14 @@ from typing import Optional
 
 from ..models import (
     MissionType,
-    GameState, Mission, GameOutcome,
+    GameState, Mission, VolcanoCard, GameOutcome,
 )
 from ..actions import PlayerAction, ShuffleMissionsAction
 from ..mechanics import refresh_exhaustion, update_tool_repairs
 from ..mechanics.mission import resolve_mission
 from ..deck import draw_mission
 from ..agents import (
-    decide_mission_action, ChooseMissionAction, active_player_select_participants,
+    decide_mission_action, vote_for_mission, active_player_select_participants,
 )
 from .phases import (
     handle_volcano_draw, handle_panic_cap_round,
@@ -56,8 +56,7 @@ def run_round(state: GameState) -> Optional[GameOutcome]:
         state.advance_active_player()
         return None
 
-    # action == PlayerAction.CHOOSE_MISSION
-    mission_name = ChooseMissionAction().execute(active_player, state)
+    mission_name = vote_for_mission(active_player, state)
 
     if mission_name is None:
         participants, gather_actions, success, no_exhaustion, eruption = handle_panic_cap_round(state)
@@ -65,6 +64,11 @@ def run_round(state: GameState) -> Optional[GameOutcome]:
             return GameOutcome.LOSS
     else:
         mission = Mission.get(mission_name)
+
+        # Clear pending Panic card (we chose a valid mission under its cap)
+        if (state.pending_volcano_card is not None
+                and VolcanoCard.get(state.pending_volcano_card).max_mission_participants is not None):
+            state.pending_volcano_card = None
 
         # Step 3 - Participant selection
         participants = active_player_select_participants(active_player, mission, state)

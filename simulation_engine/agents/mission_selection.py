@@ -1,28 +1,29 @@
 import random
-from typing import ClassVar, Optional
+from typing import Optional
 
 from ..models import (
     MissionType, MissionName, BOAT_PART_ORDER,
     Player, GameState, Mission, VolcanoCard,
 )
-from ..actions import PlayerAction, ActivePlayerAction
+from ..actions import PlayerAction
 from ..characters import get_strategy
 from .feasibility import team_can_afford
 
 
-def decide_mission_action(active_player: Player, state: GameState) -> PlayerAction:
+def decide_mission_action(active_player: Player, state: GameState) -> Optional[PlayerAction]:
     """
-    Shuffle the mission pool when the team is stuck on the wrong boat parts:
-    all active missions are boat parts, the next-needed boat part (first unbuilt
-    in BOAT_PART_ORDER) is not among them, and the active player can pay the
-    shuffle cost. Otherwise, choose a mission.
+    Return PlayerAction.SHUFFLE_MISSIONS when the team is stuck on the wrong boat
+    parts: all active missions are boat parts, the next-needed boat part (first
+    unbuilt in BOAT_PART_ORDER) is not among them, and the active player can pay
+    the shuffle cost. Otherwise return None to signal the default choose-mission
+    path.
     """
     all_active_are_boat_parts = all(
         Mission.catalog[mission_name].mission_type == MissionType.BOAT
         for mission_name in state.active_missions
     )
     if not all_active_are_boat_parts:
-        return PlayerAction.CHOOSE_MISSION
+        return None
 
     next_needed = next(
         (boat_part for boat_part in BOAT_PART_ORDER if boat_part not in state.boat_parts_built),
@@ -34,7 +35,7 @@ def decide_mission_action(active_player: Player, state: GameState) -> PlayerActi
             and next_needed not in state.active_missions
     )
 
-    return PlayerAction.SHUFFLE_MISSIONS if stuck_on_wrong_boats else PlayerAction.CHOOSE_MISSION
+    return PlayerAction.SHUFFLE_MISSIONS if stuck_on_wrong_boats else None
 
 
 def vote_for_mission(player: Player, state: GameState) -> Optional[MissionName]:
@@ -49,7 +50,7 @@ def vote_for_mission(player: Player, state: GameState) -> Optional[MissionName]:
 
     Returns None when there are simply no missions to vote on (an edge case where
     active_missions or the Panic-filtered list is empty); the engine treats this
-    as a failed round via _handle_panic_cap_round.
+    as a failed round via handle_panic_cap_round.
 
     Args:
         player: The player casting a vote.
@@ -87,18 +88,3 @@ def vote_for_mission(player: Player, state: GameState) -> Optional[MissionName]:
         return preferred
 
     return random.choice(candidates)
-
-
-class ChooseMissionAction(ActivePlayerAction):
-    action_type: ClassVar[PlayerAction] = PlayerAction.CHOOSE_MISSION
-
-    def execute(self, active_player: Player, state: GameState) -> Optional[MissionName]:
-        mission_name = vote_for_mission(active_player, state)
-        if mission_name is not None:
-            pending_is_panic = (
-                state.pending_volcano_card is not None
-                and VolcanoCard.get(state.pending_volcano_card).max_mission_participants is not None
-            )
-            if pending_is_panic:
-                state.pending_volcano_card = None
-        return mission_name

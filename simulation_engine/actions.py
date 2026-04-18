@@ -10,22 +10,12 @@ from .deck import draw_resource
 
 
 class PlayerAction(Enum):
-    CHOOSE_MISSION = ("choose_mission", True, False)
-    SHUFFLE_MISSIONS = ("shuffle_missions", True, False)
-    GATHER = ("gather", False, True)
-    REPAIR = ("repair", False, True)
-
-    def __new__(cls, value: str, active_player_action: bool, non_participant_action: bool):
-        obj = object.__new__(cls)
-        obj._value_ = value
-        obj.active_player_action = active_player_action
-        obj.non_participant_action = non_participant_action
-        return obj
+    SHUFFLE_MISSIONS = "shuffle_missions"
+    GATHER = "gather"
+    REPAIR = "repair"
 
 
 class NonParticipantAction(ABC):
-    """Action taken by a player who is not participating in the round's mission."""
-
     action_type: ClassVar[PlayerAction]
 
     @abstractmethod
@@ -62,13 +52,7 @@ class RepairAction(NonParticipantAction):
         player.contribution.tools_repaired += 1
 
 
-class ActivePlayerAction(ABC):
-    """Action chosen by the active player at the start of a round."""
-
-    action_type: ClassVar[PlayerAction]
-
-
-class ShuffleMissionsAction(ActivePlayerAction):
+class ShuffleMissionsAction:
     action_type: ClassVar[PlayerAction] = PlayerAction.SHUFFLE_MISSIONS
 
     def execute(self, active_player: Player, state: GameState) -> None:
