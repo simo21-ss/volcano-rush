@@ -2,12 +2,12 @@ import random
 from typing import Optional
 
 from .models import Resource, ComplicationCardName, VolcanoCardName, MissionName, GameState
-from .initialization import prepare_resource_deck
+from .initialization import _prepare_resource_deck
 
 
 def draw_resource(state: GameState) -> Resource:
     if not state.resource_deck:
-        state.resource_deck = prepare_resource_deck()
+        state.resource_deck = _prepare_resource_deck()
 
     return state.resource_deck.pop()
 

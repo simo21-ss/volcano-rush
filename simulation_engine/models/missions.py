@@ -121,15 +121,15 @@ Mission.catalog = {
     MissionName.MAKE_THE_SAIL: Mission(
         name               = MissionName.MAKE_THE_SAIL,
         required_resources = {Resource.WOOD: 1, Resource.ROPE: 1},
-        players_count      = 2,
+        players_count      = 4,
         points             = 1,
         mission_type       = MissionType.BOAT,
         bonus_on_success   = BonusEffect(boat_part = True),
     ),
     MissionName.FIT_THE_RUDDER: Mission(
         name               = MissionName.FIT_THE_RUDDER,
-        required_resources = {Resource.WOOD: 1, Resource.STONE: 1, Resource.ROPE: 1},
-        players_count      = 4,
+        required_resources = {Resource.WOOD: 1, Resource.ROPE: 1},
+        players_count      = 3,
         points             = 1,
         mission_type       = MissionType.BOAT,
         required_tools     = [Tool.VESSEL],
