@@ -1,7 +1,7 @@
 from typing import Optional
 
-from ..models import Character, MissionType, MissionName, BOAT_PART_ORDER, Mission
 from .base import CharacterStrategy
+from ..models import Character, MissionType, MissionName, BOAT_PART_ORDER, Mission
 
 
 class SailorStrategy(CharacterStrategy):
@@ -18,9 +18,8 @@ class SailorStrategy(CharacterStrategy):
         for boat_name in BOAT_PART_ORDER:
             if boat_name in boat_options:
                 return boat_name
+
         return None
 
     def complication_draw_count(self, mission: Mission) -> int:
-        if mission.mission_type == MissionType.BOAT:
-            return 2
-        return 1
+        return 2 if mission.mission_type == MissionType.BOAT else 1

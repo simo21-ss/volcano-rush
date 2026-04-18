@@ -1,20 +1,19 @@
-from ..models.enums import Character
 from .base import CharacterStrategy
 from .builder import BuilderStrategy
-from .fire_starter import FireStarterStrategy
-from .craftsman import CraftsmanStrategy
 from .cook import CookStrategy
+from .craftsman import CraftsmanStrategy
+from .fire_starter import FireStarterStrategy
 from .gatherer import GathererStrategy
 from .sailor import SailorStrategy
-
+from ..models.enums import Character
 
 STRATEGY_REGISTRY: dict[Character, CharacterStrategy] = {
-    Character.BUILDER:      BuilderStrategy(),
+    Character.BUILDER: BuilderStrategy(),
     Character.FIRE_STARTER: FireStarterStrategy(),
-    Character.CRAFTSMAN:    CraftsmanStrategy(),
-    Character.COOK:         CookStrategy(),
-    Character.GATHERER:     GathererStrategy(),
-    Character.SAILOR:       SailorStrategy(),
+    Character.CRAFTSMAN: CraftsmanStrategy(),
+    Character.COOK: CookStrategy(),
+    Character.GATHERER: GathererStrategy(),
+    Character.SAILOR: SailorStrategy(),
 }
 
 

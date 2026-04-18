@@ -1,7 +1,7 @@
 from typing import Optional
 
-from ..models import Character, MissionType, MissionName, Mission, MissionRequirement
 from .base import CharacterStrategy
+from ..models import Character, MissionType, MissionName, Mission, MissionRequirement
 
 
 class FireStarterStrategy(CharacterStrategy):
@@ -19,16 +19,11 @@ class FireStarterStrategy(CharacterStrategy):
             return None
         return max(preferred, key = lambda mission_name: Mission.catalog[mission_name].points)
 
-    def requirement_discount(
-        self,
-        mission:      Mission,
-        requirements: MissionRequirement,
-    ) -> MissionRequirement:
+    def requirement_discount(self, mission: Mission, requirements: MissionRequirement) -> MissionRequirement:
         if mission.mission_type == MissionType.FIRE:
             return MissionRequirement(typed = requirements.typed, any_extra = requirements.any_extra - 1)
+
         return requirements
 
     def mission_success_bonus_points(self, mission: Mission) -> int:
-        if mission.mission_type == MissionType.FIRE:
-            return 1
-        return 0
+        return 1 if mission.mission_type == MissionType.FIRE else 0

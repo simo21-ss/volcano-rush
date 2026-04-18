@@ -111,15 +111,19 @@ def run_scenario(
     return results
 
 
-def _print_verbose_game_init(state: GameState):
+def _print_verbose_game_init(state: GameState) -> None:
     print(f"Characters: {[p.character.value for p in state.players]}")
     print(f"Boat parts required: {state.boat_parts_required}")
     print(f"Active missions: {[m.value for m in state.active_missions]}")
     print()
 
 
-def _print_verbose_round_results(active_player: Player, prev_missions: list[MissionName], prev_scores: list[int], prev_volcano: int,
-                                 state: GameState):
+def _print_verbose_round_results(
+        active_player: Player,
+        prev_missions: list[MissionName], prev_scores: list[int],
+        prev_volcano: int,
+        state: GameState
+) -> None:
     completed_missions = [m for m in prev_missions if m not in state.active_missions]
     completed = completed_missions[0].value if completed_missions else "-"
     volcano_used = prev_volcano - len(state.volcano_deck)
@@ -134,7 +138,7 @@ def _print_verbose_round_results(active_player: Player, prev_missions: list[Miss
     )
 
 
-def _print_verbose_game_results(outcome: GameOutcome, state: GameState):
+def _print_verbose_game_results(outcome: GameOutcome, state: GameState) -> None:
     failures_by_resource = { r.value: n for r, n in state.mission_failures_by_resource.items() }
     failures_tool = { t.value: n for t, n in state.mission_failures_tool_damaged.items() }
 

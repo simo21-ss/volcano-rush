@@ -35,10 +35,7 @@ def handle_volcano_draw(state: GameState) -> bool:
     return False
 
 
-def apply_non_participant_actions(
-        state: GameState,
-        non_participants: list[Player],
-) -> list[tuple[Player, GatherAction]]:
+def apply_non_participant_actions(state: GameState, non_participants: list[Player]) -> list[tuple[Player, GatherAction]]:
     """
     Determine the actions of players not selected for the mission.
 
@@ -64,11 +61,7 @@ def apply_non_participant_actions(
     return gather_actions
 
 
-def draw_complication_card(
-        state: GameState,
-        participants: list,
-        mission: Mission,
-) -> ComplicationCard:
+def draw_complication_card(state: GameState, participants: list, mission: Mission) -> ComplicationCard:
     """
     Draw the complication card for this round's mission attempt.
 

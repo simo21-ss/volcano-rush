@@ -17,9 +17,11 @@ class CookStrategy(CharacterStrategy):
         ]
         if not preferred:
             return None
+
         return max(preferred, key = lambda mission_name: Mission.catalog[mission_name].points)
 
     def mission_success_bonus_points(self, mission: Mission) -> int:
         if mission.mission_type == MissionType.FOOD:
             return 1
+
         return 0

@@ -1,8 +1,8 @@
 from typing import ClassVar
 
-from ..models import Character, Player, GameState
-from ..actions import NonParticipantAction, GatherAction
 from .base import CharacterStrategy
+from ..actions import NonParticipantAction, GatherAction
+from ..models import Character, Player, GameState
 
 
 class GathererStrategy(CharacterStrategy):
@@ -13,12 +13,9 @@ class GathererStrategy(CharacterStrategy):
     def character(self) -> Character:
         return Character.GATHERER
 
-    def choose_non_participant_action(
-        self,
-        player: Player,
-        state: GameState,
-    ) -> NonParticipantAction:
+    def choose_non_participant_action(self, player: Player, state: GameState) -> NonParticipantAction:
         can_use_ability = not player.is_exhausted and len(player.resources) < self.ABILITY_HAND_CEILING
         if can_use_ability:
             return GatherAction(amount = self.ABILITY_DRAW_AMOUNT, causes_exhaustion = True)
+
         return GatherAction()

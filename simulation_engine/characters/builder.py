@@ -19,13 +19,10 @@ class BuilderStrategy(CharacterStrategy):
             return None
         return max(preferred, key = lambda mission_name: Mission.catalog[mission_name].points)
 
-    def requirement_discount(
-        self,
-        mission:      Mission,
-        requirements: MissionRequirement,
-    ) -> MissionRequirement:
+    def requirement_discount(self, mission: Mission, requirements: MissionRequirement) -> MissionRequirement:
         if requirements.typed.get(Resource.WOOD, 0) >= 1:
             updated = dict(requirements.typed)
             updated[Resource.WOOD] -= 1
             return MissionRequirement(typed = updated, any_extra = requirements.any_extra)
+
         return requirements

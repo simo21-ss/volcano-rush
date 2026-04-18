@@ -17,18 +17,10 @@ class CharacterStrategy(ABC):
     def preferred_mission(self, active_missions: list[MissionName]) -> Optional[MissionName]:
         return None
 
-    def choose_non_participant_action(
-        self,
-        player: Player,
-        state: GameState,
-    ) -> NonParticipantAction:
+    def choose_non_participant_action(self, player: Player, state: GameState) -> NonParticipantAction:
         return GatherAction()
 
-    def requirement_discount(
-        self,
-        mission: Mission,
-        requirements: MissionRequirement,
-    ) -> MissionRequirement:
+    def requirement_discount(self, mission: Mission, requirements: MissionRequirement) -> MissionRequirement:
         return requirements
 
     def complication_draw_count(self, mission: Mission) -> int:
