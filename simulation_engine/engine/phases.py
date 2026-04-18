@@ -187,4 +187,8 @@ def apply_gather_step(state: GameState, gather_actions: list[tuple[Player, Gathe
         for player, action in gather_actions:
             action.execute(player, state)
 
-    state.pending_bonus = None
+    # Consume the gather bonus once all gatherers have used it. Discount-only
+    # bonuses are left alone; they're consumed by the next mission's
+    # compute_per_player_requirements.
+    if state.pending_bonus is not None and state.pending_bonus.gather_bonus > 0:
+        state.pending_bonus = None

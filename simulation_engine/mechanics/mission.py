@@ -25,12 +25,14 @@ def compute_per_player_requirements(mission: Mission, state: GameState) -> Missi
     resource_requirements = dict(mission.required_resources)
     any_extra = 0
 
-    # Apply pending bonus discounts
+    # Apply and consume any pending discount bonus from a previous mission success
     if state.pending_bonus is not None:
         bonus = state.pending_bonus
-        for resource, amount in bonus.resource_discount.items():
-            resource_requirements[resource] = resource_requirements.get(resource, 0) - amount
-        any_extra -= bonus.resource_discount_any
+        if bonus.resource_discount or bonus.resource_discount_any > 0:
+            for resource, amount in bonus.resource_discount.items():
+                resource_requirements[resource] = resource_requirements.get(resource, 0) - amount
+            any_extra -= bonus.resource_discount_any
+            state.pending_bonus = None
 
     # Clamp
     return MissionRequirement(
