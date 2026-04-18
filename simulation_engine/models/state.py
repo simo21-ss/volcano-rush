@@ -3,7 +3,7 @@ from typing import Optional
 
 from .bonus_effects import BonusEffect
 from .contribution import CharacterContribution
-from .enums import Character, Resource, Tool, MissionName, ComplicationCardName, VolcanoCardName
+from .enums import Character, Resource, Tool, MissionName, ComplicationCardName, VolcanoCardName, GameOutcome
 
 
 @dataclass
@@ -70,13 +70,19 @@ class GameState:
         for player in self.players:
             player.is_exhausted = self.round <= player.exhausted_until
 
-    def end_round(self) -> None:
+    def end_round(self) -> Optional[GameOutcome]:
         """
         End-of-round housekeeping: consume any pending Panic card (its one-round
-        effect has now been applied) and rotate the active player to the next
-        seat. Additional end-of-round steps can be bundled here as needed.
+        effect has now been applied), check the win condition, and rotate the
+        active player to the next seat. Returns GameOutcome.WIN when the boat
+        is complete, otherwise None.
         """
         if self.pending_volcano_card == VolcanoCardName.PANIC:
             self.pending_volcano_card = None
 
+        if len(self.boat_parts_built) >= self.boat_parts_required:
+            return GameOutcome.WIN
+
         self.active_player_index = (self.active_player_index + 1) % len(self.players)
+
+        return None

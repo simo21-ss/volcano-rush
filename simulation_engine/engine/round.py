@@ -55,9 +55,7 @@ def _run_shuffle_round(active_player: Player, state: GameState) -> Optional[Game
     if handle_volcano_draw(state):
         return GameOutcome.LOSS
 
-    state.end_round()
-
-    return None
+    return state.end_round()
 
 
 def _run_forfeit_round(state: GameState) -> Optional[GameOutcome]:
@@ -70,9 +68,7 @@ def _run_forfeit_round(state: GameState) -> Optional[GameOutcome]:
     elif handle_volcano_draw(state):
         return GameOutcome.LOSS
 
-    state.end_round()
-
-    return None
+    return state.end_round()
 
 
 def _run_mission_round(
@@ -122,16 +118,5 @@ def _run_mission_round(
         if new_mission:
             state.active_missions.append(new_mission)
 
-    # Win check
-    if len(state.boat_parts_built) >= state.boat_parts_required:
-        return GameOutcome.WIN
-
-    # No-mission-left check: all three slots completed or discarded without the
-    # pool having any replacement to draw.
-    if not state.active_missions:
-        return GameOutcome.LOSS
-
-    # Step 10 - Advance active player
-    state.end_round()
-
-    return None
+    # Step 10 - End round (consumes Panic, checks win, advances active player)
+    return state.end_round()
