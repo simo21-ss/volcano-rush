@@ -1,8 +1,8 @@
 from typing import Optional
 
 from ..models import (
-    MissionType, VolcanoCardName,
-    GameState, Mission, GameOutcome,
+    MissionType, MissionName, VolcanoCardName,
+    Player, GameState, Mission, GameOutcome,
 )
 from ..actions import PlayerAction, ShuffleMissionsAction
 from ..mechanics import refresh_exhaustion, update_tool_repairs
@@ -41,34 +41,48 @@ def run_round(state: GameState) -> Optional[GameOutcome]:
     update_tool_repairs(state)
     refresh_exhaustion(state)
 
-    # Step 1 - Identify active player before any list mutations
     active_player = state.players[state.active_player_index]
 
-    # Step 2 - Active player decision
     action = decide_mission_action(active_player, state)
-
     if action == PlayerAction.SHUFFLE_MISSIONS:
-        ShuffleMissionsAction().execute(active_player, state)
-
-        if handle_volcano_draw(state):
-            return GameOutcome.LOSS
-
-        state.advance_active_player()
-        return None
+        return _run_shuffle_round(active_player, state)
 
     mission_name = vote_for_mission(active_player, state)
-
     if mission_name is None:
-        # Panic pending, all active missions are boats, no resources to shuffle:
-        # no legal mission, round forfeits.
-        state.pending_volcano_card = None
-        if state.protect_next_failure:
-            state.protect_next_failure = False
-        elif handle_volcano_draw(state):
-            return GameOutcome.LOSS
-        state.advance_active_player()
-        return None
+        return _run_forfeit_round(state)
 
+    return _run_mission_round(active_player, mission_name, state)
+
+
+def _run_shuffle_round(active_player: Player, state: GameState) -> Optional[GameOutcome]:
+    ShuffleMissionsAction().execute(active_player, state)
+
+    if handle_volcano_draw(state):
+        return GameOutcome.LOSS
+
+    state.advance_active_player()
+    return None
+
+
+def _run_forfeit_round(state: GameState) -> Optional[GameOutcome]:
+    """
+    Panic pending, all active missions are boats, no resources to shuffle:
+    no legal mission, round forfeits.
+    """
+    state.pending_volcano_card = None
+    if state.protect_next_failure:
+        state.protect_next_failure = False
+    elif handle_volcano_draw(state):
+        return GameOutcome.LOSS
+    state.advance_active_player()
+    return None
+
+
+def _run_mission_round(
+    active_player: Player,
+    mission_name: MissionName,
+    state: GameState,
+) -> Optional[GameOutcome]:
     mission = Mission.get(mission_name)
 
     # Clear pending Panic card (we chose a non-boat under the ban)
