@@ -138,7 +138,8 @@ Apply modifiers in this order:
 
 | Players | Boat Parts Required | Active Boat Missions |
 |---|---|---|
-| 6-7 | 4 | All 4 base missions |
+| 6 | 3 | Cut the Keel, Assemble the Hull, Raise the Mast |
+| 7 | 4 | All 4 base missions (adds Make the Sail) |
 | 8 | 5 | All 4 base missions + Fit the Rudder |
 
 **Loss:** The **Eruption** Volcano card is revealed.
@@ -151,7 +152,7 @@ Points are only counted if the group achieves a **collective victory**. Each par
 
 **Character bonuses (also only counted on collective victory):**
 - **Fire Starter:** +1 point on fire mission success (for all participants).
-- **Cook:** +1 point on vessel mission success (for all participants).
+- **Cook:** +1 point on food mission success (for all participants).
 - **Craftsman:** +1 point each time the Craftsman chooses to repair a tool.
 
 **Tiebreaker:** If two or more players are tied on points, the player with more unused resources in hand wins.

@@ -1,6 +1,6 @@
 ---
 name: code-formatting
-description: Project formatting rules for Python (keyword arg spacing, dataclass and multi-line constructor column alignment, no variable-assignment alignment, single-line constructor rules, dict/list literal style, no abbreviated variable names, dataclass field ordering), Git (no Co-Authored-By), and Markdown (plain hyphens instead of em/en dashes). Invoke before editing any .py or .md file in this repo.
+description: Project formatting rules for Python (keyword arg spacing, no column alignment anywhere, dict/list literal style, no abbreviated variable names, dataclass field ordering), Git (no Co-Authored-By), and Markdown (plain hyphens instead of em/en dashes). Invoke before editing any .py or .md file in this repo.
 ---
 
 # Code Formatting Rules
@@ -21,55 +21,58 @@ Mission(name = MissionName.HUNT, players_count = 3)
 field(default_factory=dict)
 ```
 
-### Dataclass field definitions
-Align field names, type annotations, and default values in columns:
+### No column alignment anywhere
+Never pad with spaces to align `=` signs, type annotations, field names, default values, or inline comments across rows. This applies to every context: dataclass field definitions, multi-line constructor calls, function signatures, variable assignments, module-level constants, notebook cells, loop bodies.
+
+One space before and after each `=`. One space after each comma. That is the only horizontal spacing rule.
+
 ```python
+# Correct - dataclass fields, no alignment padding
 @dataclass(frozen = True)
 class BonusEffect:
-    resource_discount:      dict[Resource, int]       = field(default_factory = dict)
-    resource_discount_any:  int                       = 0
-    skip_next_complication: bool                      = False
-    negates_volcano_card:   Optional[VolcanoCardName] = None
-```
+    resource_discount: dict[Resource, int] = field(default_factory = dict)
+    resource_discount_any: int = 0
+    skip_next_complication: bool = False
+    negates_volcano_card: Optional[VolcanoCardName] = None
 
-### Multi-line constructor calls
-Align `=` signs within a single multi-line call:
-```python
+# Correct - multi-line constructor, no alignment padding
+Mission(
+    name = MissionName.FETCH_WATER,
+    required_resources = {Resource.ROPE: 2, Resource.WOOD: 1},
+    players_count = 3,
+    required_tools = [Tool.VESSEL],
+)
+
+# Correct - function signature, no alignment padding
+def run_game(
+    player_count: int,
+    initial_resources_per_player: int = 3,
+    deck_resource_count: int = 20,
+    urgent_volcano_threshold: int = 4,
+    verbose: bool = False,
+) -> GameRecord:
+    ...
+
+# Correct - variable assignments with inline comments
+BASE_MINUTES_PER_ROUND = 2.0   # fixed overhead
+MINUTES_PER_PLAYER = 0.5   # per player
+
+# Wrong - padding to align = signs across rows
+resource_discount:      dict[Resource, int]       = field(default_factory = dict)
+resource_discount_any:  int                       = 0
+skip_next_complication: bool                      = False
+
+# Wrong - padding to align = signs in a constructor call
 Mission(
     name               = MissionName.FETCH_WATER,
     required_resources = {Resource.ROPE: 2, Resource.WOOD: 1},
     players_count      = 3,
-    required_tools     = [Tool.VESSEL],
 )
-```
 
-### Variable assignments
-No column alignment for variable assignments anywhere (function bodies, module level, notebook cells, loop bodies) - just one space around `=`. This applies even when variables have inline comments:
-```python
-# Correct
-mission_name = select_mission(state)
-mission = MISSIONS[mission_name]
-
-BASE_MINUTES_PER_ROUND = 2.0   # fixed overhead
-MINUTES_PER_PLAYER = 0.5   # per player
-
-resource_labels = [r.name.title() for r in RESOURCES]
-consumed_means = [data[f"consumed_{r.name}"].mean() for r in RESOURCES]
-consumed_stds = [data[f"consumed_{r.name}"].std() for r in RESOURCES]
-
-# Wrong - padding to align = signs or inline comments across rows
-mission_name = select_mission(state)
-mission      = MISSIONS[mission_name]
-
+# Wrong - padding to align comments
 BASE_MINUTES_PER_ROUND = 2.0   # fixed overhead
 MINUTES_PER_PLAYER     = 0.5   # per player
-
-resource_labels = [r.name.title() for r in RESOURCES]
-consumed_means  = [data[f"consumed_{r.name}"].mean() for r in RESOURCES]
-consumed_stds   = [data[f"consumed_{r.name}"].std() for r in RESOURCES]
 ```
-
-Column alignment is only allowed in **dataclass field definitions** and **multi-line constructor calls** (see above).
 
 ### Single-line constructor calls
 No padding between arguments - just one space after each comma. Never add spaces to align arguments across different calls:

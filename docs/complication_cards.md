@@ -8,8 +8,8 @@ After participants are chosen for a mission, shuffle the Complication deck and d
 | **Wet Wood** | Requires +1 Wood if the mission requires Wood; otherwise no effect |
 | **Collapsed Path** | Requires +1 Stone for reinforcement |
 | **Slippery Rocks** | Requires +2 resources total (any combination) |
-| **Blunt Blade** | If the mission requires the Knife and succeeds, the Knife becomes damaged afterwards |
-| **Cracked Vessel** | If the mission requires the Bowl and succeeds, the Vessel becomes damaged afterwards |
+| **Blunt Blade** | If the mission succeeds, the Knife becomes damaged afterwards |
+| **Cracked Vessel** | If the mission succeeds, the Vessel becomes damaged afterwards |
 | **Heat and Thirst** | Each participant must add +1 resource (any type) |
 | **Night Anxiety** | Mission requires 1 additional helper who may contribute resources but receives no points; if no willing helper is available, the mission fails |
 | **Camp Panic** | Each participant may contribute at most 1 card of any single resource type to the mission |

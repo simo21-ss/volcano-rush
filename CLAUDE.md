@@ -17,12 +17,13 @@ Builder, Fire Starter, Craftsman, Cook, Gatherer, Sailor. Each player gets one v
 - 8 players: all 6 roles + 2 non-Craftsman roles repeated at random
 
 ### Missions
-13 missions in the catalog, split by `MissionType`: `FIRE`, `FOOD`, `SHELTER`, `BOAT`. Each round, 3 non-boat missions are active.
+13 missions in the catalog, split by `MissionType`: `FIRE`, `FOOD`, `SHELTER`, `BOAT`. Each round, 3 missions are active, drawn from the shuffled mission pool (can include boat missions).
 
 **Resource requirement model:** mission requirements are **per participant**, not pooled. Each participant must individually hold the per-player cost (after applying their own character's discount). Complication and volcano-card extras are paid once by the group from pooled surplus after per-player costs are deducted. See `simulation_engine/mechanics/mission.py` - `compute_per_player_requirements`, `compute_group_extras`, `check_and_contribute`.
 
 ### Boat scaling
-- 6-7 players: 4 boat parts required (Keel, Hull, Mast, Sail)
+- 6 players: 3 boat parts required (Keel, Hull, Mast)
+- 7 players: 4 boat parts required (+ Sail)
 - 8 players: 5 boat parts required (+ Fit the Rudder)
 
 ### Exhaustion
@@ -36,6 +37,7 @@ Any mission participant becomes Exhausted for the following round and cannot par
 - `simulation_engine/models/` - enums, dataclasses (missions, complications, volcano cards, state, records)
 - `simulation_engine/mechanics/` - resolution logic (`mission.py`, `effects.py`, `exhaustion.py`)
 - `simulation_engine/characters/` - one strategy class per file, all implementing `CharacterStrategy` from `base.py`
+- `simulation_engine/agents/` - team-level decision functions called from the engine: `feasibility.py` (affordability helpers), `mission_selection.py` (vote_for_mission, decide_active_player_action), `participant_selection.py` (scored participant picking)
 - `simulation_engine/engine.py` - `run_game`, `run_scenario` orchestration
 - `simulation_engine/initialization.py` - deck, player, tool, volcano, mission-pool setup
 - `tests/` - pytest suite

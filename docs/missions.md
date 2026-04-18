@@ -76,7 +76,11 @@ Each participant must **individually** meet the mission's resource requirements 
 
 ## Boat Missions
 
-The number of boat parts required to win depends on player count (see game_rules.md). There are **5 boat missions** in total; the 5th (Fit the Rudder) is only active in 8-player games.
+The number of boat parts required to win depends on player count (see game_rules.md). There are **5 boat missions** in total:
+
+- **6 players** use the first 3 (Keel, Hull, Mast).
+- **7 players** add Make the Sail (4 boat parts).
+- **8 players** add Fit the Rudder (5 boat parts).
 
 ### Cut the Keel *(Boat Part: Keel)*
 | Field | Value |
@@ -106,14 +110,14 @@ The number of boat parts required to win depends on player count (see game_rules
 | Field | Value |
 |---|---|
 | **Requires (per player)** | 1 Wood + 1 Rope |
-| **Participants** | 2 |
+| **Participants** | 4 |
 | **Reward** | 1 point per participant |
 | **Bonus** | +1 Boat Part |
 
 ### Fit the Rudder *(Boat Part: Rudder - 8 players only)*
 | Field | Value |
 |---|---|
-| **Requires (per player)** | 1 Wood + 1 Stone + 1 Rope + Vessel (tool) |
-| **Participants** | 4 |
+| **Requires (per player)** | 1 Wood + 1 Rope + Vessel (tool) |
+| **Participants** | 3 |
 | **Reward** | 1 point per participant |
 | **Bonus** | +1 Boat Part |
