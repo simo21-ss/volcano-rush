@@ -11,10 +11,13 @@ class FireStarterStrategy(CharacterStrategy):
         return Character.FIRE_STARTER
 
     def preferred_mission(self, active_missions: list[MissionName]) -> Optional[MissionName]:
-        for mission_name in active_missions:
-            if Mission.catalog[mission_name].mission_type == MissionType.FIRE:
-                return mission_name
-        return None
+        preferred = [
+            mission_name for mission_name in active_missions
+            if Mission.catalog[mission_name].mission_type == MissionType.FIRE
+        ]
+        if not preferred:
+            return None
+        return max(preferred, key = lambda mission_name: Mission.catalog[mission_name].points)
 
     def requirement_discount(
         self,

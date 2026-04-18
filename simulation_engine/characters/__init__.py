@@ -8,7 +8,7 @@ from .gatherer import GathererStrategy
 from .sailor import SailorStrategy
 
 
-_STRATEGY_REGISTRY: dict[Character, CharacterStrategy] = {
+STRATEGY_REGISTRY: dict[Character, CharacterStrategy] = {
     Character.BUILDER:      BuilderStrategy(),
     Character.FIRE_STARTER: FireStarterStrategy(),
     Character.CRAFTSMAN:    CraftsmanStrategy(),
@@ -19,4 +19,4 @@ _STRATEGY_REGISTRY: dict[Character, CharacterStrategy] = {
 
 
 def get_strategy(character: Character) -> CharacterStrategy:
-    return _STRATEGY_REGISTRY[character]
+    return STRATEGY_REGISTRY[character]

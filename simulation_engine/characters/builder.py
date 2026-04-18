@@ -11,10 +11,13 @@ class BuilderStrategy(CharacterStrategy):
         return Character.BUILDER
 
     def preferred_mission(self, active_missions: list[MissionName]) -> Optional[MissionName]:
-        for mission_name in active_missions:
-            if Mission.catalog[mission_name].required_resources.get(Resource.WOOD, 0) >= 1:
-                return mission_name
-        return None
+        preferred = [
+            mission_name for mission_name in active_missions
+            if Mission.catalog[mission_name].required_resources.get(Resource.WOOD, 0) >= 1
+        ]
+        if not preferred:
+            return None
+        return max(preferred, key = lambda mission_name: Mission.catalog[mission_name].points)
 
     def requirement_discount(
         self,

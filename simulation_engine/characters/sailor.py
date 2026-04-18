@@ -1,7 +1,6 @@
-import random
 from typing import Optional
 
-from ..models import Character, MissionType, MissionName, Mission
+from ..models import Character, MissionType, MissionName, BOAT_PART_ORDER, Mission
 from .base import CharacterStrategy
 
 
@@ -12,12 +11,13 @@ class SailorStrategy(CharacterStrategy):
         return Character.SAILOR
 
     def preferred_mission(self, active_missions: list[MissionName]) -> Optional[MissionName]:
-        boat_options = [
+        boat_options = {
             mission_name for mission_name in active_missions
             if Mission.catalog[mission_name].mission_type == MissionType.BOAT
-        ]
-        if boat_options:
-            return random.choice(boat_options)
+        }
+        for boat_name in BOAT_PART_ORDER:
+            if boat_name in boat_options:
+                return boat_name
         return None
 
     def complication_draw_count(self, mission: Mission) -> int:

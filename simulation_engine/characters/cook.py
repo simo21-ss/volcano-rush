@@ -11,10 +11,13 @@ class CookStrategy(CharacterStrategy):
         return Character.COOK
 
     def preferred_mission(self, active_missions: list[MissionName]) -> Optional[MissionName]:
-        for mission_name in active_missions:
-            if Mission.catalog[mission_name].mission_type == MissionType.FOOD:
-                return mission_name
-        return None
+        preferred = [
+            mission_name for mission_name in active_missions
+            if Mission.catalog[mission_name].mission_type == MissionType.FOOD
+        ]
+        if not preferred:
+            return None
+        return max(preferred, key = lambda mission_name: Mission.catalog[mission_name].points)
 
     def mission_success_bonus_points(self, mission: Mission) -> int:
         if mission.mission_type == MissionType.FOOD:
