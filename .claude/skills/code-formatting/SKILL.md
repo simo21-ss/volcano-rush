@@ -43,13 +43,13 @@ Mission(
     required_tools = [Tool.VESSEL],
 )
 
-# Correct - function signature, no alignment padding
+# Correct - function signature, no alignment padding, 8-space continuation indent
 def run_game(
-    player_count: int,
-    initial_resources_per_player: int = 3,
-    deck_resource_count: int = 20,
-    urgent_volcano_threshold: int = 4,
-    verbose: bool = False,
+        player_count: int,
+        initial_resources_per_player: int = 3,
+        deck_resource_count: int = 20,
+        urgent_volcano_threshold: int = 4,
+        verbose: bool = False,
 ) -> GameRecord:
     ...
 
@@ -72,6 +72,25 @@ Mission(
 # Wrong - padding to align comments
 BASE_MINUTES_PER_ROUND = 2.0   # fixed overhead
 MINUTES_PER_PLAYER     = 0.5   # per player
+```
+
+### Multi-line function signatures
+Parameters on continuation lines are indented with **8 spaces** (two indent levels), matching PyCharm's default continuation-indent setting. The closing `)` sits at column 0. Applies to both `def` declarations and multi-line signatures on method definitions inside classes (8 spaces beyond the class body's indent level):
+```python
+# Correct - top-level function, 8-space continuation indent
+def run_scenario(
+        player_count: int,
+        n_games: int,
+        base_seed: Optional[int] = None,
+) -> list[GameRecord]:
+    ...
+
+# Wrong - 4-space continuation indent
+def run_scenario(
+    player_count: int,
+    n_games: int,
+) -> list[GameRecord]:
+    ...
 ```
 
 ### Single-line constructor calls

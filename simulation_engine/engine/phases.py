@@ -14,7 +14,7 @@ def handle_volcano_draw(state: GameState) -> bool:
 
     If the drawn card is an eruption, returns True immediately (caller must end
     the game). If state.pending_bonus can negate the card, the bonus is consumed
-    and the card has no effect. Otherwise the card is applied via apply_volcano_card.
+    and the card has no effect. Otherwise, the card is applied via apply_volcano_card.
 
     Args:
         state: Current game state, mutated in place.
@@ -36,8 +36,8 @@ def handle_volcano_draw(state: GameState) -> bool:
 
 
 def apply_non_participant_actions(
-    state: GameState,
-    non_participants: list[Player],
+        state: GameState,
+        non_participants: list[Player],
 ) -> list[tuple[Player, GatherAction]]:
     """
     Determine the actions of players not selected for the mission.
@@ -48,7 +48,7 @@ def apply_non_participant_actions(
     benefit from any mission-success gather bonus set later this round.
 
     Args:
-        state:            Current game state, mutated in place.
+        state: Current game state, mutated in place.
         non_participants: Players not selected to participate in the mission.
 
     Returns:
@@ -65,9 +65,9 @@ def apply_non_participant_actions(
 
 
 def draw_complication_card(
-    state:        GameState,
-    participants: list,
-    mission:      Mission,
+        state: GameState,
+        participants: list,
+        mission: Mission,
 ) -> ComplicationCard:
     """
     Draw the complication card for this round's mission attempt.
@@ -76,12 +76,12 @@ def draw_complication_card(
     1. If skip_next_complication is set, use CALM_BREEZE and clear the flag.
     2. If a Sailor is participating in a boat mission, draw two cards and keep
        the one with lower severity (best outcome for players).
-    3. Otherwise draw one card normally.
+    3. Otherwise, draw one card normally.
 
     Args:
-        state:        Current game state, mutated in place (skip_next_complication flag).
+        state: Current game state, mutated in place (skip_next_complication flag).
         participants: Players committed to the mission this round.
-        mission:      The selected mission for this round.
+        mission: The selected mission for this round.
 
     Returns:
         The ComplicationCard to use for mission resolution.
@@ -113,10 +113,10 @@ def draw_complication_card(
 
 
 def apply_mission_success(
-    state:        GameState,
-    mission:      Mission,
-    mission_name: MissionName,
-    participants: list,
+        state: GameState,
+        mission: Mission,
+        mission_name: MissionName,
+        participants: list,
 ) -> bool:
     """
     Apply scoring and bonus effects after a mission succeeds.
@@ -126,8 +126,8 @@ def apply_mission_success(
     volcano card if it applied a penalty, and processes the mission's bonus_on_success.
 
     Args:
-        state:        Current game state, mutated in place.
-        mission:      The mission that was completed.
+        state: Current game state, mutated in place.
+        mission: The mission that was completed.
         mission_name: The mission's enum name (used for boat-part registration in apply_bonus).
         participants: Players who contributed to and completed the mission.
 
@@ -162,9 +162,9 @@ def apply_mission_success(
 
 
 def apply_exhaustion_step(
-    state:         GameState,
-    participants:  list,
-    no_exhaustion: bool,
+        state: GameState,
+        participants: list,
+        no_exhaustion: bool,
 ) -> None:
     """
     Apply exhaustion to mission participants at the end of the mission phase.
@@ -174,8 +174,8 @@ def apply_exhaustion_step(
     apply_exhaustion. The step is skipped entirely when no_exhaustion is True.
 
     Args:
-        state:         Current game state, mutated in place.
-        participants:  Players who participated in the mission this round.
+        state: Current game state, mutated in place.
+        participants: Players who participated in the mission this round.
         no_exhaustion: If True, skip exhaustion entirely.
     """
     extra_exhaustion = (
@@ -190,8 +190,8 @@ def apply_exhaustion_step(
 
 
 def apply_gather_step(
-    state: GameState,
-    gather_actions: list[tuple[Player, GatherAction]],
+        state: GameState,
+        gather_actions: list[tuple[Player, GatherAction]],
 ) -> None:
     """
     Execute the bucketed gather actions.
@@ -201,7 +201,7 @@ def apply_gather_step(
     per-player gather bonus. Clears state.pending_bonus at the end.
 
     Args:
-        state:          Current game state, mutated in place.
+        state: Current game state, mutated in place.
         gather_actions: (player, GatherAction) pairs produced by
                         apply_non_participant_actions.
     """
