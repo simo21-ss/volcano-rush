@@ -2,9 +2,8 @@ import random
 from typing import Optional
 
 from .round import run_round
-from .. import MissionName
 from ..initialization import init_game
-from ..models import CharacterContribution, GameRecord, GameState, GameOutcome, Player
+from ..models import CharacterContribution, GameRecord, GameState, GameOutcome, MissionName, Player
 
 
 def run_game(
