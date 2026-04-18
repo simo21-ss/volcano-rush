@@ -1,18 +1,14 @@
-import random
 from collections import Counter
 from typing import Optional
 
+from ..characters import get_strategy
 from ..models import (
     GameState, Player, Mission, ComplicationCard, VolcanoCard,
     MissionRequirement,
 )
-from ..characters import get_strategy
 
 
-def compute_per_player_requirements(
-    mission: Mission,
-    state:   GameState,
-) -> MissionRequirement:
+def compute_per_player_requirements(mission: Mission, state: GameState) -> MissionRequirement:
     """
     Compute the base per-player mission requirements.
 
@@ -38,16 +34,16 @@ def compute_per_player_requirements(
 
     # Clamp
     return MissionRequirement(
-        typed     = {resource: max(0, value) for resource, value in resource_requirements.items()},
+        typed = { resource: max(0, value) for resource, value in resource_requirements.items() },
         any_extra = max(0, any_extra),
     )
 
 
 def compute_group_extras(
-    mission:      Mission,
-    complication: ComplicationCard,
-    participants: list[Player],
-    state:        GameState,
+        mission: Mission,
+        complication: ComplicationCard,
+        participants: list[Player],
+        state: GameState,
 ) -> MissionRequirement:
     """
     Compute the one-time group extras from complication and volcano cards.
@@ -64,7 +60,7 @@ def compute_group_extras(
     Returns:
         One-time group extras with typed resource costs and a wildcard any_extra count.
     """
-    resource_requirements: dict = {}
+    resource_requirements: dict = { }
     any_extra = 0
 
     # Apply pending volcano card extra resources
@@ -86,12 +82,12 @@ def compute_group_extras(
 
 
 def check_and_contribute(
-    participants:        list[Player],
-    per_player_requirements: MissionRequirement,
-    group_extras:        MissionRequirement,
-    max_per_type:        Optional[int],
-    state:               GameState,
-    mission:             Mission,
+        participants: list[Player],
+        per_player_requirements: MissionRequirement,
+        group_extras: MissionRequirement,
+        max_per_type: Optional[int],
+        state: GameState,
+        mission: Mission,
 ) -> bool:
     """
     Check if each participant individually meets the per-player requirements and the group
@@ -123,7 +119,7 @@ def check_and_contribute(
         if personal.typed != typed_before or personal.any_extra != any_extra_before:
             player.contribution.requirement_discounts_used += 1
         personal = MissionRequirement(
-            typed     = {resource: max(0, value) for resource, value in personal.typed.items()},
+            typed = { resource: max(0, value) for resource, value in personal.typed.items() },
             any_extra = max(0, personal.any_extra),
         )
         player_requirements.append((player, personal))
@@ -132,12 +128,12 @@ def check_and_contribute(
     for player, personal in player_requirements:
         resources_by_type = Counter(player.resources)
         if max_per_type is not None:
-            resources_by_type = Counter({resource: min(count, max_per_type) for resource, count in resources_by_type.items()})
+            resources_by_type = Counter({ resource: min(count, max_per_type) for resource, count in resources_by_type.items() })
 
         for resource, needed in personal.typed.items():
             if needed > 0 and resources_by_type.get(resource, 0) < needed:
                 state.mission_failures_by_resource[resource] = (
-                    state.mission_failures_by_resource.get(resource, 0) + 1
+                        state.mission_failures_by_resource.get(resource, 0) + 1
                 )
                 return False
 
@@ -155,7 +151,7 @@ def check_and_contribute(
         for player, personal in player_requirements:
             resources_by_type = Counter(player.resources)
             if max_per_type is not None:
-                resources_by_type = Counter({resource: min(count, max_per_type) for resource, count in resources_by_type.items()})
+                resources_by_type = Counter({ resource: min(count, max_per_type) for resource, count in resources_by_type.items() })
             for resource in set(resources_by_type) | set(personal.typed):
                 surplus = resources_by_type.get(resource, 0) - personal.typed.get(resource, 0) - personal.any_extra
                 if surplus > 0:
@@ -172,7 +168,7 @@ def check_and_contribute(
         for resource, needed in group_extras.typed.items():
             if needed > 0 and pooled_surplus.get(resource, 0) < needed:
                 state.mission_failures_by_resource[resource] = (
-                    state.mission_failures_by_resource.get(resource, 0) + 1
+                        state.mission_failures_by_resource.get(resource, 0) + 1
                 )
                 return False
             pooled_surplus[resource] -= needed
@@ -237,10 +233,10 @@ def check_and_contribute(
 
 
 def resolve_mission(
-    state:        GameState,
-    mission:      Mission,
-    participants: list[Player],
-    complication: ComplicationCard,
+        state: GameState,
+        mission: Mission,
+        participants: list[Player],
+        complication: ComplicationCard,
 ) -> bool:
     """
     Attempt to resolve a mission with the given participants and complication card.
@@ -265,7 +261,7 @@ def resolve_mission(
     for tool in mission.required_tools:
         if state.tools[tool].damaged:
             state.mission_failures_tool_damaged[tool] = (
-                state.mission_failures_tool_damaged.get(tool, 0) + 1
+                    state.mission_failures_tool_damaged.get(tool, 0) + 1
             )
             return False
 
@@ -279,12 +275,12 @@ def resolve_mission(
     group_extras = compute_group_extras(mission, complication, participants, state)
 
     success = check_and_contribute(
-        participants        = participants,
+        participants = participants,
         per_player_requirements = per_player,
-        group_extras        = group_extras,
-        max_per_type        = complication.max_resource_per_type,
-        state               = state,
-        mission             = mission,
+        group_extras = group_extras,
+        max_per_type = complication.max_resource_per_type,
+        state = state,
+        mission = mission,
     )
 
     if success and complication.damages_tool_on_success is not None:
