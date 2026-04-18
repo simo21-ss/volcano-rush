@@ -1,7 +1,7 @@
 from typing import Optional
 
 from ..models import (
-    MissionType, MissionName, VolcanoCardName,
+    MissionType, MissionName,
     Player, GameState, Mission, GameOutcome,
 )
 from ..actions import PlayerAction, ShuffleMissionsAction
@@ -56,6 +56,7 @@ def _run_shuffle_round(active_player: Player, state: GameState) -> Optional[Game
         return GameOutcome.LOSS
 
     state.end_round()
+
     return None
 
 
@@ -64,25 +65,22 @@ def _run_forfeit_round(state: GameState) -> Optional[GameOutcome]:
     Panic pending, all active missions are boats, no resources to shuffle:
     no legal mission, round forfeits.
     """
-    state.pending_volcano_card = None
     if state.protect_next_failure:
         state.protect_next_failure = False
     elif handle_volcano_draw(state):
         return GameOutcome.LOSS
+
     state.end_round()
+
     return None
 
 
 def _run_mission_round(
-    active_player: Player,
-    mission_name: MissionName,
-    state: GameState,
+        active_player: Player,
+        mission_name: MissionName,
+        state: GameState,
 ) -> Optional[GameOutcome]:
     mission = Mission.get(mission_name)
-
-    # Clear pending Panic card (we chose a non-boat under the ban)
-    if state.pending_volcano_card == VolcanoCardName.PANIC:
-        state.pending_volcano_card = None
 
     # Step 3 - Participant selection
     participants = active_player_select_participants(active_player, mission, state)

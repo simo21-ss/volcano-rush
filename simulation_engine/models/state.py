@@ -72,7 +72,11 @@ class GameState:
 
     def end_round(self) -> None:
         """
-        End-of-round housekeeping: rotate the active player to the next seat.
-        Additional end-of-round steps can be bundled here as needed.
+        End-of-round housekeeping: consume any pending Panic card (its one-round
+        effect has now been applied) and rotate the active player to the next
+        seat. Additional end-of-round steps can be bundled here as needed.
         """
+        if self.pending_volcano_card == VolcanoCardName.PANIC:
+            self.pending_volcano_card = None
+
         self.active_player_index = (self.active_player_index + 1) % len(self.players)
