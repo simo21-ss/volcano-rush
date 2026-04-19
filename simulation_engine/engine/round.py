@@ -10,6 +10,7 @@ from ..actions import PlayerAction, ShuffleMissionsAction, GatherAction, RepairA
 from ..agents import (
     decide_mission_action, vote_for_mission, active_player_select_participants,
 )
+from ..deck import draw_mission
 from ..mechanics.mission import resolve_mission
 from ..models import (
     MissionType, MissionName,
@@ -96,4 +97,10 @@ def _run_mission_round(active_player: Player, mission_name: MissionName, state: 
     apply_exhaustion_step(state, participants)
     apply_gather_step(state, gather_actions)
 
-    return state.end_round(completed_mission = mission_name if success else None)
+    if success:
+        state.active_missions.remove(mission_name)
+        new_mission = draw_mission(state)
+        if new_mission:
+            state.active_missions.append(new_mission)
+
+    return state.end_round()
