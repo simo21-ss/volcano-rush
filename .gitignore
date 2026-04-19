@@ -28,3 +28,7 @@ build/
 .env
 *.key
 *.pem
+
+# BGG dataset (re-fetch via `kaggle datasets download` per README)
+data/bgg/*
+!data/bgg/.gitkeep

@@ -1,0 +1,212 @@
+{
+  "created_at": "2026-04-19T15:07:22+00:00",
+  "git_sha": "7392802c7b3c296555c8c1ebb7f5338108cfdec5",
+  "scenarios": [
+    {
+      "player_count": 6,
+      "n_games": 4000,
+      "base_seed": 20260428
+    },
+    {
+      "player_count": 7,
+      "n_games": 4000,
+      "base_seed": 20260428
+    },
+    {
+      "player_count": 8,
+      "n_games": 4000,
+      "base_seed": 20260428
+    }
+  ],
+  "tables": {
+    "games": {
+      "grain": "one row per simulated game",
+      "primary_key": [
+        "game_id"
+      ],
+      "columns": [
+        {
+          "name": "game_id",
+          "dtype": "string",
+          "description": "Stable hash of player_count + base_seed + game_index. Joins to all other tables."
+        },
+        {
+          "name": "seed",
+          "dtype": "int",
+          "description": "RNG seed used for this game (base_seed + game_index)."
+        },
+        {
+          "name": "player_count",
+          "dtype": "int",
+          "description": "Number of players (6, 7, or 8). Drives boat parts required and character distribution."
+        },
+        {
+          "name": "outcome",
+          "dtype": "string",
+          "description": "'win' if all required boat parts built before eruption, else 'loss'."
+        },
+        {
+          "name": "rounds_played",
+          "dtype": "int",
+          "description": "Total rounds played before win, loss, or timeout."
+        },
+        {
+          "name": "boat_parts_built",
+          "dtype": "int",
+          "description": "Number of boat parts completed when the game ended."
+        },
+        {
+          "name": "boat_parts_required",
+          "dtype": "int",
+          "description": "Boat parts needed to win at this player count (3 / 4 / 5)."
+        },
+        {
+          "name": "volcano_cards_remaining",
+          "dtype": "int",
+          "description": "Volcano deck size at game end. Higher = more time was left when the game ended."
+        },
+        {
+          "name": "mission_failures_any_extra",
+          "dtype": "int",
+          "description": "Mission failures caused by a shortage of any-type resources demanded by a complication card."
+        }
+      ],
+      "row_count": 12000
+    },
+    "game_characters": {
+      "grain": "one row per (game, character) pairing",
+      "primary_key": [
+        "game_id",
+        "character"
+      ],
+      "columns": [
+        {
+          "name": "game_id",
+          "dtype": "string",
+          "description": "Foreign key to games.game_id."
+        },
+        {
+          "name": "character",
+          "dtype": "string",
+          "description": "Character role name (e.g. BUILDER, SAILOR). Enum name, not value."
+        },
+        {
+          "name": "final_score",
+          "dtype": "int",
+          "description": "Personal score at game end. Awarded by mission participation and Cook food bonuses."
+        },
+        {
+          "name": "won",
+          "dtype": "bool",
+          "description": "True if the game's outcome was a win. Duplicated here for convenience so character-centric analysis does not need to join games.csv."
+        }
+      ],
+      "row_count": 84000
+    },
+    "game_resources": {
+      "grain": "one row per (game, resource) pairing (long format)",
+      "primary_key": [
+        "game_id",
+        "resource"
+      ],
+      "columns": [
+        {
+          "name": "game_id",
+          "dtype": "string",
+          "description": "Foreign key to games.game_id."
+        },
+        {
+          "name": "resource",
+          "dtype": "string",
+          "description": "Resource type. One of WOOD, STONE, ROPE."
+        },
+        {
+          "name": "consumed",
+          "dtype": "int",
+          "description": "Total units of this resource spent on successful missions during the game."
+        },
+        {
+          "name": "mission_failures",
+          "dtype": "int",
+          "description": "Count of missions that failed due to insufficient supply of this resource type (base + complication + volcano cost)."
+        }
+      ],
+      "row_count": 36000
+    },
+    "game_tools": {
+      "grain": "one row per (game, tool) pairing (long format)",
+      "primary_key": [
+        "game_id",
+        "tool"
+      ],
+      "columns": [
+        {
+          "name": "game_id",
+          "dtype": "string",
+          "description": "Foreign key to games.game_id."
+        },
+        {
+          "name": "tool",
+          "dtype": "string",
+          "description": "Tool type. One of KNIFE, VESSEL."
+        },
+        {
+          "name": "repairs",
+          "dtype": "int",
+          "description": "Number of times this tool was repaired by a Craftsman during the game."
+        },
+        {
+          "name": "mission_failures_damaged",
+          "dtype": "int",
+          "description": "Count of missions that failed because this tool was damaged and unavailable."
+        }
+      ],
+      "row_count": 24000
+    },
+    "character_contributions": {
+      "grain": "one row per (game, character) pairing, win games only",
+      "primary_key": [
+        "game_id",
+        "character"
+      ],
+      "columns": [
+        {
+          "name": "game_id",
+          "dtype": "string",
+          "description": "Foreign key to games.game_id. Only games with outcome == 'win' appear in this table."
+        },
+        {
+          "name": "character",
+          "dtype": "string",
+          "description": "Character role name. Enum name, not value."
+        },
+        {
+          "name": "missions_participated",
+          "dtype": "int",
+          "description": "Count of missions this character participated in during the game."
+        },
+        {
+          "name": "boat_missions_participated",
+          "dtype": "int",
+          "description": "Subset of missions_participated that were boat-building missions."
+        },
+        {
+          "name": "tools_repaired",
+          "dtype": "int",
+          "description": "Count of tool repairs performed by this character (Craftsman-only contribution)."
+        },
+        {
+          "name": "lesser_evil_uses",
+          "dtype": "int",
+          "description": "Count of lesser-evil trade-off decisions invoked by this character to dodge a complication."
+        },
+        {
+          "name": "requirement_discounts_used",
+          "dtype": "int",
+          "description": "Count of times this character's passive or active ability reduced a mission's resource requirement."
+        }
+      ],
+      "row_count": 34122
+    }
+  }
+}
