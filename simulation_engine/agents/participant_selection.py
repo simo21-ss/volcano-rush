@@ -1,11 +1,8 @@
 import random
 from typing import Optional
 
-from ..models import (
-    Character, Resource, MissionType, Player, GameState, Mission, MissionRequirement,
-)
-from ..mechanics.mission import compute_per_player_requirements
-from .feasibility import player_afford_level
+from ..models import Character, Resource, MissionType, Player, GameState, Mission
+from .feasibility import AffordLevel, player_afford_level
 
 _CHARACTER_BONUS_MISSION_TYPES: dict[Character, MissionType] = {
     Character.COOK: MissionType.FOOD,
@@ -33,14 +30,13 @@ def active_player_select_participants(active_player: Player, mission: Mission, s
         A list of up to mission.players_count Player objects.
     """
     needed = mission.players_count
-    base_requirement = compute_per_player_requirements(mission, state)
     apply_competition = random.random() < _COMPETITION_WEIGHT_PROBABILITY
 
     scored: list[tuple[int, int, Player]] = []
     for index, player in enumerate(state.players):
         if player is active_player or player.is_exhausted:
             continue
-        score = _participant_score(player, mission, state, base_requirement, active_player, apply_competition)
+        score = _participant_score(player, mission, state, active_player, apply_competition)
         if score is None:
             continue
         scored.append((score, index, player))
@@ -49,8 +45,8 @@ def active_player_select_participants(active_player: Player, mission: Mission, s
     ranked = [player for _, _, player in scored]
 
     if not active_player.is_exhausted:
-        active_afford = player_afford_level(active_player, mission, base_requirement)
-        if active_afford in ("exact", "surplus"):
+        active_afford = player_afford_level(active_player, mission, state)
+        if active_afford != AffordLevel.CANNOT_AFFORD:
             ranked = [active_player] + ranked
 
     return ranked[:needed]
@@ -62,9 +58,9 @@ def _character_bonus_applies(character: Character, mission: Mission) -> bool:
     expected_type = _CHARACTER_BONUS_MISSION_TYPES.get(character)
     return expected_type is not None and mission.mission_type == expected_type
 
-_AFFORD_SCORE = {
-    "exact": 5,
-    "surplus": 3,
+_AFFORD_SCORE: dict[AffordLevel, int] = {
+    AffordLevel.EXACT: 5,
+    AffordLevel.SURPLUS: 3,
 }
 _COMPETITION_WEIGHT_PROBABILITY = 0.75
 
@@ -89,7 +85,6 @@ def _participant_score(
         player: Player,
         mission: Mission,
         state: GameState,
-        base_requirement: MissionRequirement,
         active_player: Player,
         apply_competition: bool,
 ) -> Optional[int]:
@@ -97,9 +92,9 @@ def _participant_score(
     Score a candidate participant for mission staffing.
 
     Higher scores are preferred. Returns None when the candidate cannot fully
-    pay for the mission (partial-afford or empty-hand). A player who cannot pay
-    should not be selected - they would just fail the mission and waste an
-    exhaustion slot.
+    pay for the mission's per-player base cost. A player who cannot pay should
+    not be selected - they would just fail the mission and waste an exhaustion
+    slot.
 
     Scoring breakdown (for candidates who can afford):
         +10  character bonus applies to this mission (Cook/food, Fire Starter/fire,
@@ -112,8 +107,8 @@ def _participant_score(
              of lead, floored at -4. Applied only for 75% of selection calls so
              the active player does not always optimise personal-point competition.
     """
-    afford_level = player_afford_level(player, mission, base_requirement)
-    if afford_level not in ("exact", "surplus"):
+    afford_level = player_afford_level(player, mission, state)
+    if afford_level == AffordLevel.CANNOT_AFFORD:
         return None
 
     score = _AFFORD_SCORE[afford_level]

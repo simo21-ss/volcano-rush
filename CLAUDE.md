@@ -19,7 +19,7 @@ Builder, Fire Starter, Craftsman, Cook, Gatherer, Sailor. Each player gets one v
 ### Missions
 13 missions in the catalog, split by `MissionType`: `FIRE`, `FOOD`, `SHELTER`, `BOAT`. Each round, 3 missions are active, drawn from the shuffled mission pool (can include boat missions).
 
-**Resource requirement model:** mission requirements are **per participant**, not pooled. Each participant must individually hold the per-player cost (after applying their own character's discount). Complication and volcano-card extras are paid once by the group from pooled surplus after per-player costs are deducted. See `simulation_engine/mechanics/mission.py` - `compute_per_player_requirements`, `compute_group_extras`, `check_and_contribute`.
+**Resource requirement model:** every resource cost is **per participant**. Each participant individually covers the base mission cost (with their own character's discount applied), any complication card extras, and any pending volcano card extras. Nothing is pooled. The mechanics package splits the mission-resolution flow by responsibility: `requirements.py` (pure cost queries: `compute_per_player_requirements`, `compute_complication_extras`, `compute_volcano_extras`), `affordability.py` (`apply_character_discounts`, `can_afford`), `deductions.py` (`deduct_costs`), and `mission.py` (`resolve_mission` orchestrator).
 
 ### Boat scaling
 - 6 players: 3 boat parts required (Keel, Hull, Mast)
@@ -37,8 +37,8 @@ Any mission participant becomes Exhausted for the following round and cannot par
 - `simulation_engine/models/` - enums, dataclasses (missions, complications, volcano cards, state, records)
 - `simulation_engine/mechanics/` - resolution logic (`mission.py`, `effects.py`, `exhaustion.py`)
 - `simulation_engine/characters/` - one strategy class per file, all implementing `CharacterStrategy` from `base.py`
-- `simulation_engine/agents/` - team-level decision functions called from the engine: `feasibility.py` (affordability helpers), `mission_selection.py` (vote_for_mission, decide_mission_action), `participant_selection.py` (scored participant picking)
-- `simulation_engine/engine.py` - `run_game`, `run_scenario` orchestration
+- `simulation_engine/agents/` - team-level decision functions called from the engine: `feasibility.py` (`AffordLevel` enum, `player_afford_level`, `team_can_afford`), `mission_selection.py` (vote_for_mission, decide_mission_action), `participant_selection.py` (scored participant picking)
+- `simulation_engine/engine/` - orchestration package: `game.py` (`run_game`, `run_scenario`), `round.py` (`run_round` and per-branch helpers), `phases.py` (volcano draw, complication draw, mission success, exhaustion, gather)
 - `simulation_engine/initialization.py` - deck, player, tool, volcano, mission-pool setup
 - `tests/` - pytest suite
 - `notebooks/` - analysis (player-count balance, character balance, resource efficiency)

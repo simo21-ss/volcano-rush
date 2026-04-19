@@ -14,9 +14,9 @@ def decide_mission_action(active_player: Player, state: GameState) -> Optional[P
     """
     Return PlayerAction.SHUFFLE_MISSIONS when the active player should reshuffle
     the mission pool: (a) Panic is pending and all active missions are boat parts
-    (boats are banned), or (b) all active missions are boat parts but the
+    (boats are banned), or (b) all active missions are boat parts, but the
     next-needed boat part is not among them. Both require the active player to
-    have a resource to pay the shuffle cost. Otherwise return None to signal the
+    have a resource to pay the shuffle cost. Otherwise, return None to signal the
     default choose-mission path.
     """
     all_active_are_boat_parts = all(

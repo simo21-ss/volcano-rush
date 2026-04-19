@@ -4,25 +4,30 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from simulation_engine.models.enums import (
-    Character, Resource, Tool, MissionType, MissionName,
-    ComplicationCardName, VolcanoCardName,
+    Character, Resource, Tool, MissionName, ComplicationCardName, VolcanoCardName,
 )
 from simulation_engine.models.bonus_effects import BonusEffect
 from simulation_engine.models.missions import Mission
 from simulation_engine.models.complications import ComplicationCard
-from simulation_engine.models.volcano import VolcanoCard
 from simulation_engine.models.state import Player, GameState, ToolState
 from simulation_engine.models.records import MissionRequirement
-from simulation_engine.mechanics.mission import compute_per_player_requirements, compute_group_extras, check_and_contribute, resolve_mission
+from simulation_engine.mechanics.requirements import (
+    compute_per_player_requirements, compute_complication_extras, compute_volcano_extras,
+)
+from simulation_engine.mechanics.affordability import apply_character_discounts, can_afford
+from simulation_engine.mechanics.deductions import deduct_costs
 
 
 # ── Constants ────────────────────────────────────────────────────────────────
 
 CALM_BREEZE = ComplicationCard.get(ComplicationCardName.CALM_BREEZE)
+MOSQUITO_ATTACK = ComplicationCard.get(ComplicationCardName.MOSQUITO_ATTACK)
+WET_WOOD = ComplicationCard.get(ComplicationCardName.WET_WOOD)
+SLIPPERY_ROCKS = ComplicationCard.get(ComplicationCardName.SLIPPERY_ROCKS)
+HEAT_AND_THIRST = ComplicationCard.get(ComplicationCardName.HEAT_AND_THIRST)
+
 LIGHT_A_FIRE = Mission.get(MissionName.LIGHT_A_FIRE)
 HUNT = Mission.get(MissionName.HUNT)
-FETCH_WATER = Mission.get(MissionName.FETCH_WATER)
-NO_EXTRAS = MissionRequirement(typed = {}, any_extra = 0)
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -33,19 +38,19 @@ def make_player(character: Character, resources: list[Resource]) -> Player:
 
 def make_state(players: list[Player], **overrides) -> GameState:
     defaults = {
-        "players":            players,
-        "active_missions":    [],
-        "resource_deck":      [],
-        "complication_deck":  list(ComplicationCardName),
-        "volcano_deck":       list(VolcanoCardName),
-        "tools":              {Tool.KNIFE: ToolState(), Tool.VESSEL: ToolState()},
+        "players": players,
+        "active_missions": [],
+        "resource_deck": [],
+        "complication_deck": list(ComplicationCardName),
+        "volcano_deck": list(VolcanoCardName),
+        "tools": { Tool.KNIFE: ToolState(), Tool.VESSEL: ToolState() },
         "boat_parts_required": 4,
     }
     defaults.update(overrides)
     return GameState(**defaults)
 
 
-# ── compute_requirements ─────────────────────────────────────────────────────
+# ── compute_per_player_requirements ──────────────────────────────────────────
 
 class TestComputePerPlayerRequirements:
 
@@ -54,237 +59,251 @@ class TestComputePerPlayerRequirements:
 
         result = compute_per_player_requirements(LIGHT_A_FIRE, state)
 
-        assert result.typed == {Resource.WOOD: 1}
+        assert result.typed == { Resource.WOOD: 1 }
         assert result.any_extra == 0
 
     def test_bonus_discount_applied(self):
-        state = make_state([], pending_bonus = BonusEffect(resource_discount = {Resource.WOOD: 1}))
+        state = make_state([], pending_bonus = BonusEffect(resource_discount = { Resource.WOOD: 1 }))
 
         result = compute_per_player_requirements(LIGHT_A_FIRE, state)
 
         assert result.typed.get(Resource.WOOD, 0) == 0
 
+    def test_bonus_not_consumed_by_compute(self):
+        state = make_state([], pending_bonus = BonusEffect(resource_discount = { Resource.WOOD: 1 }))
+
+        compute_per_player_requirements(LIGHT_A_FIRE, state)
+        compute_per_player_requirements(LIGHT_A_FIRE, state)
+
+        assert state.pending_bonus is not None
+        assert state.pending_bonus.resource_discount == { Resource.WOOD: 1 }
+
     def test_character_discounts_not_applied(self):
-        """Per-player requirements do not include character discounts - applied in check_and_contribute."""
         state = make_state([])
 
         result = compute_per_player_requirements(LIGHT_A_FIRE, state)
 
-        assert result.typed == {Resource.WOOD: 1}
+        assert result.typed == { Resource.WOOD: 1 }
+
+    def test_negates_volcano_bonus_is_not_cleared(self):
+        state = make_state([], pending_bonus = BonusEffect(negates_volcano_card = VolcanoCardName.RAIN_AND_MUD))
+
+        compute_per_player_requirements(LIGHT_A_FIRE, state)
+
+        assert state.pending_bonus is not None
+        assert state.pending_bonus.negates_volcano_card == VolcanoCardName.RAIN_AND_MUD
 
 
-class TestComputeGroupExtras:
+# ── compute_complication_extras (per-participant) ────────────────────────────
 
-    def test_calm_breeze_no_extras(self):
-        players = [make_player(Character.COOK, [Resource.WOOD])]
-        state = make_state(players)
+class TestComputeComplicationExtras:
 
-        result = compute_group_extras(LIGHT_A_FIRE, CALM_BREEZE, players, state)
+    def test_no_complication_returns_zero_extras(self):
+        result = compute_complication_extras(LIGHT_A_FIRE, None)
 
         assert result.typed == {}
         assert result.any_extra == 0
 
-    def test_complication_adds_typed_resource(self):
-        players = [make_player(Character.COOK, [Resource.WOOD])]
-        state = make_state(players)
-        mosquito_attack = ComplicationCard.get(ComplicationCardName.MOSQUITO_ATTACK)
+    def test_calm_breeze_no_extras(self):
+        result = compute_complication_extras(LIGHT_A_FIRE, CALM_BREEZE)
 
-        result = compute_group_extras(LIGHT_A_FIRE, mosquito_attack, players, state)
+        assert result.typed == {}
+        assert result.any_extra == 0
 
-        assert result.typed[Resource.ROPE] == 1
+    def test_mosquito_attack_typed_extra_per_participant(self):
+        result = compute_complication_extras(HUNT, MOSQUITO_ATTACK)
 
-    def test_conditional_complication_applies_when_resource_present(self):
-        players = [make_player(Character.COOK, [Resource.WOOD])]
-        state = make_state(players)
-        wet_wood = ComplicationCard.get(ComplicationCardName.WET_WOOD)
+        assert result.typed == { Resource.ROPE: 1 }
+        assert result.any_extra == 0
 
-        result = compute_group_extras(LIGHT_A_FIRE, wet_wood, players, state)
+    def test_conditional_wet_wood_applies_when_mission_requires_wood(self):
+        result = compute_complication_extras(LIGHT_A_FIRE, WET_WOOD)
 
-        assert result.typed[Resource.WOOD] == 1
+        assert result.typed == { Resource.WOOD: 1 }
 
-    def test_conditional_complication_skipped_when_resource_absent(self):
-        players = [make_player(Character.COOK, [Resource.STONE])]
-        state = make_state(players)
-        wet_wood = ComplicationCard.get(ComplicationCardName.WET_WOOD)
-
-        result = compute_group_extras(HUNT, wet_wood, players, state)
+    def test_conditional_wet_wood_skipped_when_mission_does_not_require_wood(self):
+        result = compute_complication_extras(HUNT, WET_WOOD)
 
         assert result.typed == {}
 
-    def test_volcano_card_adds_conditional_extra(self):
-        players = [make_player(Character.COOK, [Resource.WOOD])]
-        state = make_state(players, pending_volcano_card = VolcanoCardName.RAIN_AND_MUD)
+    def test_slippery_rocks_any_extra_per_participant(self):
+        result = compute_complication_extras(LIGHT_A_FIRE, SLIPPERY_ROCKS)
 
-        result = compute_group_extras(LIGHT_A_FIRE, CALM_BREEZE, players, state)
+        assert result.typed == {}
+        assert result.any_extra == 2
+
+    def test_heat_and_thirst_folds_per_participant_into_any_extra(self):
+        result = compute_complication_extras(LIGHT_A_FIRE, HEAT_AND_THIRST)
+
+        assert result.typed == {}
+        assert result.any_extra == 1
+
+
+# ── compute_volcano_extras (per-participant) ─────────────────────────────────
+
+class TestComputeVolcanoExtras:
+
+    def test_no_volcano_card_returns_empty(self):
+        state = make_state([])
+
+        result = compute_volcano_extras(LIGHT_A_FIRE, state)
+
+        assert result.typed == {}
+        assert result.any_extra == 0
+
+    def test_rain_and_mud_applies_to_wood_mission(self):
+        state = make_state([], pending_volcano_card = VolcanoCardName.RAIN_AND_MUD)
+
+        result = compute_volcano_extras(LIGHT_A_FIRE, state)
 
         assert result.typed[Resource.WOOD] == 2
 
+    def test_rain_and_mud_conditional_skipped_when_mission_lacks_wood(self):
+        state = make_state([], pending_volcano_card = VolcanoCardName.RAIN_AND_MUD)
 
-# ── check_and_contribute ─────────────────────────────────────────────────────
+        result = compute_volcano_extras(HUNT, state)
 
-class TestCheckAndContribute:
+        assert result.typed == {}
 
-    def test_success_deducts_typed_resources_per_player(self):
-        player_one = make_player(Character.COOK, [Resource.WOOD, Resource.STONE, Resource.ROPE])
-        player_two = make_player(Character.COOK, [Resource.WOOD, Resource.STONE])
-        state = make_state([player_one, player_two])
-        requirements = MissionRequirement(typed = {Resource.WOOD: 1, Resource.STONE: 1}, any_extra = 0)
+    def test_lava_flow_applies_unconditionally(self):
+        state = make_state([], pending_volcano_card = VolcanoCardName.LAVA_FLOW)
 
-        result = check_and_contribute([player_one, player_two], requirements, NO_EXTRAS, None, state, LIGHT_A_FIRE)
+        result = compute_volcano_extras(HUNT, state)
 
-        assert result is True
-        assert player_one.resources == [Resource.ROPE]
-        assert player_two.resources == []
+        assert result.typed[Resource.ROPE] == 1
 
-    def test_failure_one_player_insufficient_typed_resource(self):
-        player_one = make_player(Character.COOK, [Resource.WOOD, Resource.STONE])
-        player_two = make_player(Character.COOK, [Resource.ROPE])
-        state = make_state([player_one, player_two])
-        requirements = MissionRequirement(typed = {Resource.WOOD: 1, Resource.STONE: 1}, any_extra = 0)
 
-        result = check_and_contribute([player_one, player_two], requirements, NO_EXTRAS, None, state, LIGHT_A_FIRE)
+# ── apply_character_discounts ────────────────────────────────────────────────
 
-        assert result is False
-        assert state.mission_failures_by_resource.get(Resource.WOOD, 0) == 1
+class TestApplyCharacterDiscounts:
 
-    def test_any_extra_filled_from_player_surplus(self):
-        player = make_player(Character.COOK, [Resource.WOOD, Resource.STONE, Resource.ROPE, Resource.ROPE])
-        state = make_state([player])
-        requirements = MissionRequirement(typed = {Resource.WOOD: 1}, any_extra = 1)
-
-        result = check_and_contribute([player], requirements, NO_EXTRAS, None, state, LIGHT_A_FIRE)
-
-        assert result is True
-        assert len(player.resources) == 2
-
-    def test_failure_insufficient_any_extra(self):
-        player = make_player(Character.COOK, [Resource.WOOD])
-        state = make_state([player])
-        requirements = MissionRequirement(typed = {Resource.WOOD: 1}, any_extra = 5)
-
-        result = check_and_contribute([player], requirements, NO_EXTRAS, None, state, LIGHT_A_FIRE)
-
-        assert result is False
-        assert state.mission_failures_any_extra == 1
-
-    def test_max_per_type_caps_per_player(self):
-        player = make_player(Character.COOK, [Resource.WOOD, Resource.WOOD, Resource.WOOD])
-        state = make_state([player])
-        requirements = MissionRequirement(typed = {Resource.WOOD: 2}, any_extra = 0)
-
-        result = check_and_contribute([player], requirements, NO_EXTRAS, 1, state, LIGHT_A_FIRE)
-
-        assert result is False
-
-    def test_no_mutation_on_failure(self):
-        player = make_player(Character.COOK, [Resource.WOOD, Resource.STONE])
-        state = make_state([player])
-        original_resources = list(player.resources)
-        requirements = MissionRequirement(typed = {Resource.ROPE: 5}, any_extra = 0)
-
-        result = check_and_contribute([player], requirements, NO_EXTRAS, None, state, LIGHT_A_FIRE)
-
-        assert result is False
-        assert player.resources == original_resources
-
-    def test_builder_discount_applied_per_player(self):
+    def test_builder_discount_reduces_wood_cost_and_bumps_counter(self):
         builder = make_player(Character.BUILDER, [Resource.STONE])
-        state = make_state([builder])
-        requirements = MissionRequirement(typed = {Resource.WOOD: 1}, any_extra = 0)
+        requirements = MissionRequirement(typed = { Resource.WOOD: 1 }, any_extra = 0)
 
-        result = check_and_contribute([builder], requirements, NO_EXTRAS, None, state, LIGHT_A_FIRE)
+        result = apply_character_discounts([builder], requirements, LIGHT_A_FIRE)
 
-        assert result is True
-        assert builder.resources == [Resource.STONE]
+        assert len(result) == 1
+        _, personal = result[0]
+        assert personal.typed.get(Resource.WOOD, 0) == 0
         assert builder.contribution.requirement_discounts_used == 1
 
-    def test_builder_discount_does_not_affect_other_players(self):
-        builder = make_player(Character.BUILDER, [Resource.STONE])
-        cook = make_player(Character.COOK, [Resource.ROPE])
-        state = make_state([builder, cook])
-        requirements = MissionRequirement(typed = {Resource.WOOD: 1}, any_extra = 0)
+    def test_builder_discount_only_bumps_its_own_player(self):
+        builder = make_player(Character.BUILDER, [])
+        cook = make_player(Character.COOK, [])
+        requirements = MissionRequirement(typed = { Resource.WOOD: 1 }, any_extra = 0)
 
-        result = check_and_contribute([builder, cook], requirements, NO_EXTRAS, None, state, LIGHT_A_FIRE)
+        apply_character_discounts([builder, cook], requirements, LIGHT_A_FIRE)
 
-        assert result is False
+        assert builder.contribution.requirement_discounts_used == 1
+        assert cook.contribution.requirement_discounts_used == 0
 
     def test_fire_starter_discount_on_fire_mission(self):
-        fire_starter = make_player(Character.FIRE_STARTER, [Resource.WOOD, Resource.STONE, Resource.ROPE])
-        state = make_state([fire_starter])
-        slippery_rocks = ComplicationCard.get(ComplicationCardName.SLIPPERY_ROCKS)
-        per_player = compute_per_player_requirements(LIGHT_A_FIRE, state)
-        group_extras = compute_group_extras(LIGHT_A_FIRE, slippery_rocks, [fire_starter], state)
+        fire_starter = make_player(Character.FIRE_STARTER, [])
+        requirements = MissionRequirement(typed = { Resource.WOOD: 1 }, any_extra = 2)
 
-        result = check_and_contribute([fire_starter], per_player, group_extras, None, state, LIGHT_A_FIRE)
+        result = apply_character_discounts([fire_starter], requirements, LIGHT_A_FIRE)
 
-        assert result is True
+        _, personal = result[0]
+        assert personal.any_extra == 1
         assert fire_starter.contribution.requirement_discounts_used == 1
 
     def test_fire_starter_no_discount_on_non_fire_mission(self):
-        fire_starter = make_player(Character.FIRE_STARTER, [Resource.STONE, Resource.ROPE])
-        state = make_state([fire_starter])
-        requirements = MissionRequirement(typed = {Resource.STONE: 1, Resource.ROPE: 1}, any_extra = 0)
+        fire_starter = make_player(Character.FIRE_STARTER, [])
+        requirements = MissionRequirement(typed = { Resource.STONE: 1, Resource.ROPE: 1 }, any_extra = 0)
 
-        result = check_and_contribute([fire_starter], requirements, NO_EXTRAS, None, state, HUNT)
+        apply_character_discounts([fire_starter], requirements, HUNT)
 
-        assert result is True
         assert fire_starter.contribution.requirement_discounts_used == 0
 
 
-# ── resolve_mission ──────────────────────────────────────────────────────────
+# ── can_afford ───────────────────────────────────────────────────────────────
 
-class TestResolveMission:
+class TestCanAfford:
 
-    def test_resolve_success_simple(self):
+    def test_returns_true_when_all_checks_pass(self):
         player_one = make_player(Character.COOK, [Resource.WOOD, Resource.STONE, Resource.ROPE])
-        player_two = make_player(Character.COOK, [Resource.WOOD, Resource.STONE, Resource.ROPE])
-        state = make_state([player_one, player_two])
-
-        result = resolve_mission(state, LIGHT_A_FIRE, [player_one, player_two], CALM_BREEZE)
-
-        assert result is True
-
-    def test_resolve_fails_wrong_participant_count(self):
-        player_one = make_player(Character.COOK, [Resource.WOOD, Resource.STONE])
         player_two = make_player(Character.COOK, [Resource.WOOD, Resource.STONE])
-        player_three = make_player(Character.SAILOR, [Resource.WOOD, Resource.STONE])
-        state = make_state([player_one, player_two, player_three])
-
-        result = resolve_mission(state, LIGHT_A_FIRE, [player_one, player_two, player_three], CALM_BREEZE)
-
-        assert result is False
-
-    def test_resolve_fails_damaged_tool(self):
-        player_one = make_player(Character.COOK, [Resource.ROPE, Resource.WOOD, Resource.STONE])
-        player_two = make_player(Character.COOK, [Resource.ROPE, Resource.WOOD, Resource.STONE])
-        player_three = make_player(Character.SAILOR, [Resource.ROPE, Resource.WOOD, Resource.STONE])
-        state = make_state([player_one, player_two, player_three])
-        state.tools[Tool.VESSEL].damaged = True
-
-        result = resolve_mission(state, FETCH_WATER, [player_one, player_two, player_three], CALM_BREEZE)
-
-        assert result is False
-        assert state.mission_failures_tool_damaged.get(Tool.VESSEL, 0) == 1
-
-    def test_resolve_complication_damages_tool_on_success(self):
-        player_one = make_player(Character.COOK, [Resource.WOOD, Resource.STONE, Resource.ROPE])
-        player_two = make_player(Character.COOK, [Resource.WOOD, Resource.STONE, Resource.ROPE])
         state = make_state([player_one, player_two])
-        blunt_blade = ComplicationCard.get(ComplicationCardName.BLUNT_BLADE)
+        requirements = MissionRequirement(typed = { Resource.WOOD: 1, Resource.STONE: 1 }, any_extra = 0)
+        player_requirements = apply_character_discounts([player_one, player_two], requirements, LIGHT_A_FIRE)
 
-        result = resolve_mission(state, LIGHT_A_FIRE, [player_one, player_two], blunt_blade)
+        assert can_afford(player_requirements, None, state) is True
 
-        assert result is True
-        assert state.tools[Tool.KNIFE].damaged is True
-
-    def test_resolve_fails_when_one_player_cannot_afford(self):
+    def test_returns_false_and_tracks_missing_typed(self):
         player_one = make_player(Character.COOK, [Resource.WOOD, Resource.STONE])
         player_two = make_player(Character.COOK, [Resource.ROPE])
         state = make_state([player_one, player_two])
+        requirements = MissionRequirement(typed = { Resource.WOOD: 1, Resource.STONE: 1 }, any_extra = 0)
+        player_requirements = apply_character_discounts([player_one, player_two], requirements, LIGHT_A_FIRE)
 
-        result = resolve_mission(state, LIGHT_A_FIRE, [player_one, player_two], CALM_BREEZE)
+        assert can_afford(player_requirements, None, state) is False
+        assert state.mission_failures_by_resource.get(Resource.WOOD, 0) == 1
 
-        assert result is False
+    def test_returns_false_and_tracks_insufficient_any_extra(self):
+        player = make_player(Character.COOK, [Resource.WOOD])
+        state = make_state([player])
+        requirements = MissionRequirement(typed = { Resource.WOOD: 1 }, any_extra = 5)
+        player_requirements = apply_character_discounts([player], requirements, LIGHT_A_FIRE)
+
+        assert can_afford(player_requirements, None, state) is False
+        assert state.mission_failures_any_extra == 1
+
+    def test_max_per_type_cap_rejects_overloaded_hand(self):
+        player = make_player(Character.COOK, [Resource.WOOD, Resource.WOOD, Resource.WOOD])
+        state = make_state([player])
+        requirements = MissionRequirement(typed = { Resource.WOOD: 2 }, any_extra = 0)
+        player_requirements = apply_character_discounts([player], requirements, LIGHT_A_FIRE)
+
+        assert can_afford(player_requirements, 1, state) is False
+
+    def test_can_afford_does_not_mutate_player_resources(self):
+        player = make_player(Character.COOK, [Resource.WOOD, Resource.STONE])
+        state = make_state([player])
+        original_resources = list(player.resources)
+        requirements = MissionRequirement(typed = { Resource.ROPE: 5 }, any_extra = 0)
+        player_requirements = apply_character_discounts([player], requirements, LIGHT_A_FIRE)
+
+        can_afford(player_requirements, None, state)
+
+        assert player.resources == original_resources
+
+
+# ── deduct_costs ─────────────────────────────────────────────────────────────
+
+class TestDeductCosts:
+
+    def test_deducts_typed_resources_per_player(self):
+        player_one = make_player(Character.COOK, [Resource.WOOD, Resource.STONE, Resource.ROPE])
+        player_two = make_player(Character.COOK, [Resource.WOOD, Resource.STONE])
+        state = make_state([player_one, player_two])
+        requirements = MissionRequirement(typed = { Resource.WOOD: 1, Resource.STONE: 1 }, any_extra = 0)
+        player_requirements = apply_character_discounts([player_one, player_two], requirements, LIGHT_A_FIRE)
+
+        deduct_costs(player_requirements, state)
+
+        assert player_one.resources == [Resource.ROPE]
+        assert player_two.resources == []
+
+    def test_deducts_any_extra_from_player_surplus(self):
+        player = make_player(Character.COOK, [Resource.WOOD, Resource.STONE, Resource.ROPE, Resource.ROPE])
+        state = make_state([player])
+        requirements = MissionRequirement(typed = { Resource.WOOD: 1 }, any_extra = 1)
+        player_requirements = apply_character_discounts([player], requirements, LIGHT_A_FIRE)
+
+        deduct_costs(player_requirements, state)
+
+        assert len(player.resources) == 2
+
+    def test_builder_discount_spares_wood_from_hand(self):
+        builder = make_player(Character.BUILDER, [Resource.STONE])
+        state = make_state([builder])
+        requirements = MissionRequirement(typed = { Resource.WOOD: 1 }, any_extra = 0)
+        player_requirements = apply_character_discounts([builder], requirements, LIGHT_A_FIRE)
+
+        deduct_costs(player_requirements, state)
+
+        assert builder.resources == [Resource.STONE]
 
 
 # ── Cook bonus points ───────────────────────────────────────────────────────

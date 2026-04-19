@@ -78,7 +78,7 @@ Players not selected as participants:
 After participants are declared, shuffle the Complication deck and draw 1 card. Apply its effect to this mission.
 
 **Step 5 - Resolution**
-Check whether each participant individually meets the per-player resource requirements (after all modifiers). Each player's character discount applies to their own requirement.
+Each participant must individually cover the mission's per-player cost plus the complication card's extras, with their own character discount applied. Any volcano card extras are a one-time group cost paid from the participants' pooled surplus.
 - **Success:** Distribute points to all participants. Apply any bonus effect.
 - **Failure:** Draw 1 Volcano card and apply its effect.
 
@@ -120,15 +120,16 @@ The active player may choose to shuffle the mission deck instead of attempting a
 
 ### Resource Calculation for Missions
 
-Each participant must individually meet the base mission requirement (per player). Complication and volcano card extras are paid once by the group from pooled surplus resources.
+Every resource cost is per-participant. Each participant pays their own base mission cost, their own complication extras, and their own volcano card extras from their own hand. There is no pooled group payment.
 
-Apply modifiers in this order:
+Apply modifiers in this order (all per-participant):
 
-1. Base mission requirement (per player) with pending bonus discounts
-2. Character ability discounts (per player)
-3. Volcano card extras (one-time group total)
-4. Complication card extras (one-time group total)
-5. Each player pays their individual cost, then group extras are deducted from surplus
+1. Base mission requirement, with any pending-bonus discount subtracted.
+2. Character ability discounts.
+3. Complication card extras: `extra_resources`, `extra_resources_any`, and `extra_per_participant` each apply individually. A conditional complication (e.g. Wet Wood) applies only when the base mission requires the matching resource.
+4. Volcano card extras from a pending card (Rain and Mud, Lava Flow). Conditional gating (e.g. Rain and Mud's Wood condition) applies.
+
+Each participant must cover the sum of the above from their own hand, or the mission fails.
 
 ---
 
