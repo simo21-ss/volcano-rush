@@ -25,3 +25,6 @@ class CookStrategy(CharacterStrategy):
             return 1
 
         return 0
+
+    def has_active_ability_on(self, mission: Mission) -> bool:
+        return mission.mission_type == MissionType.FOOD

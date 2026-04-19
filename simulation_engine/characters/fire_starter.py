@@ -27,3 +27,6 @@ class FireStarterStrategy(CharacterStrategy):
 
     def mission_success_bonus_points(self, mission: Mission) -> int:
         return 1 if mission.mission_type == MissionType.FIRE else 0
+
+    def has_active_ability_on(self, mission: Mission) -> bool:
+        return mission.mission_type == MissionType.FIRE

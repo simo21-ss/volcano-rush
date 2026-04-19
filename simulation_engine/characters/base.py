@@ -28,3 +28,12 @@ class CharacterStrategy(ABC):
 
     def mission_success_bonus_points(self, mission: Mission) -> int:
         return 0
+
+    def has_active_ability_on(self, mission: Mission) -> bool:
+        """
+        Return True when this character's ability is relevant to the given mission.
+        Used by participant selection to prefer characters whose abilities would
+        meaningfully help (requirement discount, mission-success bonus points, or
+        lesser-evil complication draws).
+        """
+        return False

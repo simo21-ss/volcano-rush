@@ -26,3 +26,6 @@ class BuilderStrategy(CharacterStrategy):
             return MissionRequirement(typed = updated, any_extra = requirements.any_extra)
 
         return requirements
+
+    def has_active_ability_on(self, mission: Mission) -> bool:
+        return mission.required_resources.get(Resource.WOOD, 0) >= 1

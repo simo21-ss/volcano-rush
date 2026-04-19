@@ -27,3 +27,6 @@ class SailorStrategy(CharacterStrategy):
             return self.BOAT_COMPLICATION_DRAWS
 
         return super().complication_draw_count(mission)
+
+    def has_active_ability_on(self, mission: Mission) -> bool:
+        return mission.mission_type == MissionType.BOAT
