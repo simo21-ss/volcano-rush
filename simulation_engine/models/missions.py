@@ -129,7 +129,7 @@ Mission.catalog = {
     MissionName.FIT_THE_RUDDER: Mission(
         name = MissionName.FIT_THE_RUDDER,
         required_resources = { Resource.WOOD: 1, Resource.ROPE: 1 },
-        players_count = 3,
+        players_count = 4,
         points = 1,
         mission_type = MissionType.BOAT,
         required_tools = [Tool.VESSEL],

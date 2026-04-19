@@ -118,6 +118,6 @@ The number of boat parts required to win depends on player count (see game_rules
 | Field | Value |
 |---|---|
 | **Requires (per player)** | 1 Wood + 1 Rope + Vessel (tool) |
-| **Participants** | 3 |
+| **Participants** | 4 |
 | **Reward** | 1 point per participant |
 | **Bonus** | +1 Boat Part |
