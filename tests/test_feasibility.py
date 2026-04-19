@@ -18,6 +18,8 @@ LIGHT_A_FIRE = Mission.get(MissionName.LIGHT_A_FIRE)
 HUNT = Mission.get(MissionName.HUNT)
 FETCH_WATER = Mission.get(MissionName.FETCH_WATER)
 GATHER_MATERIALS = Mission.get(MissionName.GATHER_MATERIALS)
+CUT_THE_KEEL = Mission.get(MissionName.CUT_THE_KEEL)
+BUILD_A_SHELTER = Mission.get(MissionName.BUILD_A_SHELTER)
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -77,22 +79,31 @@ class TestPlayerAffordLevel:
 
         assert player_afford_level(player, HUNT, state) == AffordLevel.CANNOT_AFFORD
 
-    def test_builder_discount_enables_affordability(self):
-        # Builder with only a STONE cannot satisfy LIGHT_A_FIRE (wants 1 WOOD)
-        # by their raw hand. The Builder's per-player discount drops the wood
-        # cost to 0, so the STONE is classified as surplus.
+    def test_builder_discount_enables_affordability_on_shelter_mission(self):
+        # Builder with [ROPE, STONE] on BUILD_A_SHELTER (WOOD + STONE) gets the
+        # WOOD requirement dropped to 0. STONE pays the typed stone cost; ROPE
+        # is left over, classifying the hand as SURPLUS.
+        builder = make_player(Character.BUILDER, [Resource.ROPE, Resource.STONE])
+        state = make_state([builder])
+
+        assert player_afford_level(builder, BUILD_A_SHELTER, state) == AffordLevel.SURPLUS
+
+    def test_builder_discount_minimal_hand_is_exact_on_boat_mission(self):
+        # Builder with [ROPE] on CUT_THE_KEEL (WOOD + ROPE) gets WOOD dropped to
+        # 0. The single ROPE covers the remaining typed cost exactly.
+        builder = make_player(Character.BUILDER, [Resource.ROPE])
+        state = make_state([builder])
+
+        assert player_afford_level(builder, CUT_THE_KEEL, state) == AffordLevel.EXACT
+
+    def test_builder_discount_does_not_apply_to_fire_mission(self):
+        # Builder's wood discount is scoped to SHELTER and BOAT missions. On
+        # LIGHT_A_FIRE (FIRE type), the discount does not trigger, so a player
+        # with only STONE cannot satisfy the 1 WOOD typed requirement.
         builder = make_player(Character.BUILDER, [Resource.STONE])
         state = make_state([builder])
 
-        assert player_afford_level(builder, LIGHT_A_FIRE, state) == AffordLevel.SURPLUS
-
-    def test_builder_discount_empty_hand_is_exact(self):
-        # Builder with no resources on a WOOD-only mission: discount reduces
-        # cost to 0, player pays nothing, hand fits exactly.
-        builder = make_player(Character.BUILDER, [])
-        state = make_state([builder])
-
-        assert player_afford_level(builder, LIGHT_A_FIRE, state) == AffordLevel.EXACT
+        assert player_afford_level(builder, LIGHT_A_FIRE, state) == AffordLevel.CANNOT_AFFORD
 
     def test_pending_bonus_reduces_requirement(self):
         player = make_player(Character.COOK, [Resource.STONE])

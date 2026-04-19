@@ -28,6 +28,7 @@ HEAT_AND_THIRST = ComplicationCard.get(ComplicationCardName.HEAT_AND_THIRST)
 
 LIGHT_A_FIRE = Mission.get(MissionName.LIGHT_A_FIRE)
 HUNT = Mission.get(MissionName.HUNT)
+BUILD_A_SHELTER = Mission.get(MissionName.BUILD_A_SHELTER)
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -181,7 +182,7 @@ class TestApplyCharacterDiscounts:
         builder = make_player(Character.BUILDER, [Resource.STONE])
         requirements = MissionRequirement(typed = { Resource.WOOD: 1 }, any_extra = 0)
 
-        result = apply_character_discounts([builder], requirements, LIGHT_A_FIRE)
+        result = apply_character_discounts([builder], requirements, BUILD_A_SHELTER)
 
         assert len(result) == 1
         _, personal = result[0]
@@ -193,10 +194,20 @@ class TestApplyCharacterDiscounts:
         cook = make_player(Character.COOK, [])
         requirements = MissionRequirement(typed = { Resource.WOOD: 1 }, any_extra = 0)
 
-        apply_character_discounts([builder, cook], requirements, LIGHT_A_FIRE)
+        apply_character_discounts([builder, cook], requirements, BUILD_A_SHELTER)
 
         assert builder.contribution.requirement_discounts_used == 1
         assert cook.contribution.requirement_discounts_used == 0
+
+    def test_builder_discount_skipped_on_fire_mission(self):
+        builder = make_player(Character.BUILDER, [Resource.WOOD])
+        requirements = MissionRequirement(typed = { Resource.WOOD: 1 }, any_extra = 0)
+
+        result = apply_character_discounts([builder], requirements, LIGHT_A_FIRE)
+
+        _, personal = result[0]
+        assert personal.typed.get(Resource.WOOD, 0) == 1
+        assert builder.contribution.requirement_discounts_used == 0
 
     def test_fire_starter_discount_on_fire_mission(self):
         fire_starter = make_player(Character.FIRE_STARTER, [])
@@ -299,7 +310,7 @@ class TestDeductCosts:
         builder = make_player(Character.BUILDER, [Resource.STONE])
         state = make_state([builder])
         requirements = MissionRequirement(typed = { Resource.WOOD: 1 }, any_extra = 0)
-        player_requirements = apply_character_discounts([builder], requirements, LIGHT_A_FIRE)
+        player_requirements = apply_character_discounts([builder], requirements, BUILD_A_SHELTER)
 
         deduct_costs(player_requirements, state)
 

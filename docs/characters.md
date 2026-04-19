@@ -5,7 +5,7 @@ Each player is assigned one visible character card. Characters provide passive o
 > Any player who participates in a mission becomes **Exhausted** and cannot participate in a mission the following round.
 
 ### Builder
-Missions requiring 1+ Wood have their Wood requirement reduced by **-1 Wood** (per player).
+On **Shelter** and **Boat** missions requiring 1+ Wood, the Wood requirement is reduced by **-1 Wood** (per player). Has no effect on Fire or Food missions.
 
 ### Fire Starter
 - Missions "Light a Fire" or "Torch": requires **-1 resource** (any type).

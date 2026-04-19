@@ -90,7 +90,7 @@ def _participant_score(
     Scoring breakdown (for candidates who can afford):
         +_ACTIVE_ABILITY_BONUS  character's ability is relevant to this mission
                                 (Cook/food, Fire Starter/fire, Sailor/boat,
-                                Builder/wood-requiring)
+                                Builder/shelter+boat-with-wood)
         +_AFFORD_SCORE[SURPLUS] hand covers the cost with surplus resources
                                 (absorbs per-participant complication or volcano extras)
         +_AFFORD_SCORE[EXACT]   hand exactly matches the base cost (no surplus,
