@@ -36,6 +36,7 @@ class GameState:
     round: int = 0
     skip_next_complication: bool = False
     protect_next_failure: bool = False
+    skip_exhaustion: bool = False
     pending_volcano_card: Optional[VolcanoCardName] = None
     pending_bonus: Optional[BonusEffect] = None
     urgent_volcano_threshold: int = 4
@@ -54,31 +55,40 @@ class GameState:
         for this round.
         """
         self.round += 1
-        self.update_tool_repairs()
-        self.refresh_exhaustion()
 
-        return self.players[self.active_player_index]
-
-    def update_tool_repairs(self) -> None:
         for tool, tool_state in self.tools.items():
             if tool_state.repair_due is not None and tool_state.repair_due <= self.round:
                 tool_state.damaged = False
                 tool_state.repair_due = None
                 self.tool_repairs[tool] = self.tool_repairs.get(tool, 0) + 1
 
-    def refresh_exhaustion(self) -> None:
         for player in self.players:
             player.is_exhausted = self.round <= player.exhausted_until
 
-    def end_round(self) -> Optional[GameOutcome]:
+        return self.players[self.active_player_index]
+
+    def end_round(self, completed_mission: Optional[MissionName] = None) -> Optional[GameOutcome]:
         """
-        End-of-round housekeeping: consume any pending Panic card (its one-round
-        effect has now been applied), check the win condition, and rotate the
-        active player to the next seat. Returns GameOutcome.WIN when the boat
-        is complete, otherwise None.
+        End-of-round housekeeping: consume any pending Panic card, replace a
+        completed mission with a fresh draw from the pool, check the win
+        condition, and rotate the active player to the next seat.
+
+        Args:
+            completed_mission: The mission name that succeeded this round, or
+                               None if the round ended without a successful
+                               mission (shuffle round, forfeit round, or
+                               failed a mission).
+
+        Returns:
+            GameOutcome.WIN if the boat is complete, otherwise None.
         """
         if self.pending_volcano_card == VolcanoCardName.PANIC:
             self.pending_volcano_card = None
+
+        if completed_mission is not None:
+            self.active_missions.remove(completed_mission)
+            if self.mission_pool:
+                self.active_missions.append(self.mission_pool.pop())
 
         if len(self.boat_parts_built) >= self.boat_parts_required:
             return GameOutcome.WIN

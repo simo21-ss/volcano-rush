@@ -93,7 +93,7 @@ def draw_complication_card(state: GameState, participants: list, mission: Missio
     return ComplicationCard.get(draw_complication(state))
 
 
-def apply_mission_success(state: GameState, mission: Mission, mission_name: MissionName, participants: list) -> bool:
+def apply_mission_success(state: GameState, mission: Mission, mission_name: MissionName, participants: list) -> None:
     """
     Apply scoring and bonus effects after a mission succeeds.
 
@@ -106,10 +106,6 @@ def apply_mission_success(state: GameState, mission: Mission, mission_name: Miss
         mission: The mission that was completed.
         mission_name: The mission's enum name (used for boat-part registration in apply_bonus).
         participants: Players who contributed to and completed the mission.
-
-    Returns:
-        True if participants should skip exhaustion this round (from bonus_on_success),
-        False otherwise.
     """
     base_points = mission.points
     seen_characters = set()
@@ -133,22 +129,26 @@ def apply_mission_success(state: GameState, mission: Mission, mission_name: Miss
     for player in participants:
         player.score += points_per_player
 
-    return apply_mission_bonus(mission.bonus_on_success, mission_name, state)
+    apply_mission_bonus(mission.bonus_on_success, mission_name, state)
 
 
-def apply_exhaustion_step(state: GameState, participants: list, no_exhaustion: bool) -> None:
+def apply_exhaustion_step(state: GameState, participants: list) -> None:
     """
     Apply exhaustion to mission participants at the end of the mission phase.
 
-    If a pending volcano card carries extra_exhaustion_rounds (Ash in the Air),
-    those extra rounds are read and the card is consumed before calling
-    apply_exhaustion. The step is skipped entirely when no_exhaustion is True.
+    If state.skip_exhaustion is set (from a no_exhaustion mission bonus), the flag
+    is consumed and exhaustion is skipped entirely. Otherwise, if a pending volcano
+    card carries extra_exhaustion_rounds (Ash in the Air), those extra rounds are
+    read and the card is consumed before calling apply_exhaustion.
 
     Args:
         state: Current game state, mutated in place.
         participants: Players who participated in the mission this round.
-        no_exhaustion: If True, skip exhaustion entirely.
     """
+    if state.skip_exhaustion:
+        state.skip_exhaustion = False
+        return
+
     extra_exhaustion = (
         VolcanoCard.get(state.pending_volcano_card).extra_exhaustion_rounds
         if state.pending_volcano_card is not None
@@ -158,8 +158,7 @@ def apply_exhaustion_step(state: GameState, participants: list, no_exhaustion: b
     if extra_exhaustion > 0:
         state.pending_volcano_card = None
 
-    if not no_exhaustion:
-        apply_exhaustion(participants, state.round, extra_rounds = extra_exhaustion)
+    apply_exhaustion(participants, state.round, extra_rounds = extra_exhaustion)
 
 
 def apply_gather_step(state: GameState, gather_actions: list[tuple[Player, GatherAction]]) -> None:

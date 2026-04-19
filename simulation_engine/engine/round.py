@@ -1,20 +1,19 @@
 from typing import Optional
 
-from ..models import (
-    MissionType, MissionName,
-    Player, GameState, Mission, GameOutcome,
-)
-from ..actions import PlayerAction, ShuffleMissionsAction, GatherAction, RepairAction
-from ..mechanics.mission import resolve_mission
-from ..deck import draw_mission
-from ..agents import (
-    decide_mission_action, vote_for_mission, active_player_select_participants,
-)
 from .phases import (
     handle_volcano_draw,
     decide_non_participant_actions,
     draw_complication_card, apply_mission_success,
     apply_exhaustion_step, apply_gather_step,
+)
+from ..actions import PlayerAction, ShuffleMissionsAction, GatherAction, RepairAction
+from ..agents import (
+    decide_mission_action, vote_for_mission, active_player_select_participants,
+)
+from ..mechanics.mission import resolve_mission
+from ..models import (
+    MissionType, MissionName,
+    Player, GameState, Mission, GameOutcome,
 )
 
 
@@ -69,7 +68,6 @@ def _run_mission_round(active_player: Player, mission_name: MissionName, state: 
 
     participants = active_player_select_participants(active_player, mission, state)
 
-
     non_participants = [player for player in state.players if player not in participants]
 
     decisions = decide_non_participant_actions(state, non_participants)
@@ -79,9 +77,6 @@ def _run_mission_round(active_player: Player, mission_name: MissionName, state: 
 
     gather_actions = [(player, action) for player, action in decisions if isinstance(action, GatherAction)]
 
-    # No-one could be staffed: mission will fail on participant count; skip
-    # the complication draw so draw_complication_card can assume non-empty
-    # participants.
     complication = draw_complication_card(state, participants, mission) if participants else None
     success = resolve_mission(state, mission, participants, complication)
 
@@ -90,22 +85,15 @@ def _run_mission_round(active_player: Player, mission_name: MissionName, state: 
             player.contribution.missions_participated += 1
             if mission.mission_type == MissionType.BOAT:
                 player.contribution.boat_missions_participated += 1
-        no_exhaustion = apply_mission_success(state, mission, mission_name, participants)
+        apply_mission_success(state, mission, mission_name, participants)
     else:
-        no_exhaustion = False
         if state.protect_next_failure:
             state.protect_next_failure = False
         else:
             if handle_volcano_draw(state):
                 return GameOutcome.LOSS
 
-    apply_exhaustion_step(state, participants, no_exhaustion)
+    apply_exhaustion_step(state, participants)
     apply_gather_step(state, gather_actions)
 
-    if success:
-        state.active_missions.remove(mission_name)
-        new_mission = draw_mission(state)
-        if new_mission:
-            state.active_missions.append(new_mission)
-
-    return state.end_round()
+    return state.end_round(completed_mission = mission_name if success else None)

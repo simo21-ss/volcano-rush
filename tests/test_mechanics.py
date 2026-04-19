@@ -46,23 +46,26 @@ class TestExhaustion:
         assert player.exhausted_until == 4
         assert player.is_exhausted is True
 
-    def test_refresh_exhaustion_clears_when_past_due(self):
+    def test_begin_round_clears_exhaustion_when_past_due(self):
         player = make_player(Character.COOK, [])
         player.exhausted_until = 3
         player.is_exhausted = True
-        state = make_state([player], round = 4)
+        state = make_state([player], round = 3)
 
-        state.refresh_exhaustion()
+        state.begin_round()
 
+        assert state.round == 4
         assert player.is_exhausted is False
 
-    def test_update_tool_repairs_completes_repair(self):
-        state = make_state([], round = 5)
+    def test_begin_round_completes_tool_repair(self):
+        player = make_player(Character.COOK, [])
+        state = make_state([player], round = 4)
         state.tools[Tool.KNIFE].damaged = True
         state.tools[Tool.KNIFE].repair_due = 5
 
-        state.update_tool_repairs()
+        state.begin_round()
 
+        assert state.round == 5
         assert state.tools[Tool.KNIFE].damaged is False
         assert state.tools[Tool.KNIFE].repair_due is None
         assert state.tool_repairs.get(Tool.KNIFE, 0) == 1
