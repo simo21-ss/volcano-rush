@@ -3,7 +3,7 @@ from typing import Optional
 
 from .round import run_round
 from ..initialization import init_game
-from ..models import CharacterContribution, GameRecord, GameState, GameOutcome, MissionName, Player
+from ..models import GameRecord, GameState, GameOutcome, MissionName, Player
 
 
 def run_game(
@@ -49,10 +49,6 @@ def run_game(
             break
     else:
         outcome = GameOutcome.LOSS
-
-    # Compute group win effects
-    if outcome == GameOutcome.WIN:
-        CharacterContribution.compute_group_win_effects([player.contribution for player in state.players])
 
     if verbose:
         _print_verbose_game_results(outcome, state)
@@ -150,5 +146,3 @@ def _print_verbose_game_results(outcome: GameOutcome, state: GameState) -> None:
     print(f"Resources consumed: { { r.value: n for r, n in state.resources_consumed.items() } }")
     print(f"Mission failures by resource: {failures_by_resource}  (any_extra: {state.mission_failures_any_extra}, tool_damaged: {failures_tool})")
     print(f"Tool repairs: { { t.value: n for t, n in state.tool_repairs.items() } }")
-    if outcome == GameOutcome.WIN:
-        print(f"Group win effects: { { p.character.value: round(p.contribution.group_win_effect, 3) for p in state.players } }")
