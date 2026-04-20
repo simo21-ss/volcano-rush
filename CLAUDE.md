@@ -41,5 +41,5 @@ Any mission participant becomes Exhausted for the following round and cannot par
 - `simulation_engine/engine/` - orchestration package: `game.py` (`run_game`, `run_scenario`), `round.py` (`run_round` and per-branch helpers), `phases.py` (volcano draw, complication draw, mission success, exhaustion, gather)
 - `simulation_engine/initialization.py` - deck, player, tool, volcano, mission-pool setup
 - `tests/` - pytest suite
-- `notebooks/` - analysis: `board_game_simulation.ipynb` is the entry write-up, `math_concepts/` holds the per-scenario simulation notebooks (verbose run, player-count balance, character balance, resource efficiency), `data_science/` is reserved for later data-science extensions
+- `notebooks/` - analysis: `math_concepts/` holds the Math Concepts course work (`board_game_simulation.ipynb` entry write-up plus `simulations/` with the per-scenario notebooks: verbose run, player-count balance, character balance, resource efficiency); `data_science/` is reserved for later data-science extensions
 - `docs/` - human-facing rulebook (characters, missions, game_rules)
