@@ -19,9 +19,9 @@ This document is written **before** inspecting simulation outputs or BGG data in
 
 **Data.** Simulation rollouts only. `data/simulations/games.csv` contains 4,000 games per player count (12,000 total), with the `outcome` and `player_count` columns.
 
-**Test.** Chi-square test of independence on the 3 x 2 contingency table (player_count x win / loss). Pairwise 95% Wilson confidence intervals for each win rate, and 95% CIs on each pairwise difference in proportions.
+**Test.** Chi-square goodness-of-fit test on the observed win counts across the three player-count groups, against equal expected counts (the simpler one-way form is valid here because the three groups have equal sample size of 4,000 games each). Per-group 95% Wilson confidence intervals on the win rate as supplementary effect sizes.
 
-**Decision rule.** Reject H0 if the chi-square p-value is below the Holm-corrected threshold. Report the three pairwise CIs regardless of the decision, so the reader can see the effect sizes.
+**Decision rule.** Reject H0 if the chi-square p-value is below the Holm-corrected threshold. Report the three Wilson CIs regardless of the decision, so the reader can see the effect sizes.
 
 ## Hypothesis 2 - Duplication effect at 7 and 8 players
 
