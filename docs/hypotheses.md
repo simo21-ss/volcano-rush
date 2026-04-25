@@ -30,9 +30,11 @@ This document is written **before** inspecting simulation outputs or BGG data in
 - **H0:** within each player count (7 and 8), the team win rate is the same regardless of which non-Craftsman role is duplicated.
 - **H1:** within at least one player count, the team win rate differs by which non-Craftsman role is duplicated.
 
-**Data.** Simulation rollouts only, restricted to player counts 7 and 8 (8,000 games total). The duplicated role per game is recovered from `data/simulations/game_characters.csv`, whose grain is per player (7 rows per 7-player game, 8 per 8-player game): grouping by (`game_id`, `character`) and keeping rows with count > 1 yields the doubled role. A game with two doubled roles (8 players) contributes to two role buckets. Game outcome is joined from `games.csv`.
+**Data.** Simulation rollouts only, restricted to player counts 7 and 8 (8,000 games total). The duplicated role(s) per game are recovered from `data/simulations/game_characters.csv`, whose grain is per player (7 rows per 7-player game, 8 per 8-player game): grouping by (`game_id`, `character`) and keeping rows with count > 1 yields the doubled role(s). At 7 players each game falls into a single role bucket. At 8 players each game falls into a single bucket keyed by the unordered pair of duplicated roles (e.g. `BUILDER|GATHERER`), so buckets stay disjoint. Game outcome is joined from `games.csv`.
 
-**Test.** Two independent chi-square tests of independence, one per player count, on the contingency table (duplicated_role x win / loss). Pairwise 95% Wilson confidence intervals for the win rate in each role bucket, plus 95% CIs on each pairwise difference. Both chi-square p-values enter the Holm-Bonferroni family under the single label **Hypothesis 2** (the smaller of the two is reported as the Hypothesis 2 p-value).
+**Edit 2026-04-25.** 8-player bucketing changed from per-role (a game contributing to two buckets) to unordered-pair to keep buckets disjoint and avoid double-counting in the chi-square test.
+
+**Test.** Two independent chi-square tests of independence, one per player count, on the contingency table (bucket x win / loss). At 7 players the bucket is the duplicated role; at 8 players the bucket is the unordered pair of duplicated roles. Pairwise 95% Wilson confidence intervals for the win rate in each bucket, plus 95% CIs on each pairwise difference. Both chi-square p-values enter the Holm-Bonferroni family under the single label **Hypothesis 2** (the smaller of the two is reported as the Hypothesis 2 p-value).
 
 **Decision rule.** Reject H0 if the representative chi-square p-value is below the Holm-corrected threshold. Report both player-count tables and all pairwise CIs regardless of the decision.
 
