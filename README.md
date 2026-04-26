@@ -22,8 +22,7 @@ The `data/` folder holds the two independent data sources used in the analysis:
   ```
   Schema and per-column descriptions are in `data/simulations/README.md`; run provenance (seed, git sha, timestamp) is in `data/simulations/manifest.json`.
 
-- `data/bgg/` - BoardGameGeek board games dataset from Kaggle. Not tracked in git (the full dataset is ~650 MB and one file exceeds GitHub's per-file limit). Fetch with:
+- `data/bgg/` - the two BoardGameGeek tables used in the analysis (`games.csv`, `mechanics.csv`) are committed directly so the project is self-contained. Source: Kaggle dataset *Board Games Database from BoardGameGeek* by threnjen, downloaded 2026-04-19. The other tables in the original Kaggle export (themes, ratings distributions, user ratings, creators) are not used in this project and were excluded to keep the repo size manageable. To re-fetch the full dataset:
   ```bash
   kaggle datasets download -d threnjen/board-games-database-from-boardgamegeek -p data/bgg/ --unzip
   ```
-  Requires a Kaggle API token at `~/.kaggle/kaggle.json` (free signup at kaggle.com).
