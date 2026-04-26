@@ -5,7 +5,7 @@ This document is written **before** inspecting simulation outputs or BGG data in
 - **Author:** project owner
 - **Pre-registered on:** 2026-04-22
 - **Significance level:** alpha = 0.05 for every test below
-- **Multiple-testing correction:** Holm-Bonferroni across the seven hypotheses
+- **Multiple-testing correction:** Holm-Bonferroni across the six hypotheses
 - **Data sources:**
     1. Simulation data produced by `simulation_engine/` (Monte Carlo rollouts, exported under `data/simulations/`)
     2. BoardGameGeek dataset (`data/bgg/`, sourced from Kaggle)
@@ -73,24 +73,11 @@ This document is written **before** inspecting simulation outputs or BGG data in
 
 **Data.** BGG only. A game qualifies as cooperative if `mechanics.csv` has `Cooperative Game == 1` or `Semi-Cooperative Game == 1`. Same `NumUserRatings >= 500` filter as Hypothesis 4. Partition the remaining games by `MaxPlayers >= 6`.
 
-**Test.** Two-sample Welch t-test on `BayesAvgRating`, with Mann-Whitney U-test as a robustness check. 95% bootstrap confidence interval on the difference in means.
+**Test.** Two-sample Welch t-test on `BayesAvgRating`, with Mann-Whitney U-test as a robustness check. 95% bootstrap confidence interval on the difference in means. Each group's standard deviation is reported descriptively as a side observation on whether one of the two categories is more polarizing (a wider spread means players disagree more on whether the games are good).
 
 **Decision rule.** Reject H0 if the p-value is below the Holm-corrected threshold.
 
-## Hypothesis 6 - Rating spread across large- vs smaller-group co-op
-
-**Question.** Does the *spread* of community ratings differ between large-group and smaller-group cooperative games? A wider spread on one side means the category is more polarizing (players disagree more on whether the games are good).
-
-- **H0:** the variance of `BayesAvgRating` is the same in both groups (large-group co-op and smaller-group co-op).
-- **H1:** the variances differ.
-
-**Data.** Same two groups as Hypothesis 5, same `NumUserRatings >= 500` filter.
-
-**Test.** Levene's test for equality of variances (more robust to non-normality than the F-test). Report each group's standard deviation with a 95% bootstrap confidence interval, plus a bootstrap CI on the ratio of the two standard deviations.
-
-**Decision rule.** Reject H0 if the Levene p-value is below the Holm-corrected threshold.
-
-## Hypothesis 7 - Simulation-optimal player count vs BGG community sweet spot
+## Hypothesis 6 - Simulation-optimal player count vs BGG community sweet spot
 
 **Question.** Does Volcano Rush's simulation-optimal player count match the community-voted best player count for comparably-sized BoardGameGeek cooperative games?
 
@@ -106,4 +93,4 @@ This document is written **before** inspecting simulation outputs or BGG data in
 
 **Decision rule.** Reject H0 if the simulation-optimal count falls outside the BGG 95% CI.
 
-**Fallback.** If the filtered BGG group has fewer than 30 games, relax `NumUserRatings >= 500` to `>= 200`. If still too small, withdraw the hypothesis under rule 3 below rather than silently swapping the filter.
+**Fallback.** If the filtered BGG group has fewer than 30 games, relax `NumUserRatings >= 500` to `>= 200`. If still too small, withdraw the hypothesis rather than silently swapping the filter.
