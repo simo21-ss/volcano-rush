@@ -47,9 +47,9 @@ This document is written **before** inspecting simulation outputs or BGG data in
 
 **Data.** Simulation rollouts only, restricted to the 4,000 6-player games. `data/simulations/game_characters.csv` has one row per player per game; joining with `games.csv` and filtering to `player_count == 6` gives 24,000 observations (4,000 games x 6 characters), with each character contributing 4,000 rows. Six-player games are the only configuration where every character appears exactly once; at 7 and 8 players the random non-Craftsman duplication rule contaminates per-character scoring (Hypothesis 2 confirms the duplication mechanic shifts outcomes).
 
-**Test.** One-way ANOVA on `final_score` with `character` as the factor. With 24,000 observations the central limit theorem makes the F-test's normality assumption irrelevant; the non-parametric Kruskal-Wallis test on the same data is reported as a robustness check. 95% CIs are reported for each character's mean score.
+**Test.** One-way ANOVA on `final_score` with `character` as the factor. With 24,000 observations the central limit theorem makes the F-test's normality assumption irrelevant. 95% CIs are reported for each character's mean score.
 
-**Decision rule.** Reject H0 if the ANOVA (and supporting Kruskal-Wallis) p-value is below the Holm-corrected threshold. Per-character highlights (characters whose 95% CI excludes the overall mean) are flagged as exploratory once the global test is significant, not as individually pre-registered claims.
+**Decision rule.** Reject H0 if the ANOVA p-value is below the Holm-corrected threshold. Per-character highlights (characters whose 95% CI excludes the overall mean) are flagged as exploratory once the global test is significant, not as individually pre-registered claims.
 
 ## Hypothesis 4 - Semi-cooperative vs fully cooperative ratings on BGG
 
@@ -60,7 +60,7 @@ This document is written **before** inspecting simulation outputs or BGG data in
 
 **Data.** BGG only. A game is **semi-cooperative** if `mechanics.csv` has `Semi-Cooperative Game == 1`, and **fully cooperative** if `Cooperative Game == 1` and `Semi-Cooperative Game == 0`. Games with both flags are classified as semi-cooperative to keep the groups disjoint. The comparison is limited to games with `NumUserRatings >= 500` so the Bayesian rating is based on a non-trivial sample.
 
-**Test.** Two-sample Welch t-test on `BayesAvgRating`. If the distributions are visibly skewed, report a Mann-Whitney U-test alongside. 95% confidence interval on the difference in means, computed by bootstrap.
+**Test.** Two-sample Welch t-test on `BayesAvgRating`. The non-parametric Mann-Whitney U-test is reported alongside as a robustness check, since the semi-cooperative group is small and may be sensitive to skew.
 
 **Decision rule.** Reject H0 if the p-value is below the Holm-corrected threshold.
 
@@ -73,7 +73,7 @@ This document is written **before** inspecting simulation outputs or BGG data in
 
 **Data.** BGG only. A game qualifies as cooperative if `mechanics.csv` has `Cooperative Game == 1` or `Semi-Cooperative Game == 1`. Same `NumUserRatings >= 500` filter as Hypothesis 4. Partition the remaining games by `MaxPlayers >= 6`.
 
-**Test.** Two-sample Welch t-test on `BayesAvgRating`, with Mann-Whitney U-test as a robustness check. 95% bootstrap confidence interval on the difference in means. Each group's standard deviation is reported descriptively as a side observation on whether one of the two categories is more polarizing (a wider spread means players disagree more on whether the games are good).
+**Test.** Two-sample Welch t-test on `BayesAvgRating`. Each group's standard deviation is reported descriptively as a side observation on whether one of the two categories is more polarizing (a wider spread means players disagree more on whether the games are good).
 
 **Decision rule.** Reject H0 if the p-value is below the Holm-corrected threshold.
 
@@ -81,16 +81,16 @@ This document is written **before** inspecting simulation outputs or BGG data in
 
 **Question.** Does Volcano Rush's simulation-optimal player count match the community-voted best player count for comparably-sized BoardGameGeek cooperative games?
 
-- **H0:** Volcano Rush's simulation-optimal player count falls inside the 95% bootstrap confidence interval of the mean `BestPlayers` for BGG cooperative games with `MaxPlayers >= 6`.
-- **H1:** it falls outside that interval.
+- **H0:** the mean `BestPlayers` of BGG large-group cooperative games equals Volcano Rush's simulation-optimal player count.
+- **H1:** the two differ.
 
 **Data.**
 
 - Simulation side: win rate per player count (6, 7, 8) from `data/simulations/games.csv`. Volcano Rush's **simulation-optimal player count** is defined as the count whose win rate is closest to 0.575 (the midpoint of the 50-65% design-target band). Ties broken by the count with the tighter Wilson confidence interval on its win rate.
-- BGG side: `BestPlayers` column for games with `Cooperative Game == 1` or `Semi-Cooperative Game == 1`, `MaxPlayers >= 6`, and `NumUserRatings >= 500`. Parsing rule: the column may contain a single integer, a comma-separated list, or a range; the numeric median of the parsed values is used for each game. Games where `BestPlayers` does not parse are dropped and the drop count is reported.
+- BGG side: `BestPlayers` column for games with `Cooperative Game == 1` or `Semi-Cooperative Game == 1`, `MaxPlayers >= 6`, and `NumUserRatings >= 500`. In the Kaggle export `BestPlayers` is already a single integer per game (the community-voted modal best count); a value of `0` means there is no community consensus and is dropped from the test.
 
-**Test.** Compute a 95% bootstrap confidence interval on the mean parsed `BestPlayers` across the BGG group. Check whether Volcano Rush's simulation-optimal count (a single integer, 6, 7, or 8) lies inside that interval.
+**Test.** One-sample Welch t-test of the BGG mean `BestPlayers` against Volcano Rush's simulation-optimal player count as the null mean. Report the BGG mean with a 95% Student-t confidence interval as the supporting effect size.
 
-**Decision rule.** Reject H0 if the simulation-optimal count falls outside the BGG 95% CI.
+**Decision rule.** Reject H0 if the t-test p-value is below the Holm-corrected threshold.
 
 **Fallback.** If the filtered BGG group has fewer than 30 games, relax `NumUserRatings >= 500` to `>= 200`. If still too small, withdraw the hypothesis rather than silently swapping the filter.
