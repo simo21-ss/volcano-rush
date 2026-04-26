@@ -40,16 +40,16 @@ This document is written **before** inspecting simulation outputs or BGG data in
 
 ## Hypothesis 3 - Character dominance in personal scoring
 
-**Question.** Does any single character earn systematically more personal points than the others, across all player counts?
+**Question.** Does any single character earn systematically more personal points than the others?
 
 - **H0:** the six characters have equal expected per-player final score.
 - **H1:** at least one character's expected per-player final score differs from the others.
 
-**Data.** Simulation rollouts only. `data/simulations/game_characters.csv` has one row per player per game (84,000 rows total) with columns `character` and `final_score`. Player count is joined from `games.csv` and used as a blocking factor.
+**Data.** Simulation rollouts only, restricted to the 4,000 6-player games. `data/simulations/game_characters.csv` has one row per player per game; joining with `games.csv` and filtering to `player_count == 6` gives 24,000 observations (4,000 games x 6 characters), with each character contributing 4,000 rows. Six-player games are the only configuration where every character appears exactly once; at 7 and 8 players the random non-Craftsman duplication rule contaminates per-character scoring (Hypothesis 2 confirms the duplication mechanic shifts outcomes).
 
-**Test.** One-way analysis of variance (ANOVA) on `final_score` with `character` as the factor and `player_count` as a categorical covariate (two-way ANOVA without interaction). If the residuals are visibly non-normal or heteroskedastic, fall back to the non-parametric Kruskal-Wallis test on `final_score` by character, reported separately per player count. 95% CIs are reported for each character's mean score.
+**Test.** One-way ANOVA on `final_score` with `character` as the factor. With 24,000 observations the central limit theorem makes the F-test's normality assumption irrelevant; the non-parametric Kruskal-Wallis test on the same data is reported as a robustness check. 95% CIs are reported for each character's mean score.
 
-**Decision rule.** Reject H0 if the global ANOVA (or Kruskal-Wallis) p-value is below the Holm-corrected threshold. Per-character highlights (characters whose 95% CI excludes the overall mean) are flagged as exploratory once the global test is significant, not as individually pre-registered claims.
+**Decision rule.** Reject H0 if the ANOVA (and supporting Kruskal-Wallis) p-value is below the Holm-corrected threshold. Per-character highlights (characters whose 95% CI excludes the overall mean) are flagged as exploratory once the global test is significant, not as individually pre-registered claims.
 
 ## Hypothesis 4 - Semi-cooperative vs fully cooperative ratings on BGG
 
