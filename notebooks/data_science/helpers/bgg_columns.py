@@ -1,4 +1,4 @@
-"""Helpers for working with the BoardGameGeek dataset.
+"""Column-name normalization for the BoardGameGeek Kaggle export.
 
 Used from the per-hypothesis notebooks under `notebooks/data_science/hypotheses/`.
 """
