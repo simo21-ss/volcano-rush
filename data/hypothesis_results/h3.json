@@ -1,0 +1,6 @@
+{
+  "hypothesis": "H3",
+  "description": "Character dominance in personal scoring",
+  "test": "ANOVA",
+  "p_value": 7.500487489536282e-28
+}

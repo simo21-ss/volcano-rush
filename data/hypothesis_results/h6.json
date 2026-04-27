@@ -1,0 +1,6 @@
+{
+  "hypothesis": "H6",
+  "description": "Simulation-optimal player count vs BGG sweet spot",
+  "test": "one-sample t",
+  "p_value": 1.4574221439521624e-33
+}

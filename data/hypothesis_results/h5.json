@@ -1,0 +1,6 @@
+{
+  "hypothesis": "H5",
+  "description": "Large-group vs smaller-group co-op on BGG",
+  "test": "Welch t",
+  "p_value": 8.503188012970155e-05
+}

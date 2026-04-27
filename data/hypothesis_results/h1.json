@@ -1,0 +1,6 @@
+{
+  "hypothesis": "H1",
+  "description": "Player-count balance",
+  "test": "chi-square",
+  "p_value": 3.4236392854209937e-10
+}

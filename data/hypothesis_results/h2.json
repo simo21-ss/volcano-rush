@@ -1,0 +1,6 @@
+{
+  "hypothesis": "H2",
+  "description": "Duplication effect at 7 and 8 players",
+  "test": "chi-square",
+  "p_value": 0.001427738620762493
+}

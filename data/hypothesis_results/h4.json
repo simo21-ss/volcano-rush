@@ -1,0 +1,6 @@
+{
+  "hypothesis": "H4",
+  "description": "Semi-coop vs fully coop ratings on BGG",
+  "test": "Welch t",
+  "p_value": 0.23155493950661646
+}
