@@ -64,7 +64,7 @@ Each participant must **individually** meet the mission's resource requirements 
 | **Requires (per player)** | 1 Rope + Knife (tool) |
 | **Participants** | 2 |
 | **Reward** | 2 points per participant |
-| **Bonus** | Reduce the requirement of the next chosen mission by -1 resource (player's choice) |
+| **Bonus** | Every player who currently has 0 resources immediately draws 1 resource card |
 
 ### Gather Materials
 | Field | Value |

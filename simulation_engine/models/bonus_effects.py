@@ -16,3 +16,4 @@ class BonusEffect:
     protect_next_failure: bool = False
     boat_part: bool = False
     participant_card_draws: int = 0
+    empty_hand_card_draws: int = 0

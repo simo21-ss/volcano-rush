@@ -82,7 +82,7 @@ Mission.catalog = {
         points = 2,
         mission_type = MissionType.SHELTER,
         required_tools = [Tool.KNIFE],
-        bonus_on_success = BonusEffect(resource_discount_any = 1),
+        bonus_on_success = BonusEffect(empty_hand_card_draws = 1),
     ),
     MissionName.GATHER_MATERIALS: Mission(
         name = MissionName.GATHER_MATERIALS,

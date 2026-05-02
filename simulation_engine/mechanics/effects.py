@@ -98,5 +98,11 @@ def apply_mission_bonus(
             for _ in range(bonus.participant_card_draws):
                 participant.resources.append(draw_resource(state))
 
+    if bonus.empty_hand_card_draws > 0:
+        for player in state.players:
+            if not player.resources:
+                for _ in range(bonus.empty_hand_card_draws):
+                    player.resources.append(draw_resource(state))
+
     if bonus.resource_discount or bonus.resource_discount_any > 0 or bonus.gather_bonus > 0:
         state.pending_bonus = bonus

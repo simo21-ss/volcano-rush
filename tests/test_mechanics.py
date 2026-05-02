@@ -112,3 +112,18 @@ class TestApplyBonus:
         assert len(player_one.resources) == 1
         assert len(player_two.resources) == 1
         assert state.resource_deck == []
+
+    def test_apply_bonus_empty_hand_card_draws(self):
+        empty_player = make_player(Character.COOK, [])
+        stocked_player = make_player(Character.GATHERER, [Resource.WOOD])
+        state = make_state(
+            [empty_player, stocked_player],
+            resource_deck = [Resource.STONE, Resource.ROPE],
+        )
+        bonus = BonusEffect(empty_hand_card_draws = 1)
+
+        apply_mission_bonus(bonus, MissionName.FORTIFY_THE_CAMP, state, [])
+
+        assert len(empty_player.resources) == 1
+        assert stocked_player.resources == [Resource.WOOD]
+        assert len(state.resource_deck) == 1
