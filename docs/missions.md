@@ -16,7 +16,7 @@ Each participant must **individually** meet the mission's resource requirements 
 | **Requires (per player)** | 1 Wood |
 | **Participants** | 2 |
 | **Reward** | 2 points per participant |
-| **Bonus** | Next round, any mission requiring wood will cost -1 Wood (one-time) |
+| **Bonus** | Each participant immediately draws 1 resource card |
 
 ### Torch for the Night
 | Field | Value |

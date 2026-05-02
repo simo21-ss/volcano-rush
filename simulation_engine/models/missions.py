@@ -29,7 +29,7 @@ Mission.catalog = {
         players_count = 2,
         points = 2,
         mission_type = MissionType.FIRE,
-        bonus_on_success = BonusEffect(resource_discount = { Resource.WOOD: 1 }),
+        bonus_on_success = BonusEffect(participant_card_draws = 1),
     ),
     MissionName.TORCH_FOR_THE_NIGHT: Mission(
         name = MissionName.TORCH_FOR_THE_NIGHT,

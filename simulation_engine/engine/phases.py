@@ -129,7 +129,7 @@ def apply_mission_success(state: GameState, mission: Mission, mission_name: Miss
     for player in participants:
         player.score += points_per_player
 
-    apply_mission_bonus(mission.bonus_on_success, mission_name, state)
+    apply_mission_bonus(mission.bonus_on_success, mission_name, state, participants)
 
 
 def apply_exhaustion_step(state: GameState, participants: list) -> None:

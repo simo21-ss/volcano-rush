@@ -79,7 +79,7 @@ class TestApplyBonus:
         state = make_state([])
         bonus = BonusEffect(boat_part = True)
 
-        apply_mission_bonus(bonus, MissionName.CUT_THE_KEEL, state)
+        apply_mission_bonus(bonus, MissionName.CUT_THE_KEEL, state, [])
 
         assert MissionName.CUT_THE_KEEL in state.boat_parts_built
 
@@ -88,7 +88,7 @@ class TestApplyBonus:
         state.tools[Tool.KNIFE].damaged = True
         bonus = BonusEffect(repair_tool = True)
 
-        apply_mission_bonus(bonus, MissionName.GATHER_MATERIALS, state)
+        apply_mission_bonus(bonus, MissionName.GATHER_MATERIALS, state, [])
 
         assert state.tools[Tool.KNIFE].damaged is False
         assert state.tool_repairs.get(Tool.KNIFE, 0) == 1
@@ -97,6 +97,18 @@ class TestApplyBonus:
         state = make_state([], pending_volcano_card = VolcanoCardName.RAIN_AND_MUD)
         bonus = BonusEffect(negates_volcano_card = VolcanoCardName.RAIN_AND_MUD)
 
-        apply_mission_bonus(bonus, MissionName.BUILD_A_SHELTER, state)
+        apply_mission_bonus(bonus, MissionName.BUILD_A_SHELTER, state, [])
 
         assert state.pending_volcano_card is None
+
+    def test_apply_bonus_participant_card_draws(self):
+        player_one = make_player(Character.COOK, [])
+        player_two = make_player(Character.GATHERER, [])
+        state = make_state([player_one, player_two], resource_deck = [Resource.WOOD, Resource.STONE])
+        bonus = BonusEffect(participant_card_draws = 1)
+
+        apply_mission_bonus(bonus, MissionName.LIGHT_A_FIRE, state, [player_one, player_two])
+
+        assert len(player_one.resources) == 1
+        assert len(player_two.resources) == 1
+        assert state.resource_deck == []

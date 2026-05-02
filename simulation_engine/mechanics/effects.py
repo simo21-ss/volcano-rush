@@ -1,8 +1,8 @@
 import random
 from typing import Optional
 
-from ..models import MissionType, MissionName, VolcanoCardName, GameState, BonusEffect, VolcanoCard, Mission
-from ..deck import draw_mission
+from ..models import MissionType, MissionName, VolcanoCardName, GameState, BonusEffect, VolcanoCard, Mission, Player
+from ..deck import draw_mission, draw_resource
 
 
 def apply_volcano_card(volcano_card_name: VolcanoCardName, state: GameState) -> None:
@@ -46,19 +46,25 @@ def apply_volcano_card(volcano_card_name: VolcanoCardName, state: GameState) -> 
         state.pending_volcano_card = volcano_card_name
 
 
-def apply_mission_bonus(bonus: Optional[BonusEffect], mission_name: MissionName, state: GameState) -> None:
+def apply_mission_bonus(
+        bonus: Optional[BonusEffect],
+        mission_name: MissionName,
+        state: GameState,
+        participants: list[Player],
+) -> None:
     """
     Apply a mission success bonus effect to the game state.
 
     Handles all bonus types: boat part registration, complication skip, failure protection,
-    tool repair, volcano card negation, exhaustion skip, and resource discounts /
-    gather bonuses for the next round. Each effect flips the corresponding GameState
-    flag; the consuming phase reads and clears the flag.
+    tool repair, volcano card negation, exhaustion skip, immediate participant card draws,
+    and resource discounts / gather bonuses for the next round. Each effect flips the
+    corresponding GameState flag; the consuming phase reads and clears the flag.
 
     Args:
         bonus: The bonus effect to apply, or None if the mission has no bonus.
         mission_name: The completed mission's name (used to register a boat part if applicable).
         state: Current game state, mutated in place.
+        participants: The mission's participants (used by per-participant bonuses).
     """
     if bonus is None:
         return
@@ -86,6 +92,11 @@ def apply_mission_bonus(bonus: Optional[BonusEffect], mission_name: MissionName,
     if bonus.negates_volcano_card is not None:
         if state.pending_volcano_card == bonus.negates_volcano_card:
             state.pending_volcano_card = None
+
+    if bonus.participant_card_draws > 0:
+        for participant in participants:
+            for _ in range(bonus.participant_card_draws):
+                participant.resources.append(draw_resource(state))
 
     if bonus.resource_discount or bonus.resource_discount_any > 0 or bonus.gather_bonus > 0:
         state.pending_bonus = bonus

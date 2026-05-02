@@ -15,3 +15,4 @@ class BonusEffect:
     no_exhaustion: bool = False
     protect_next_failure: bool = False
     boat_part: bool = False
+    participant_card_draws: int = 0
