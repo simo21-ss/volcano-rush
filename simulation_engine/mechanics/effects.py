@@ -57,8 +57,8 @@ def apply_mission_bonus(
 
     Handles all bonus types: boat part registration, complication skip, failure protection,
     tool repair, volcano card negation, exhaustion skip, immediate participant card draws,
-    and resource discounts / gather bonuses for the next round. Each effect flips the
-    corresponding GameState flag; the consuming phase reads and clears the flag.
+    immediate empty-hand relief draws, and gather bonuses for the next round. Each effect
+    flips the corresponding GameState flag; the consuming phase reads and clears the flag.
 
     Args:
         bonus: The bonus effect to apply, or None if the mission has no bonus.
@@ -104,5 +104,5 @@ def apply_mission_bonus(
                 for _ in range(bonus.empty_hand_card_draws):
                     player.resources.append(draw_resource(state))
 
-    if bonus.resource_discount or bonus.resource_discount_any > 0 or bonus.gather_bonus > 0:
+    if bonus.gather_bonus > 0:
         state.pending_bonus = bonus

@@ -6,7 +6,6 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from simulation_engine.models.enums import (
     Character, Resource, Tool, MissionName, ComplicationCardName, VolcanoCardName,
 )
-from simulation_engine.models.bonus_effects import BonusEffect
 from simulation_engine.models.missions import Mission
 from simulation_engine.models.complications import ComplicationCard
 from simulation_engine.models.state import Player, GameState, ToolState
@@ -100,121 +99,6 @@ class TestResolveMissionOutcomes:
         result = resolve_mission(state, LIGHT_A_FIRE, [player_one, player_two], CALM_BREEZE)
 
         assert result is False
-
-
-# ── Pending-bonus consumption (regression tests for the evaporation bug) ─────
-
-class TestPendingBonusConsumption:
-
-    def test_resource_discount_reduces_each_participant_cost(self):
-        # LIGHT_A_FIRE needs 2 participants with 1 WOOD each. With a pending
-        # WOOD discount the per-player cost is 0; neither participant should
-        # lose wood from their hand.
-        player_one = make_player(Character.COOK, [Resource.WOOD])
-        player_two = make_player(Character.COOK, [Resource.WOOD])
-        state = make_state(
-            [player_one, player_two],
-            pending_bonus = BonusEffect(resource_discount = { Resource.WOOD: 1 }),
-        )
-
-        result = resolve_mission(state, LIGHT_A_FIRE, [player_one, player_two], CALM_BREEZE)
-
-        assert result is True
-        assert player_one.resources == [Resource.WOOD]
-        assert player_two.resources == [Resource.WOOD]
-
-    def test_resource_discount_consumed_after_successful_attempt(self):
-        player_one = make_player(Character.COOK, [Resource.WOOD])
-        player_two = make_player(Character.COOK, [Resource.WOOD])
-        state = make_state(
-            [player_one, player_two],
-            pending_bonus = BonusEffect(resource_discount = { Resource.WOOD: 1 }),
-        )
-
-        resolve_mission(state, LIGHT_A_FIRE, [player_one, player_two], CALM_BREEZE)
-
-        assert state.pending_bonus is None
-
-    def test_resource_discount_not_cleared_by_pre_compute_failure(self):
-        # Attempt fails on wrong participant count before compute_per_player_requirements
-        # runs. The bonus must remain available for the next attempt.
-        player_one = make_player(Character.COOK, [])
-        state = make_state(
-            [player_one],
-            pending_bonus = BonusEffect(resource_discount = { Resource.WOOD: 1 }),
-        )
-
-        result = resolve_mission(state, LIGHT_A_FIRE, [player_one], CALM_BREEZE)
-
-        assert result is False
-        assert state.pending_bonus is not None
-
-    def test_resource_discount_any_reduces_complication_any_extra(self):
-        # SLIPPERY_ROCKS charges 2 any-resource per participant. With a pending
-        # resource_discount_any = 1 (e.g. from FORTIFY_THE_CAMP succeeding),
-        # each participant pays only 1 any on top of the base WOOD cost.
-        # Player_a holds exactly WOOD + 1 STONE; without the discount this hand
-        # would fall 1 short of the SLIPPERY_ROCKS any_extra.
-        player_a = make_player(Character.COOK, [Resource.WOOD, Resource.STONE])
-        player_b = make_player(Character.COOK, [Resource.WOOD, Resource.ROPE])
-        state = make_state(
-            [player_a, player_b],
-            pending_bonus = BonusEffect(resource_discount_any = 1),
-        )
-
-        result = resolve_mission(
-            state,
-            Mission.get(MissionName.LIGHT_A_FIRE),
-            [player_a, player_b],
-            ComplicationCard.get(ComplicationCardName.SLIPPERY_ROCKS),
-        )
-
-        assert result is True
-        assert player_a.resources == []
-        assert player_b.resources == []
-
-    def test_resource_discount_any_consumed_after_successful_attempt(self):
-        player_a = make_player(Character.COOK, [Resource.WOOD, Resource.STONE])
-        player_b = make_player(Character.COOK, [Resource.WOOD, Resource.ROPE])
-        state = make_state(
-            [player_a, player_b],
-            pending_bonus = BonusEffect(resource_discount_any = 1),
-        )
-
-        resolve_mission(
-            state,
-            Mission.get(MissionName.LIGHT_A_FIRE),
-            [player_a, player_b],
-            ComplicationCard.get(ComplicationCardName.SLIPPERY_ROCKS),
-        )
-
-        assert state.pending_bonus is None
-
-    def test_resource_discount_any_preserved_on_pre_compute_failure(self):
-        player = make_player(Character.COOK, [])
-        state = make_state(
-            [player],
-            pending_bonus = BonusEffect(resource_discount_any = 1),
-        )
-
-        # Fails on wrong participant count before reaching the compute phase.
-        resolve_mission(state, Mission.get(MissionName.LIGHT_A_FIRE), [player], CALM_BREEZE)
-
-        assert state.pending_bonus is not None
-        assert state.pending_bonus.resource_discount_any == 1
-
-    def test_non_discount_bonus_is_not_cleared_by_resolve(self):
-        player_one = make_player(Character.COOK, [Resource.WOOD, Resource.STONE])
-        player_two = make_player(Character.COOK, [Resource.WOOD, Resource.STONE])
-        state = make_state(
-            [player_one, player_two],
-            pending_bonus = BonusEffect(negates_volcano_card = VolcanoCardName.RAIN_AND_MUD),
-        )
-
-        resolve_mission(state, LIGHT_A_FIRE, [player_one, player_two], CALM_BREEZE)
-
-        assert state.pending_bonus is not None
-        assert state.pending_bonus.negates_volcano_card == VolcanoCardName.RAIN_AND_MUD
 
 
 # ── Per-player complication model ────────────────────────────────────────────

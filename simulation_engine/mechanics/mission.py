@@ -43,7 +43,6 @@ def resolve_mission(
     if success:
         deduct_costs(player_requirements, state)
 
-    _consume_discount_bonus(state)
     _consume_volcano_extras_card(state)
 
     if success and complication is not None and complication.damages_tool_on_success is not None:
@@ -85,15 +84,7 @@ def _build_per_player_requirement(
     base = compute_per_player_requirements(mission, state)
     complication_extras = compute_complication_extras(mission, complication)
     volcano_extras = compute_volcano_extras(mission, state)
-    combined = _combine_requirements([base, complication_extras, volcano_extras])
-
-    if state.pending_bonus is not None and state.pending_bonus.resource_discount_any > 0:
-        combined = MissionRequirement(
-            typed = combined.typed,
-            any_extra = max(0, combined.any_extra - state.pending_bonus.resource_discount_any),
-        )
-
-    return combined
+    return _combine_requirements([base, complication_extras, volcano_extras])
 
 
 def _combine_requirements(requirements: list[MissionRequirement]) -> MissionRequirement:
@@ -104,18 +95,6 @@ def _combine_requirements(requirements: list[MissionRequirement]) -> MissionRequ
             typed[resource] = typed.get(resource, 0) + amount
         any_extra += requirement.any_extra
     return MissionRequirement(typed = typed, any_extra = any_extra)
-
-
-def _consume_discount_bonus(state: GameState) -> None:
-    """
-    Clear state.pending_bonus once per mission attempt (success or failure) if it
-    carried a resource discount. Other BonusEffect fields (gather_bonus,
-    negates_volcano_card, ...) are consumed by their own dedicated phase handlers.
-    """
-    if state.pending_bonus is None:
-        return
-    if state.pending_bonus.resource_discount or state.pending_bonus.resource_discount_any > 0:
-        state.pending_bonus = None
 
 
 def _consume_volcano_extras_card(state: GameState) -> None:

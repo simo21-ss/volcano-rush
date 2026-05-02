@@ -9,26 +9,18 @@ def compute_per_player_requirements(mission: Mission, state: GameState) -> Missi
     """
     Compute the base per-player mission requirements.
 
-    Applies any pending typed discount from state.pending_bonus without consuming
-    it: the consumer is resolve_mission, which clears the bonus once after the
-    attempt. Character ability discounts are applied per-player inside
-    check_and_contribute.
+    Character ability discounts are applied per-player inside check_and_contribute.
 
     Args:
         mission: The mission being attempted.
-        state: Current game state (pending bonus, etc.).
+        state: Current game state (unused here; accepted for signature symmetry
+               with compute_complication_extras and compute_volcano_extras).
 
     Returns:
         Per-player base requirements. Each participant must individually meet these.
     """
-    resource_requirements = dict(mission.required_resources)
-
-    if state.pending_bonus is not None and state.pending_bonus.resource_discount:
-        for resource, amount in state.pending_bonus.resource_discount.items():
-            resource_requirements[resource] = resource_requirements.get(resource, 0) - amount
-
     return MissionRequirement(
-        typed = { resource: max(0, value) for resource, value in resource_requirements.items() },
+        typed = dict(mission.required_resources),
         any_extra = 0,
     )
 

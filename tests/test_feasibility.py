@@ -6,7 +6,6 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from simulation_engine.models.enums import (
     Character, Resource, Tool, MissionName, ComplicationCardName, VolcanoCardName,
 )
-from simulation_engine.models.bonus_effects import BonusEffect
 from simulation_engine.models.missions import Mission
 from simulation_engine.models.state import Player, GameState, ToolState
 from simulation_engine.agents.feasibility import AffordLevel, player_afford_level, team_can_afford
@@ -105,50 +104,6 @@ class TestPlayerAffordLevel:
 
         assert player_afford_level(builder, LIGHT_A_FIRE, state) == AffordLevel.CANNOT_AFFORD
 
-    def test_pending_bonus_reduces_requirement(self):
-        player = make_player(Character.COOK, [Resource.STONE])
-        state = make_state(
-            [player],
-            pending_bonus = BonusEffect(resource_discount = { Resource.WOOD: 1 }),
-        )
-
-        assert player_afford_level(player, LIGHT_A_FIRE, state) == AffordLevel.SURPLUS
-
-    def test_pending_bonus_not_consumed_by_feasibility_query(self):
-        # Regression: the old code consumed state.pending_bonus inside
-        # compute_per_player_requirements, which silently evaporated the bonus
-        # during voting.
-        player = make_player(Character.COOK, [Resource.STONE])
-        state = make_state(
-            [player],
-            pending_bonus = BonusEffect(resource_discount = { Resource.WOOD: 1 }),
-        )
-
-        player_afford_level(player, LIGHT_A_FIRE, state)
-        player_afford_level(player, LIGHT_A_FIRE, state)
-
-        assert state.pending_bonus is not None
-        assert state.pending_bonus.resource_discount == { Resource.WOOD: 1 }
-
-    def test_classification_stable_across_missions_with_shared_bonus(self):
-        # Simulates vote_for_mission iterating over active missions. Whichever
-        # order missions are evaluated in, feasibility classifications should
-        # stay consistent because the bonus is a pure read, not a consume.
-        player = make_player(Character.COOK, [Resource.WOOD, Resource.ROPE])
-        state = make_state(
-            [player],
-            pending_bonus = BonusEffect(resource_discount = { Resource.WOOD: 1 }),
-        )
-
-        first = player_afford_level(player, LIGHT_A_FIRE, state)
-        second = player_afford_level(player, HUNT, state)
-        third = player_afford_level(player, LIGHT_A_FIRE, state)
-
-        assert first == third
-        # HUNT requires STONE and ROPE; player has WOOD and ROPE -> missing STONE.
-        assert second == AffordLevel.CANNOT_AFFORD
-
-
 # ── team_can_afford ──────────────────────────────────────────────────────────
 
 class TestTeamCanAfford:
@@ -196,17 +151,3 @@ class TestTeamCanAfford:
         # Only one non-exhausted player can afford LIGHT_A_FIRE, which needs 2.
         assert team_can_afford(LIGHT_A_FIRE, state) is False
 
-    def test_pending_bonus_enlarges_feasible_team(self):
-        players = [
-            make_player(Character.COOK, [Resource.STONE]),
-            make_player(Character.COOK, [Resource.STONE]),
-        ]
-        # Without the bonus the team could not afford LIGHT_A_FIRE (needs WOOD).
-        state_no_bonus = make_state(players)
-        state_with_bonus = make_state(
-            players,
-            pending_bonus = BonusEffect(resource_discount = { Resource.WOOD: 1 }),
-        )
-
-        assert team_can_afford(LIGHT_A_FIRE, state_no_bonus) is False
-        assert team_can_afford(LIGHT_A_FIRE, state_with_bonus) is True

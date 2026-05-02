@@ -6,7 +6,6 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from simulation_engine.models.enums import (
     Character, Resource, Tool, MissionName, ComplicationCardName, VolcanoCardName,
 )
-from simulation_engine.models.bonus_effects import BonusEffect
 from simulation_engine.models.missions import Mission
 from simulation_engine.models.complications import ComplicationCard
 from simulation_engine.models.state import Player, GameState, ToolState
@@ -63,36 +62,12 @@ class TestComputePerPlayerRequirements:
         assert result.typed == { Resource.WOOD: 1 }
         assert result.any_extra == 0
 
-    def test_bonus_discount_applied(self):
-        state = make_state([], pending_bonus = BonusEffect(resource_discount = { Resource.WOOD: 1 }))
-
-        result = compute_per_player_requirements(LIGHT_A_FIRE, state)
-
-        assert result.typed.get(Resource.WOOD, 0) == 0
-
-    def test_bonus_not_consumed_by_compute(self):
-        state = make_state([], pending_bonus = BonusEffect(resource_discount = { Resource.WOOD: 1 }))
-
-        compute_per_player_requirements(LIGHT_A_FIRE, state)
-        compute_per_player_requirements(LIGHT_A_FIRE, state)
-
-        assert state.pending_bonus is not None
-        assert state.pending_bonus.resource_discount == { Resource.WOOD: 1 }
-
     def test_character_discounts_not_applied(self):
         state = make_state([])
 
         result = compute_per_player_requirements(LIGHT_A_FIRE, state)
 
         assert result.typed == { Resource.WOOD: 1 }
-
-    def test_negates_volcano_bonus_is_not_cleared(self):
-        state = make_state([], pending_bonus = BonusEffect(negates_volcano_card = VolcanoCardName.RAIN_AND_MUD))
-
-        compute_per_player_requirements(LIGHT_A_FIRE, state)
-
-        assert state.pending_bonus is not None
-        assert state.pending_bonus.negates_volcano_card == VolcanoCardName.RAIN_AND_MUD
 
 
 # ── compute_complication_extras (per-participant) ────────────────────────────
