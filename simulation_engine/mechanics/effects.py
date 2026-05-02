@@ -56,9 +56,9 @@ def apply_mission_bonus(
     Apply a mission success bonus effect to the game state.
 
     Handles all bonus types: boat part registration, complication skip, failure protection,
-    tool repair, volcano card negation, exhaustion skip, immediate participant card draws,
-    immediate empty-hand relief draws, and gather bonuses for the next round. Each effect
-    flips the corresponding GameState flag; the consuming phase reads and clears the flag.
+    volcano card negation, exhaustion skip, immediate participant card draws, immediate
+    empty-hand relief draws, and gather bonuses for the next round. Each effect flips the
+    corresponding GameState flag; the consuming phase reads and clears the flag.
 
     Args:
         bonus: The bonus effect to apply, or None if the mission has no bonus.
@@ -80,14 +80,6 @@ def apply_mission_bonus(
 
     if bonus.no_exhaustion:
         state.skip_exhaustion = True
-
-    if bonus.repair_tool:
-        for tool, tool_state in state.tools.items():
-            if tool_state.damaged:
-                tool_state.damaged = False
-                tool_state.under_repair = False
-                state.tool_repairs[tool] = state.tool_repairs.get(tool, 0) + 1
-                break
 
     if bonus.negates_volcano_card is not None:
         if state.pending_volcano_card == bonus.negates_volcano_card:

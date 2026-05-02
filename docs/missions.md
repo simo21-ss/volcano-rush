@@ -71,8 +71,8 @@ Each participant must **individually** meet the mission's resource requirements 
 |---|---|
 | **Requires (per player)** | 1 Wood + 1 Stone + 1 Rope |
 | **Participants** | 3 |
-| **Reward** | 2 points per participant |
-| **Bonus** | Repair 1 damaged tool in camp |
+| **Reward** | 3 points per participant |
+| **Bonus** | None |
 
 ## Boat Missions
 

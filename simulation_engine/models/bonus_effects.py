@@ -9,7 +9,6 @@ class BonusEffect:
     skip_next_complication: bool = False
     gather_bonus: int = 0
     negates_volcano_card: Optional[VolcanoCardName] = None
-    repair_tool: bool = False
     no_exhaustion: bool = False
     protect_next_failure: bool = False
     boat_part: bool = False

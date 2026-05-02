@@ -88,9 +88,8 @@ Mission.catalog = {
         name = MissionName.GATHER_MATERIALS,
         required_resources = { Resource.WOOD: 1, Resource.STONE: 1, Resource.ROPE: 1 },
         players_count = 3,
-        points = 2,
+        points = 3,
         mission_type = MissionType.SHELTER,
-        bonus_on_success = BonusEffect(repair_tool = True),
     ),
     MissionName.CUT_THE_KEEL: Mission(
         name = MissionName.CUT_THE_KEEL,

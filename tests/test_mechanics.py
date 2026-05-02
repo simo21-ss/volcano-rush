@@ -83,16 +83,6 @@ class TestApplyBonus:
 
         assert MissionName.CUT_THE_KEEL in state.boat_parts_built
 
-    def test_apply_bonus_repair_tool(self):
-        state = make_state([])
-        state.tools[Tool.KNIFE].damaged = True
-        bonus = BonusEffect(repair_tool = True)
-
-        apply_mission_bonus(bonus, MissionName.GATHER_MATERIALS, state, [])
-
-        assert state.tools[Tool.KNIFE].damaged is False
-        assert state.tool_repairs.get(Tool.KNIFE, 0) == 1
-
     def test_apply_bonus_negate_volcano(self):
         state = make_state([], pending_volcano_card = VolcanoCardName.RAIN_AND_MUD)
         bonus = BonusEffect(negates_volcano_card = VolcanoCardName.RAIN_AND_MUD)
