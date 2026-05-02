@@ -99,7 +99,7 @@ def _combine_requirements(requirements: list[MissionRequirement]) -> MissionRequ
 
 def _consume_volcano_extras_card(state: GameState) -> None:
     """
-    Clear state.pending_volcano_card once its resource extras have been applied
+    Clear the state.pending_volcano_card once its resource extras have been applied
     to a mission attempt (RAIN_AND_MUD, LAVA_FLOW). Non-extras pending cards
     (SMOKE, ASH_IN_THE_AIR, HEAT_WAVE, PANIC) are consumed by their own phase
     handlers.
