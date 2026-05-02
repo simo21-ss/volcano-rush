@@ -12,7 +12,7 @@ class CraftsmanStrategy(CharacterStrategy):
     def choose_non_participant_action(self, player: Player, state: GameState) -> NonParticipantAction:
         if not player.is_exhausted:
             any_repairable = any(
-                tool_state.damaged and tool_state.repair_due is None
+                tool_state.damaged and not tool_state.under_repair
                 for tool_state in state.tools.values()
             )
             if any_repairable and Resource.STONE in player.resources:

@@ -44,9 +44,9 @@ class RepairAction(NonParticipantAction):
     def execute(self, player: Player, state: GameState) -> None:
         repairable_tool = next(
             tool for tool, tool_state in state.tools.items()
-            if tool_state.damaged and tool_state.repair_due is None
+            if tool_state.damaged and not tool_state.under_repair
         )
-        state.tools[repairable_tool].repair_due = state.round + 2
+        state.tools[repairable_tool].under_repair = True
         player.resources.remove(Resource.STONE)
         player.score += 1
         player.contribution.tools_repaired += 1

@@ -79,7 +79,7 @@ def apply_mission_bonus(bonus: Optional[BonusEffect], mission_name: MissionName,
         for tool, tool_state in state.tools.items():
             if tool_state.damaged:
                 tool_state.damaged = False
-                tool_state.repair_due = None
+                tool_state.under_repair = False
                 state.tool_repairs[tool] = state.tool_repairs.get(tool, 0) + 1
                 break
 

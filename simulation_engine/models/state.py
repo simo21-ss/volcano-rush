@@ -9,7 +9,7 @@ from .enums import Character, Resource, Tool, MissionName, ComplicationCardName,
 @dataclass
 class ToolState:
     damaged: bool = False
-    repair_due: Optional[int] = None
+    under_repair: bool = False
 
 
 @dataclass
@@ -57,9 +57,9 @@ class GameState:
         self.round += 1
 
         for tool, tool_state in self.tools.items():
-            if tool_state.repair_due is not None and tool_state.repair_due <= self.round:
+            if tool_state.under_repair:
                 tool_state.damaged = False
-                tool_state.repair_due = None
+                tool_state.under_repair = False
                 self.tool_repairs[tool] = self.tool_repairs.get(tool, 0) + 1
 
         for player in self.players:

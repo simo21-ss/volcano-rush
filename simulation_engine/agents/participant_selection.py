@@ -113,7 +113,7 @@ def _participant_score(
 
     if player.character == Character.CRAFTSMAN:
         any_tool_needs_repair = any(
-            tool_state.damaged and tool_state.repair_due is None
+            tool_state.damaged and not tool_state.under_repair
             for tool_state in state.tools.values()
         )
         if any_tool_needs_repair:

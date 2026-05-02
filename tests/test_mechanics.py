@@ -61,13 +61,13 @@ class TestExhaustion:
         player = make_player(Character.COOK, [])
         state = make_state([player], round = 4)
         state.tools[Tool.KNIFE].damaged = True
-        state.tools[Tool.KNIFE].repair_due = 5
+        state.tools[Tool.KNIFE].under_repair = True
 
         state.begin_round()
 
         assert state.round == 5
         assert state.tools[Tool.KNIFE].damaged is False
-        assert state.tools[Tool.KNIFE].repair_due is None
+        assert state.tools[Tool.KNIFE].under_repair is False
         assert state.tool_repairs.get(Tool.KNIFE, 0) == 1
 
 
