@@ -78,7 +78,7 @@ Players not selected as participants:
 After participants are declared, shuffle the Complication deck and draw 1 card. Apply its effect to this mission.
 
 **Step 5 - Resolution**
-Each participant must individually cover the mission's per-player cost plus the complication card's extras, with their own character discount applied. Any volcano card extras are a one-time group cost paid from the participants' pooled surplus.
+Each participant must individually cover the mission's per-player cost plus the complication card's extras and any pending volcano card extras, all with their own character discount applied. Every cost is per-participant - never pooled.
 - **Success:** Distribute points to all participants. Apply any bonus effect.
 - **Failure:** Draw 1 Volcano card and apply its effect.
 
@@ -127,7 +127,7 @@ Apply modifiers in this order (all per-participant):
 1. Base mission requirement, with any pending-bonus discount subtracted.
 2. Character ability discounts.
 3. Complication card extras: `extra_resources`, `extra_resources_any`, and `extra_per_participant` each apply individually. A conditional complication (e.g. Wet Wood) applies only when the base mission requires the matching resource.
-4. Volcano card extras from a pending card (Rain and Mud, Lava Flow). Conditional gating (e.g. Rain and Mud's Wood condition) applies.
+4. Volcano card extras from any pending volcano cards (Rain and Mud, Lava Flow). Multiple pending cards stack - each card's extras are summed. Conditional gating (e.g. Rain and Mud's Wood condition) applies.
 
 Each participant must cover the sum of the above from their own hand, or the mission fails.
 

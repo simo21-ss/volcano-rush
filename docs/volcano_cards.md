@@ -13,7 +13,7 @@ Shuffle the Volcano deck before the game, placing **Eruption** on the bottom.
 | **Lava Flow** | The next mission requires +1 Rope per participant |
 | **Panic** | Next round, boat missions cannot be chosen |
 | **Collapse** | Every player with 3+ resources loses 1 |
-| **Heat Wave** | Players who choose "Gather" next round draw **0 resources** |
+| **Heat Wave** | Players who choose "Gather" this round draw **0 resources** |
 | **Smoke** | The next mission gives -1 point to participants (minimum 0) |
 | **Earthquake** | All currently Exhausted characters remain Exhausted for **1 additional round** |
 | **Eruption** | Game over - **Loss** |

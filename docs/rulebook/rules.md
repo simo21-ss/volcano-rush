@@ -23,7 +23,6 @@ This rulebook is everything you need to learn and play the game. Read it once fr
 13. [Winning and losing](#winning-and-losing)
 14. [Scoring](#scoring)
 15. [Quick reference](#quick-reference)
-16. [Open rules questions](#open-rules-questions)
 
 ---
 
@@ -193,7 +192,7 @@ On a successful **Food** mission, every participant gets +1 bonus point.
 When the Gatherer chooses **Gather**, they may draw **3 resource cards** instead of 1. If they do, they become Exhausted afterwards. They may not use this ability while already Exhausted.
 
 ### Sailor
-When the Sailor participates in a **Boat** mission, draw **2 complication cards** and choose which one applies.
+When the Sailor participates in a **Boat** mission, draw **2 complication cards** and choose which one applies. The Sailor's choice is private: the unchosen card is discarded face-down without showing it.
 
 ---
 
@@ -208,7 +207,7 @@ There are 13 missions in total: 8 standard and 5 boat parts. The active pool alw
 | **Light a Fire** | Fire | 1 Wood | - | 2 | 2 | Each participant immediately draws 1 resource card |
 | **Torch for the Night** | Fire | 1 Wood, 1 Rope | - | 3 | 3 | Skip the next complication card draw (one-time) |
 | **Fetch Water** | Food | 1 Rope, 1 Wood | Vessel | 3 | 3 | All players who Gather next round draw 1 extra resource |
-| **Hunt** | Food | 1 Stone, 1 Rope | Knife | 3 | 3 | If the next mission fails, no volcano card is drawn (one-time) |
+| **Hunt** | Food | 1 Stone, 1 Rope | Knife | 3 | 3 | If the next mission fails, no volcano card is drawn - including the Eruption (one-time) |
 | **Prepare Food** | Food | 1 Wood | Knife, Vessel | 3 | 3 | Participants in this mission are not Exhausted afterwards |
 | **Build a Shelter** | Shelter | 1 Wood, 1 Stone | Knife | 4 | 4 | Negate the volcano card Rain and Mud (one-time) |
 | **Fortify the Camp** | Shelter | 1 Rope | Knife | 2 | 2 | Every player who currently has 0 resources immediately draws 1 resource card |
@@ -241,7 +240,7 @@ After participants are declared, draw 1 complication card and apply it to the mi
 | **Blunt Blade** | If the mission succeeds, the Knife becomes damaged afterwards |
 | **Cracked Vessel** | If the mission succeeds, the Vessel becomes damaged afterwards |
 | **Heat and Thirst** | +1 resource per participant (any type) |
-| **Night Anxiety** | The mission needs 1 extra helper from outside the participants. The helper contributes resources but earns no points. If no one is willing or able to help, the mission fails |
+| **Night Anxiety** | The mission needs 1 non-participant, non-Exhausted player to stand by as a helper. The helper pays the same per-participant resource cost as a regular participant (base + complication + volcano extras), earns no points, and is not Exhausted afterwards. If no eligible helper can pay the cost, the mission fails |
 | **Camp Panic** | Each participant may contribute at most 1 card of any single resource type |
 | **Calm Breeze** | No effect |
 | **Clear Sky** | No effect |
@@ -252,20 +251,22 @@ When the complication deck runs out, reshuffle the discards and keep playing.
 
 ## Volcano cards
 
-A volcano card is drawn whenever a mission **fails** (and the group is not protected by **Hunt**'s bonus), or whenever the active player **shuffles** the mission pool, or the round is forfeited. Some volcano cards take effect immediately; others are pending and apply to the next mission.
+A volcano card is drawn whenever a mission **fails** (and the group is not protected by **Hunt**'s bonus), or whenever the active player **shuffles** the mission pool, or the round is forfeited. Some volcano cards take effect immediately; others are pending and apply later.
 
-The **Eruption** card sits at the bottom of the deck. The moment it is drawn, the group loses.
+If two or more pending volcano cards could affect the same mission (for example **Smoke** then **Lava Flow** drawn on consecutive failures), **both apply** - their effects stack. The same goes for **Ash in the Air** plus **Earthquake**: the next mission's exhaustion is 2 rounds (Ash) plus 1 more round (Earthquake), for a total of 3.
+
+The **Eruption** card sits at the bottom of the deck. The moment it is drawn, the group loses - unless **Hunt**'s "no volcano draw on next failure" bonus is active, which can cancel even the Eruption.
 
 | Card | When it triggers | Effect |
 |---|---|---|
 | **Rain and Mud** | Pending until the next mission | The next mission requires +2 Wood per participant, only if the mission requires Wood |
 | **Ash in the Air** | Pending until the next mission | Participants of the next mission stay Exhausted for 2 rounds instead of 1 |
 | **Tremor** | Immediate | Discard 1 non-boat active mission and reveal a new one. If all active missions are boat parts, no effect |
-| **Storm** | Immediate | Each player loses 1 random resource from their hand (if they have any) |
+| **Storm** | Immediate | Each player loses 1 random resource card from their personal hand (if they have any). Camp tools are never affected |
 | **Lava Flow** | Pending until the next mission | The next mission requires +1 Rope per participant |
 | **Panic** | Pending until the end of the next round | Boat missions cannot be chosen next round |
-| **Collapse** | Immediate | Every player with 3 or more resources loses 1 random resource |
-| **Heat Wave** | Pending until the end of the next round | Players who Gather next round draw 0 resources |
+| **Collapse** | Immediate | Every player with 3 or more resources loses 1 random resource card from their personal hand. Camp tools are never affected |
+| **Heat Wave** | Immediate | Players who Gather this round draw 0 resources |
 | **Smoke** | Pending until the next mission | The next mission gives 1 fewer point to each participant (minimum 0) |
 | **Earthquake** | Immediate | Every currently Exhausted player remains Exhausted for 1 additional round |
 | **Eruption** | Immediate | Game over: the group loses |
@@ -278,12 +279,7 @@ The group shares two tools: the **Knife** and the **Vessel**. Some missions requ
 
 A tool becomes damaged when a complication card (**Blunt Blade** or **Cracked Vessel**) damages it on a successful mission.
 
-A damaged tool is repaired in one of two ways:
-
-- A **Craftsman** spends 1 Stone during the non-participant action step to begin a repair. The tool is ready again at the start of the next round. The Craftsman scores +1 point for starting the repair.
-- The **Gather Materials** mission's bonus repairs 1 damaged tool immediately on success.
-
-Only one tool can be under repair at a time.
+A damaged tool is repaired only by a **Craftsman**: they spend 1 Stone during the non-participant action step to begin a repair, and the tool is ready again at the start of the next round. The Craftsman scores +1 point for starting the repair. Only one tool can be under repair at a time.
 
 ---
 
@@ -348,21 +344,3 @@ The player with the most points is the **hero of the journey**. If two or more p
 **Win.** All required boat parts built.
 
 **Lose.** Eruption volcano card revealed.
-
----
-
-## Open rules questions
-
-These are points where the existing reference documents and the simulation engine disagree, or where the rules need a clear authorial decision before the rulebook can be considered final. The behaviour described in the sections above follows the existing reference documents; the engine's behaviour is noted here for resolution.
-
-- **Volcano extras: per participant or pooled?** This rulebook and `complication_cards.md` say volcano extras (Rain and Mud, Lava Flow) are paid per participant. The engine agrees. The original `game_rules.md` says they are "a one-time group cost paid from the participants' pooled surplus." The pooled wording in `game_rules.md` should be removed.
-- **Hunt's protection vs. Eruption.** Hunt's "no volcano card is drawn next failure" bonus protects against any volcano draw, including Eruption, in the engine. Decide whether the boxed game should let Hunt cancel an Eruption draw or treat Eruption as unstoppable.
-- **Stacking pending volcano effects.** What happens when two pending volcano effects could both apply to the next mission (for example **Smoke** then **Lava Flow** drawn on consecutive failures)? The rulebook does not currently say whether they queue, override, or both apply. Clarify the rule.
-- **Ash plus Earthquake stacking.** Ash extends the next mission's exhaustion to 2 rounds. Earthquake extends every active exhaustion by 1 more round. If both are in play, do they stack additively (3 rounds) or cap somewhere?
-- **Storm and Collapse losses.** "Lose 1 random resource" applies to a player's resource hand. Confirm tools are never affected, even if a future card edit references a "random card."
-- **Boat construction order enforcement.** The mission deck and player-count rules already restrict which boat missions are revealed. Confirm that within an active pool the boat parts must still be attempted in Keel - Hull - Mast - Sail - Rudder order, and not whichever boat part the active player prefers to try first.
-- **Active player turn-end after a successful mission.** After a successful mission the active player still passes the role clockwise. Confirm there is no extra turn or reward mechanic intended for the active player who chose a winning mission.
-- **Sailor Complication choice.** The Sailor draws 2 cards and chooses which one applies on a Boat mission. Confirm whether the Sailor's choice is private or visible, and whether the unchosen card is discarded or returned to the deck.
-- **Night Anxiety helper resources.** A Night Anxiety helper "contributes resources but earns no points." Decide whether the helper is also charged the per-participant complication and volcano extras, or only the base resource shortfall they were called to cover.
-
-When these are resolved, update both this rulebook and the corresponding source files in `docs/` and `simulation_engine/`.

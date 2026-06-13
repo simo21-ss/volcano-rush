@@ -15,7 +15,7 @@ Complication resource costs are charged to **every participant individually**, o
 | **Blunt Blade** | If the mission succeeds, the Knife becomes damaged afterwards |
 | **Cracked Vessel** | If the mission succeeds, the Vessel becomes damaged afterwards |
 | **Heat and Thirst** | +1 resource per participant (any type) |
-| **Night Anxiety** | Mission requires 1 additional helper who may contribute resources but receives no points; if no willing helper is available, the mission fails |
+| **Night Anxiety** | Needs 1 non-participant, non-Exhausted player as a helper. The helper pays the same per-participant cost as a regular participant (base + complication + volcano extras), earns no points, and is not Exhausted afterwards. If no eligible helper can pay the cost, the mission fails |
 | **Camp Panic** | Each participant may contribute at most 1 card of any single resource type to the mission |
 | **Calm Breeze** | No effect |
 | **Clear Sky** | No effect |
