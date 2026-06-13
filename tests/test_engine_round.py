@@ -57,7 +57,7 @@ class TestVoteForMission:
         state = make_state(
             [player],
             active_missions = [MissionName.LIGHT_A_FIRE, MissionName.CUT_THE_KEEL, MissionName.ASSEMBLE_THE_HULL],
-            pending_volcano_card = VolcanoCardName.PANIC,
+            pending_volcano_cards = [VolcanoCardName.PANIC],
         )
 
         vote = vote_for_mission(player, state)
@@ -69,7 +69,7 @@ class TestVoteForMission:
         state = make_state(
             [player],
             active_missions = [MissionName.CUT_THE_KEEL, MissionName.ASSEMBLE_THE_HULL, MissionName.RAISE_THE_MAST],
-            pending_volcano_card = VolcanoCardName.PANIC,
+            pending_volcano_cards = [VolcanoCardName.PANIC],
         )
 
         assert vote_for_mission(player, state) is None
@@ -117,7 +117,7 @@ class TestDecideMissionAction:
         state = make_state(
             [player],
             active_missions = [MissionName.CUT_THE_KEEL, MissionName.ASSEMBLE_THE_HULL, MissionName.RAISE_THE_MAST],
-            pending_volcano_card = VolcanoCardName.PANIC,
+            pending_volcano_cards = [VolcanoCardName.PANIC],
         )
 
         assert decide_mission_action(player, state) == PlayerAction.SHUFFLE_MISSIONS
@@ -127,7 +127,7 @@ class TestDecideMissionAction:
         state = make_state(
             [player],
             active_missions = [MissionName.LIGHT_A_FIRE, MissionName.CUT_THE_KEEL, MissionName.RAISE_THE_MAST],
-            pending_volcano_card = VolcanoCardName.PANIC,
+            pending_volcano_cards = [VolcanoCardName.PANIC],
         )
 
         assert decide_mission_action(player, state) is None
@@ -214,7 +214,7 @@ class TestRunRound:
             [active_player, other],
             active_missions = [MissionName.CUT_THE_KEEL, MissionName.ASSEMBLE_THE_HULL, MissionName.RAISE_THE_MAST],
             mission_pool = [MissionName.LIGHT_A_FIRE, MissionName.HUNT],
-            pending_volcano_card = VolcanoCardName.PANIC,
+            pending_volcano_cards = [VolcanoCardName.PANIC],
         )
 
         outcome = run_round(state)
@@ -233,7 +233,7 @@ class TestRunRound:
             [active_player, other],
             active_missions = [MissionName.CUT_THE_KEEL, MissionName.ASSEMBLE_THE_HULL, MissionName.RAISE_THE_MAST],
             mission_pool = [],
-            pending_volcano_card = VolcanoCardName.PANIC,
+            pending_volcano_cards = [VolcanoCardName.PANIC],
             volcano_deck = [VolcanoCardName.ERUPTION],
         )
 
@@ -272,23 +272,23 @@ class TestEndRound:
         player = make_player(Character.COOK, [])
         state = make_state(
             [player],
-            pending_volcano_card = VolcanoCardName.PANIC,
+            pending_volcano_cards = [VolcanoCardName.PANIC],
         )
 
         state.end_round()
 
-        assert state.pending_volcano_card is None
+        assert state.pending_volcano_cards == []
 
     def test_end_round_preserves_non_panic_pending_volcano(self):
         player = make_player(Character.COOK, [])
         state = make_state(
             [player],
-            pending_volcano_card = VolcanoCardName.RAIN_AND_MUD,
+            pending_volcano_cards = [VolcanoCardName.RAIN_AND_MUD],
         )
 
         state.end_round()
 
-        assert state.pending_volcano_card == VolcanoCardName.RAIN_AND_MUD
+        assert state.pending_volcano_cards == [VolcanoCardName.RAIN_AND_MUD]
 
     def test_end_round_replaces_completed_mission_with_a_pool_draw(self):
         player = make_player(Character.COOK, [])
@@ -351,14 +351,14 @@ class TestApplyExhaustionStep:
         state = make_state(
             [player],
             round = 3,
-            pending_volcano_card = VolcanoCardName.ASH_IN_THE_AIR,
+            pending_volcano_cards = [VolcanoCardName.ASH_IN_THE_AIR],
         )
 
         apply_exhaustion_step(state, [player])
 
         assert player.exhausted_until == 3 + 1 + 1
         # The card is consumed.
-        assert state.pending_volcano_card is None
+        assert state.pending_volcano_cards == []
 
     def test_skip_exhaustion_flag_skips_exhaustion_and_is_consumed(self):
         player = make_player(Character.COOK, [])

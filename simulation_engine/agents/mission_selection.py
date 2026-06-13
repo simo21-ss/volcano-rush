@@ -28,7 +28,7 @@ def decide_mission_action(active_player: Player, state: GameState) -> Optional[P
 
     has_shuffle_cost = bool(active_player.resources)
 
-    if state.pending_volcano_card == VolcanoCardName.PANIC and has_shuffle_cost:
+    if VolcanoCardName.PANIC in state.pending_volcano_cards and has_shuffle_cost:
         return PlayerAction.SHUFFLE_MISSIONS
 
     next_needed = next(
@@ -67,7 +67,7 @@ def vote_for_mission(player: Player, state: GameState) -> Optional[MissionName]:
         The preferred MissionName, or None if no mission can be chosen.
     """
     active = state.active_missions
-    if state.pending_volcano_card == VolcanoCardName.PANIC:
+    if VolcanoCardName.PANIC in state.pending_volcano_cards:
         active = [mission_name for mission_name in active if Mission.catalog[mission_name].mission_type != MissionType.BOAT]
 
     if not active:

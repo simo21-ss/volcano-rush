@@ -9,9 +9,10 @@ def apply_volcano_card(volcano_card_name: VolcanoCardName, state: GameState) -> 
     """
     Apply the immediate effect of a volcano card drawn after a mission failure.
 
-    Cards with immediate effects (resource loss, exhaustion extension, mission discard)
-    are resolved now. Cards with persistent effects are stored in state.pending_volcano_card
-    and consumed at the appropriate step of the next round.
+    Cards with immediate effects (resource loss, exhaustion extension, mission discard,
+    skip-gather-this-round) are resolved now. Cards with persistent effects are appended
+    to state.pending_volcano_cards and consumed at the appropriate step of a future round.
+    Multiple pending cards stack: each one applies its effect independently.
 
     Args:
         volcano_card_name: The name of the drawn volcano card.
@@ -41,9 +42,11 @@ def apply_volcano_card(volcano_card_name: VolcanoCardName, state: GameState) -> 
             if replacement:
                 state.active_missions.append(replacement)
 
-    is_immediate = card.each_player_loses_resources > 0 or card.extend_exhaustion_rounds > 0 or card.discard_mission
-    if not is_immediate:
-        state.pending_volcano_card = volcano_card_name
+    if card.gather_yields_zero:
+        state.skip_gather_this_round = True
+
+    if not card.is_immediate:
+        state.pending_volcano_cards.append(volcano_card_name)
 
 
 def apply_mission_bonus(
@@ -82,8 +85,8 @@ def apply_mission_bonus(
         state.skip_exhaustion = True
 
     if bonus.negates_volcano_card is not None:
-        if state.pending_volcano_card == bonus.negates_volcano_card:
-            state.pending_volcano_card = None
+        if bonus.negates_volcano_card in state.pending_volcano_cards:
+            state.pending_volcano_cards.remove(bonus.negates_volcano_card)
 
     if bonus.participant_card_draws > 0:
         for participant in participants:

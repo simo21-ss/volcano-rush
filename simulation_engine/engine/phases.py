@@ -115,14 +115,16 @@ def apply_mission_success(state: GameState, mission: Mission, mission_name: Miss
             seen_characters.add(player.character)
             bonus_points += get_strategy(player.character).mission_success_bonus_points(mission)
 
-    point_penalty = (
-        VolcanoCard.get(state.pending_volcano_card).mission_point_penalty
-        if state.pending_volcano_card is not None
-        else 0
+    point_penalty = sum(
+        VolcanoCard.get(card_name).mission_point_penalty
+        for card_name in state.pending_volcano_cards
     )
 
     if point_penalty > 0:
-        state.pending_volcano_card = None
+        state.pending_volcano_cards = [
+            card_name for card_name in state.pending_volcano_cards
+            if VolcanoCard.get(card_name).mission_point_penalty == 0
+        ]
 
     points_per_player = max(0, base_points + bonus_points - point_penalty)
 
@@ -149,14 +151,16 @@ def apply_exhaustion_step(state: GameState, participants: list) -> None:
         state.skip_exhaustion = False
         return
 
-    extra_exhaustion = (
-        VolcanoCard.get(state.pending_volcano_card).extra_exhaustion_rounds
-        if state.pending_volcano_card is not None
-        else 0
+    extra_exhaustion = sum(
+        VolcanoCard.get(card_name).extra_exhaustion_rounds
+        for card_name in state.pending_volcano_cards
     )
 
     if extra_exhaustion > 0:
-        state.pending_volcano_card = None
+        state.pending_volcano_cards = [
+            card_name for card_name in state.pending_volcano_cards
+            if VolcanoCard.get(card_name).extra_exhaustion_rounds == 0
+        ]
 
     apply_exhaustion(participants, state.round, extra_rounds = extra_exhaustion)
 
@@ -165,23 +169,18 @@ def apply_gather_step(state: GameState, gather_actions: list[tuple[Player, Gathe
     """
     Execute the bucketed gather actions.
 
-    Checks for a Heat Wave pending volcano card (which zeroes all gathering) and
-    then dispatches each GatherAction, which reads state.pending_bonus for the
-    per-player gather bonus. Clears state.pending_bonus at the end.
+    Checks state.skip_gather_this_round (set by Heat Wave when drawn this round)
+    and skips all gathering if true. Otherwise, dispatches each GatherAction,
+    which reads state.pending_bonus for the per-player gather bonus. Clears
+    state.pending_bonus at the end.
 
     Args:
         state: Current game state, mutated in place.
         gather_actions: (player, GatherAction) pairs collected by
                         run_round after decide_non_participant_actions.
     """
-    gather_yields_zero = (
-        VolcanoCard.get(state.pending_volcano_card).gather_yields_zero
-        if state.pending_volcano_card is not None
-        else False
-    )
-
-    if gather_yields_zero:
-        state.pending_volcano_card = None
+    if state.skip_gather_this_round:
+        state.skip_gather_this_round = False
     else:
         for player, action in gather_actions:
             action.execute(player, state)

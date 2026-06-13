@@ -84,12 +84,12 @@ class TestApplyBonus:
         assert MissionName.CUT_THE_KEEL in state.boat_parts_built
 
     def test_apply_bonus_negate_volcano(self):
-        state = make_state([], pending_volcano_card = VolcanoCardName.RAIN_AND_MUD)
+        state = make_state([], pending_volcano_cards = [VolcanoCardName.RAIN_AND_MUD])
         bonus = BonusEffect(negates_volcano_card = VolcanoCardName.RAIN_AND_MUD)
 
         apply_mission_bonus(bonus, MissionName.BUILD_A_SHELTER, state, [])
 
-        assert state.pending_volcano_card is None
+        assert state.pending_volcano_cards == []
 
     def test_apply_bonus_participant_card_draws(self):
         player_one = make_player(Character.COOK, [])

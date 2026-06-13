@@ -128,21 +128,21 @@ class TestComputeVolcanoExtras:
         assert result.any_extra == 0
 
     def test_rain_and_mud_applies_to_wood_mission(self):
-        state = make_state([], pending_volcano_card = VolcanoCardName.RAIN_AND_MUD)
+        state = make_state([], pending_volcano_cards = [VolcanoCardName.RAIN_AND_MUD])
 
         result = compute_volcano_extras(LIGHT_A_FIRE, state)
 
         assert result.typed[Resource.WOOD] == 2
 
     def test_rain_and_mud_conditional_skipped_when_mission_lacks_wood(self):
-        state = make_state([], pending_volcano_card = VolcanoCardName.RAIN_AND_MUD)
+        state = make_state([], pending_volcano_cards = [VolcanoCardName.RAIN_AND_MUD])
 
         result = compute_volcano_extras(HUNT, state)
 
         assert result.typed == {}
 
     def test_lava_flow_applies_unconditionally(self):
-        state = make_state([], pending_volcano_card = VolcanoCardName.LAVA_FLOW)
+        state = make_state([], pending_volcano_cards = [VolcanoCardName.LAVA_FLOW])
 
         result = compute_volcano_extras(HUNT, state)
 

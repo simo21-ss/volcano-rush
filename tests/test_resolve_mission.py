@@ -213,7 +213,7 @@ class TestPerParticipantVolcanoExtras:
         participant_b = make_player(Character.COOK, [Resource.WOOD, Resource.WOOD, Resource.WOOD])
         state = make_state(
             [participant_a, participant_b],
-            pending_volcano_card = VolcanoCardName.RAIN_AND_MUD,
+            pending_volcano_cards = [VolcanoCardName.RAIN_AND_MUD],
         )
 
         result = resolve_mission(state, LIGHT_A_FIRE, [participant_a, participant_b], CALM_BREEZE)
@@ -229,7 +229,7 @@ class TestPerParticipantVolcanoExtras:
             make_player(Character.COOK, [Resource.STONE, Resource.ROPE]),
             make_player(Character.COOK, [Resource.STONE, Resource.ROPE]),
         ]
-        state = make_state(participants, pending_volcano_card = VolcanoCardName.RAIN_AND_MUD)
+        state = make_state(participants, pending_volcano_cards = [VolcanoCardName.RAIN_AND_MUD])
 
         result = resolve_mission(state, HUNT, participants, CALM_BREEZE)
 
@@ -245,7 +245,7 @@ class TestPerParticipantVolcanoExtras:
             make_player(Character.COOK, [Resource.STONE, Resource.ROPE, Resource.ROPE]),
             make_player(Character.COOK, [Resource.STONE, Resource.ROPE, Resource.ROPE]),
         ]
-        state = make_state(participants, pending_volcano_card = VolcanoCardName.LAVA_FLOW)
+        state = make_state(participants, pending_volcano_cards = [VolcanoCardName.LAVA_FLOW])
 
         result = resolve_mission(state, HUNT, participants, CALM_BREEZE)
 
@@ -260,12 +260,12 @@ class TestPerParticipantVolcanoExtras:
         participant_c = make_player(Character.COOK, [Resource.STONE, Resource.ROPE, Resource.ROPE])
         state = make_state(
             [participant_a, participant_b, participant_c],
-            pending_volcano_card = VolcanoCardName.LAVA_FLOW,
+            pending_volcano_cards = [VolcanoCardName.LAVA_FLOW],
         )
 
         resolve_mission(state, HUNT, [participant_a, participant_b, participant_c], CALM_BREEZE)
 
-        assert state.pending_volcano_card is None
+        assert state.pending_volcano_cards == []
 
     def test_pending_volcano_card_consumed_even_on_failure(self):
         # Attempt fails because participants lack the LAVA_FLOW extra; the card
@@ -275,12 +275,12 @@ class TestPerParticipantVolcanoExtras:
             make_player(Character.COOK, [Resource.STONE, Resource.ROPE]),
             make_player(Character.COOK, [Resource.STONE, Resource.ROPE]),
         ]
-        state = make_state(participants, pending_volcano_card = VolcanoCardName.LAVA_FLOW)
+        state = make_state(participants, pending_volcano_cards = [VolcanoCardName.LAVA_FLOW])
 
         result = resolve_mission(state, HUNT, participants, CALM_BREEZE)
 
         assert result is False
-        assert state.pending_volcano_card is None
+        assert state.pending_volcano_cards == []
 
     def test_non_extras_volcano_card_is_not_consumed_by_resolve(self):
         # ASH_IN_THE_AIR is consumed by the exhaustion step, not by resolve_mission.
@@ -288,9 +288,9 @@ class TestPerParticipantVolcanoExtras:
         player_b = make_player(Character.COOK, [Resource.WOOD])
         state = make_state(
             [player_a, player_b],
-            pending_volcano_card = VolcanoCardName.ASH_IN_THE_AIR,
+            pending_volcano_cards = [VolcanoCardName.ASH_IN_THE_AIR],
         )
 
         resolve_mission(state, LIGHT_A_FIRE, [player_a, player_b], CALM_BREEZE)
 
-        assert state.pending_volcano_card == VolcanoCardName.ASH_IN_THE_AIR
+        assert state.pending_volcano_cards == [VolcanoCardName.ASH_IN_THE_AIR]

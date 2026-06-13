@@ -35,10 +35,17 @@ def resolve_mission(
     if not _preconditions_met(mission, participants, complication, state):
         return False
 
+    cost_paying = list(participants)
+    if complication is not None and complication.requires_extra_helper:
+        helper = _find_night_anxiety_helper(state, participants)
+        if helper is None:
+            return False
+        cost_paying.append(helper)
+
     per_player = _build_per_player_requirement(mission, complication, state)
     max_per_type = complication.max_resource_per_type if complication is not None else None
 
-    player_requirements = apply_character_discounts(participants, per_player, mission)
+    player_requirements = apply_character_discounts(cost_paying, per_player, mission)
     success = can_afford(player_requirements, max_per_type, state)
     if success:
         deduct_costs(player_requirements, state)
@@ -67,13 +74,20 @@ def _preconditions_met(
             )
             return False
 
-    # Night Anxiety: need 1 non-participant, non-exhausted helper
-    if complication is not None and complication.requires_extra_helper:
-        helpers = [p for p in state.players if p not in participants and not p.is_exhausted]
-        if not helpers:
-            return False
-
     return True
+
+
+def _find_night_anxiety_helper(state: GameState, participants: list[Player]) -> Optional[Player]:
+    """
+    Pick the first non-participant, non-exhausted player to stand in as a Night
+    Anxiety helper. The helper will be charged the same per-participant cost as
+    a regular participant. If no eligible helper exists, returns None and the
+    caller fails the mission.
+    """
+    return next(
+        (player for player in state.players if player not in participants and not player.is_exhausted),
+        None,
+    )
 
 
 def _build_per_player_requirement(
@@ -99,12 +113,11 @@ def _combine_requirements(requirements: list[MissionRequirement]) -> MissionRequ
 
 def _consume_volcano_extras_card(state: GameState) -> None:
     """
-    Clear the state.pending_volcano_card once its resource extras have been applied
-    to a mission attempt (RAIN_AND_MUD, LAVA_FLOW). Non-extras pending cards
-    (SMOKE, ASH_IN_THE_AIR, HEAT_WAVE, PANIC) are consumed by their own phase
-    handlers.
+    Drop any pending cards whose resource extras have been applied to this
+    mission attempt (RAIN_AND_MUD, LAVA_FLOW). Non-extras pending cards
+    (SMOKE, ASH_IN_THE_AIR, PANIC) are consumed by their own phase handlers.
     """
-    if state.pending_volcano_card is None:
-        return
-    if VolcanoCard.get(state.pending_volcano_card).extra_resources:
-        state.pending_volcano_card = None
+    state.pending_volcano_cards = [
+        card_name for card_name in state.pending_volcano_cards
+        if not VolcanoCard.get(card_name).extra_resources
+    ]

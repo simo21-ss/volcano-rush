@@ -57,24 +57,25 @@ def compute_complication_extras(mission: Mission, complication: Optional[Complic
 
 def compute_volcano_extras(mission: Mission, state: GameState) -> MissionRequirement:
     """
-    Compute the per-participant extras from the pending volcano card.
+    Compute the per-participant extras from any pending volcano cards.
 
     Each participant pays these individually on top of their base and complication
-    costs, matching how complication extras are charged. A conditional card (e.g.
-    Rain and Mud) only applies when the mission requires the named resource.
+    costs, matching how complication extras are charged. Multiple pending cards
+    stack: each card's extras are summed. A conditional card (e.g. Rain and Mud)
+    only applies when the mission requires the named resource.
 
     Args:
         mission: The mission being attempted (used for conditional gating).
-        state: Current game state (pending volcano card, etc.).
+        state: Current game state (pending volcano cards).
 
     Returns:
         Per-participant volcano extras with typed resource costs.
     """
     resource_requirements: dict = {}
+    base_resources = mission.required_resources
 
-    if state.pending_volcano_card is not None:
-        volcano_card = VolcanoCard.get(state.pending_volcano_card)
-        base_resources = mission.required_resources
+    for card_name in state.pending_volcano_cards:
+        volcano_card = VolcanoCard.get(card_name)
         for resource, amount in volcano_card.extra_resources.items():
             if volcano_card.conditional_on_resource is None or volcano_card.conditional_on_resource in base_resources:
                 resource_requirements[resource] = resource_requirements.get(resource, 0) + amount

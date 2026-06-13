@@ -37,7 +37,8 @@ class GameState:
     skip_next_complication: bool = False
     protect_next_failure: bool = False
     skip_exhaustion: bool = False
-    pending_volcano_card: Optional[VolcanoCardName] = None
+    skip_gather_this_round: bool = False
+    pending_volcano_cards: list[VolcanoCardName] = field(default_factory = list)
     pending_bonus: Optional[BonusEffect] = None
     urgent_volcano_threshold: int = 4
     active_player_index: int = 0
@@ -82,8 +83,12 @@ class GameState:
         Returns:
             GameOutcome.WIN if the boat is complete, otherwise None.
         """
-        if self.pending_volcano_card == VolcanoCardName.PANIC:
-            self.pending_volcano_card = None
+        self.pending_volcano_cards = [
+            card_name for card_name in self.pending_volcano_cards
+            if card_name != VolcanoCardName.PANIC
+        ]
+
+        self.skip_gather_this_round = False
 
         if completed_mission is not None:
             self.active_missions.remove(completed_mission)
