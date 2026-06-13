@@ -118,6 +118,14 @@ class TabularAgent:
         """Deterministic greedy selection (for evaluation); touches no RNG."""
         return self._greedy_index(state_key, legal_action_indices)
 
+    def should_explore(self) -> bool:
+        """Draw an exploration coin from the private RNG (for set-valued decisions)."""
+        return self._rng.random() < self.current_epsilon
+
+    def random_subset(self, population: list, size: int) -> list:
+        """Sample a subset of the given size from the private RNG (reproducible)."""
+        return self._rng.sample(population, size)
+
     # ── learning ──────────────────────────────────────────────────────────────
 
     def apply_update(self, transition: Transition) -> float:

@@ -31,6 +31,8 @@ from .trajectory import (
     PARTICIPANT_DECISION,
 )
 from .q_agent import UpdateRule, Schedules, TabularAgent
+from .policies import MissionPolicy, ParticipantPolicy
+from .training import RewardConfig, TrainingConfig, TrainingResult, ShapingTracker, train_self_play
 
 __all__ = [
     "StateKey",
@@ -53,4 +55,11 @@ __all__ = [
     "UpdateRule",
     "Schedules",
     "TabularAgent",
+    "MissionPolicy",
+    "ParticipantPolicy",
+    "RewardConfig",
+    "TrainingConfig",
+    "TrainingResult",
+    "ShapingTracker",
+    "train_self_play",
 ]
