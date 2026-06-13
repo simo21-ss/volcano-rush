@@ -24,6 +24,13 @@ from .action_space import (
     legal_mission_action_indices,
     decode_mission_action,
 )
+from .trajectory import (
+    Transition,
+    TrajectoryRecorder,
+    MISSION_DECISION,
+    PARTICIPANT_DECISION,
+)
+from .q_agent import UpdateRule, Schedules, TabularAgent
 
 __all__ = [
     "StateKey",
@@ -39,4 +46,11 @@ __all__ = [
     "encode_mission_action",
     "legal_mission_action_indices",
     "decode_mission_action",
+    "Transition",
+    "TrajectoryRecorder",
+    "MISSION_DECISION",
+    "PARTICIPANT_DECISION",
+    "UpdateRule",
+    "Schedules",
+    "TabularAgent",
 ]
