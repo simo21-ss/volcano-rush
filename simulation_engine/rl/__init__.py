@@ -14,6 +14,16 @@ from .state_encoding import (
     bucket_index,
     next_needed_boat_part,
 )
+from .action_space import (
+    MISSION_ACTION_CARDINALITY,
+    PARTICIPANT_ACTION_CARDINALITY,
+    PARTICIPANT_ACTION_EXCLUDE,
+    PARTICIPANT_ACTION_INCLUDE,
+    legal_missions,
+    encode_mission_action,
+    legal_mission_action_indices,
+    decode_mission_action,
+)
 
 __all__ = [
     "StateKey",
@@ -21,4 +31,12 @@ __all__ = [
     "ParticipantStateEncoder",
     "bucket_index",
     "next_needed_boat_part",
+    "MISSION_ACTION_CARDINALITY",
+    "PARTICIPANT_ACTION_CARDINALITY",
+    "PARTICIPANT_ACTION_EXCLUDE",
+    "PARTICIPANT_ACTION_INCLUDE",
+    "legal_missions",
+    "encode_mission_action",
+    "legal_mission_action_indices",
+    "decode_mission_action",
 ]
