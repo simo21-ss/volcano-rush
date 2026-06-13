@@ -96,6 +96,10 @@ class TabularAgent:
     def visited_state_count(self) -> int:
         return len(self._table)
 
+    def table_items(self) -> list:
+        """Stored (state_key, action_value_row) pairs, sorted by state key for determinism."""
+        return [(state_key, self._table[state_key]) for state_key in sorted(self._table)]
+
     # ── action selection ──────────────────────────────────────────────────────
 
     def _greedy_index(self, state_key: StateKey, legal_action_indices: list[int]) -> int:

@@ -33,6 +33,11 @@ from .trajectory import (
 from .q_agent import UpdateRule, Schedules, TabularAgent
 from .policies import MissionPolicy, ParticipantPolicy
 from .training import RewardConfig, TrainingConfig, TrainingResult, ShapingTracker, train_self_play
+from .evaluation import (
+    EvaluationResult, WilsonInterval, McNemarResult,
+    evaluate_policy, wilson_interval, mcnemar_paired, Z_95,
+)
+from .persistence import save_agent, load_agent, load_metadata, git_revision
 
 __all__ = [
     "StateKey",
@@ -62,4 +67,15 @@ __all__ = [
     "TrainingResult",
     "ShapingTracker",
     "train_self_play",
+    "EvaluationResult",
+    "WilsonInterval",
+    "McNemarResult",
+    "evaluate_policy",
+    "wilson_interval",
+    "mcnemar_paired",
+    "Z_95",
+    "save_agent",
+    "load_agent",
+    "load_metadata",
+    "git_revision",
 ]
