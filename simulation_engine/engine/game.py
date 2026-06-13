@@ -2,6 +2,7 @@ import random
 from typing import Optional
 
 from .round import run_round
+from ..agents import MissionSelector, ParticipantSelector
 from ..initialization import init_game
 from ..models import GameRecord, GameState, GameOutcome, MissionName, Player
 
@@ -12,6 +13,8 @@ def run_game(
         deck_resource_count: int = 20,
         urgent_volcano_threshold: int = 4,
         verbose: bool = False,
+        mission_selector: Optional[MissionSelector] = None,
+        participant_selector: Optional[ParticipantSelector] = None,
 ) -> GameRecord:
     """
     Run a single complete game and return a record of the outcome.
@@ -25,6 +28,10 @@ def run_game(
         deck_resource_count:         Number of each resource type in the deck.
         urgent_volcano_threshold:    Volcano deck size at which agents prioritise boat missions.
         verbose:                     If True, print a round-by-round trace to stdout.
+        mission_selector:            Policy choosing which mission to attempt. When None,
+                                     the rule-based vote_for_mission is used (default behaviour).
+        participant_selector:        Policy choosing who joins the mission. When None,
+                                     the rule-based active_player_select_participants is used.
 
     Returns:
         A GameRecord with the outcome, scores, and game statistics.
@@ -40,7 +47,7 @@ def run_game(
         prev_scores = [p.score for p in state.players]
         active_player = state.players[state.active_player_index]
 
-        outcome = run_round(state)
+        outcome = run_round(state, mission_selector, participant_selector)
 
         if verbose:
             _print_verbose_round_results(active_player, prev_missions, prev_scores, prev_volcano, state)
@@ -80,6 +87,8 @@ def run_scenario(
         initial_resources_per_player: int = 3,
         deck_resource_count: int = 20,
         urgent_volcano_threshold: int = 4,
+        mission_selector: Optional[MissionSelector] = None,
+        participant_selector: Optional[ParticipantSelector] = None,
 ) -> list[GameRecord]:
     """
     Run multiple games with the same player count and collect the results.
@@ -92,6 +101,10 @@ def run_scenario(
         initial_resources_per_player: Resources dealt to each player at game start.
         deck_resource_count:         Number of each resource type in the deck.
         urgent_volcano_threshold:    Volcano deck size at which agents prioritise boat missions.
+        mission_selector:            Policy choosing which mission to attempt. When None,
+                                     the rule-based vote_for_mission is used (default behaviour).
+        participant_selector:        Policy choosing who joins the mission. When None,
+                                     the rule-based active_player_select_participants is used.
 
     Returns:
         List of GameRecord, one per game.
@@ -101,7 +114,14 @@ def run_scenario(
         if base_seed is not None:
             random.seed(base_seed + i)
 
-        game_result = run_game(player_count, initial_resources_per_player, deck_resource_count, urgent_volcano_threshold)
+        game_result = run_game(
+            player_count,
+            initial_resources_per_player,
+            deck_resource_count,
+            urgent_volcano_threshold,
+            mission_selector = mission_selector,
+            participant_selector = participant_selector,
+        )
         results.append(game_result)
 
     return results

@@ -1,5 +1,5 @@
 import random
-from typing import Optional
+from typing import Callable, Optional
 
 from ..models import (
     MissionType, MissionName, VolcanoCardName, BOAT_PART_ORDER,
@@ -8,6 +8,12 @@ from ..models import (
 from ..actions import PlayerAction
 from ..characters import get_strategy
 from .feasibility import team_can_afford
+
+
+# A mission selector chooses which active mission the active player attempts.
+# vote_for_mission is the default rule-based implementation; a learned policy
+# can be substituted by passing a different callable to the engine.
+MissionSelector = Callable[[Player, GameState], Optional[MissionName]]
 
 
 def decide_mission_action(active_player: Player, state: GameState) -> Optional[PlayerAction]:

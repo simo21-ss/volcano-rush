@@ -9,6 +9,7 @@ from .phases import (
 from ..actions import PlayerAction, ShuffleMissionsAction, GatherAction, RepairAction
 from ..agents import (
     decide_mission_action, vote_for_mission, active_player_select_participants,
+    MissionSelector, ParticipantSelector,
 )
 from ..deck import draw_mission
 from ..mechanics.mission import resolve_mission
@@ -18,7 +19,11 @@ from ..models import (
 )
 
 
-def run_round(state: GameState) -> Optional[GameOutcome]:
+def run_round(
+        state: GameState,
+        mission_selector: Optional[MissionSelector] = None,
+        participant_selector: Optional[ParticipantSelector] = None,
+) -> Optional[GameOutcome]:
     """
     Execute one full round of the game.
 
@@ -27,19 +32,31 @@ def run_round(state: GameState) -> Optional[GameOutcome]:
     rounds pick participants, draw a complication, resolve the mission, then
     handle exhaustion, non-participant gather, and mission maintenance.
 
+    Args:
+        state: The current game state, mutated in place.
+        mission_selector: Policy choosing which mission to attempt. When None,
+            the rule-based vote_for_mission is used, preserving default behaviour.
+        participant_selector: Policy choosing who joins the mission. When None,
+            the rule-based active_player_select_participants is used.
+
     Returns the GameOutcome if the game ends this round, else None.
     """
+    if mission_selector is None:
+        mission_selector = vote_for_mission
+    if participant_selector is None:
+        participant_selector = active_player_select_participants
+
     active_player = state.begin_round()
 
     action = decide_mission_action(active_player, state)
     if action == PlayerAction.SHUFFLE_MISSIONS:
         return _run_shuffle_round(active_player, state)
 
-    mission_name = vote_for_mission(active_player, state)
+    mission_name = mission_selector(active_player, state)
     if mission_name is None:
         return _run_forfeit_round(state)
 
-    return _run_mission_round(active_player, mission_name, state)
+    return _run_mission_round(active_player, mission_name, state, participant_selector)
 
 
 def _run_shuffle_round(active_player: Player, state: GameState) -> Optional[GameOutcome]:
@@ -64,10 +81,15 @@ def _run_forfeit_round(state: GameState) -> Optional[GameOutcome]:
     return state.end_round()
 
 
-def _run_mission_round(active_player: Player, mission_name: MissionName, state: GameState) -> Optional[GameOutcome]:
+def _run_mission_round(
+        active_player: Player,
+        mission_name: MissionName,
+        state: GameState,
+        participant_selector: ParticipantSelector,
+) -> Optional[GameOutcome]:
     mission = Mission.get(mission_name)
 
-    participants = active_player_select_participants(active_player, mission, state)
+    participants = participant_selector(active_player, mission, state)
 
     non_participants = [player for player in state.players if player not in participants]
 

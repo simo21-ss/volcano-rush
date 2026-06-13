@@ -1,9 +1,15 @@
 import random
-from typing import Optional
+from typing import Callable, Optional
 
 from ..models import Character, Player, GameState, Mission
 from ..characters import get_strategy
 from .feasibility import AffordLevel, player_afford_level
+
+
+# A participant selector chooses which players join the active player's mission.
+# active_player_select_participants is the default rule-based implementation; a
+# learned policy can be substituted by passing a different callable to the engine.
+ParticipantSelector = Callable[[Player, Mission, GameState], list[Player]]
 
 
 # Scoring weights
