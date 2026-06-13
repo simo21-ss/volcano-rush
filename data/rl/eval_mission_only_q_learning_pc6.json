@@ -1,0 +1,36 @@
+{
+  "ablation": "mission_only",
+  "update_rule": "q_learning",
+  "player_count": 6,
+  "n_games": 4000,
+  "rl_wins": 1452,
+  "baseline_wins": 1315,
+  "rl_win_rate": 0.363,
+  "baseline_win_rate": 0.32875,
+  "rl_win_interval": {
+    "point": 0.363,
+    "lower": 0.34823613209328785,
+    "upper": 0.3780267553680904
+  },
+  "baseline_win_interval": {
+    "point": 0.32875,
+    "lower": 0.3143626502953132,
+    "upper": 0.34346595903140964
+  },
+  "mcnemar": {
+    "rl_only_wins": 809,
+    "baseline_only_wins": 672,
+    "statistic": 12.48885887913572,
+    "p_value": 0.0004093861852793153
+  },
+  "rl_secondary": {
+    "average_rounds": 15.3795,
+    "average_boat_parts": 2.071,
+    "average_volcano_remaining_on_win": 3.577823691460055
+  },
+  "baseline_secondary": {
+    "average_rounds": 15.8495,
+    "average_boat_parts": 1.97,
+    "average_volcano_remaining_on_win": 2.91787072243346
+  }
+}

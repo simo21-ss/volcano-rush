@@ -1,0 +1,36 @@
+{
+  "ablation": "participant_only",
+  "update_rule": "sarsa",
+  "player_count": 8,
+  "n_games": 4000,
+  "rl_wins": 1253,
+  "baseline_wins": 1634,
+  "rl_win_rate": 0.31325,
+  "baseline_win_rate": 0.4085,
+  "rl_win_interval": {
+    "point": 0.31325,
+    "lower": 0.2990614412768659,
+    "upper": 0.32779691079183765
+  },
+  "baseline_win_interval": {
+    "point": 0.4085,
+    "lower": 0.39336163293865034,
+    "upper": 0.4238139451833651
+  },
+  "mcnemar": {
+    "rl_only_wins": 669,
+    "baseline_only_wins": 1050,
+    "statistic": 84.0023269342641,
+    "p_value": 4.941927512102149e-20
+  },
+  "rl_secondary": {
+    "average_rounds": 18.65725,
+    "average_boat_parts": 3.3845,
+    "average_volcano_remaining_on_win": 2.8898643256185155
+  },
+  "baseline_secondary": {
+    "average_rounds": 18.904,
+    "average_boat_parts": 3.63075,
+    "average_volcano_remaining_on_win": 2.875764993880049
+  }
+}

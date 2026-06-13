@@ -1,0 +1,182 @@
+{
+  "n_episodes": 30000,
+  "eval_games": 4000,
+  "train_base_seed": 1000,
+  "eval_base_seed": 600000,
+  "schedules": {
+    "alpha_start": 0.5,
+    "alpha_end": 0.05,
+    "gamma": 0.95,
+    "epsilon_start": 1.0,
+    "epsilon_end": 0.02,
+    "epsilon_decay_episodes": 21000
+  },
+  "reward_config": {
+    "win_reward": 1.0,
+    "loss_reward": -1.0,
+    "boat_part_reward": 0.1,
+    "step_penalty": 0.002,
+    "use_shaping": true
+  },
+  "git_revision": "d86aefdc6192b27f0056d51ab04637a18c450a73",
+  "player_counts": [
+    6,
+    7,
+    8
+  ],
+  "update_rules": [
+    "q_learning",
+    "sarsa"
+  ],
+  "ablations": [
+    "mission_only",
+    "participant_only",
+    "joint"
+  ],
+  "cells": [
+    {
+      "player_count": 6,
+      "update_rule": "q_learning",
+      "ablation": "mission_only",
+      "rl_win_rate": 0.363,
+      "baseline_win_rate": 0.32875,
+      "mcnemar_p_value": 0.0004093861852793153
+    },
+    {
+      "player_count": 6,
+      "update_rule": "q_learning",
+      "ablation": "participant_only",
+      "rl_win_rate": 0.2995,
+      "baseline_win_rate": 0.32875,
+      "mcnemar_p_value": 0.0019554655610447263
+    },
+    {
+      "player_count": 6,
+      "update_rule": "q_learning",
+      "ablation": "joint",
+      "rl_win_rate": 0.318,
+      "baseline_win_rate": 0.32875,
+      "mcnemar_p_value": 0.2715208852484084
+    },
+    {
+      "player_count": 6,
+      "update_rule": "sarsa",
+      "ablation": "mission_only",
+      "rl_win_rate": 0.39075,
+      "baseline_win_rate": 0.32875,
+      "mcnemar_p_value": 2.9319841256625023e-10
+    },
+    {
+      "player_count": 6,
+      "update_rule": "sarsa",
+      "ablation": "participant_only",
+      "rl_win_rate": 0.28325,
+      "baseline_win_rate": 0.32875,
+      "mcnemar_p_value": 1.338321429078252e-06
+    },
+    {
+      "player_count": 6,
+      "update_rule": "sarsa",
+      "ablation": "joint",
+      "rl_win_rate": 0.34525,
+      "baseline_win_rate": 0.32875,
+      "mcnemar_p_value": 0.08913773711091985
+    },
+    {
+      "player_count": 7,
+      "update_rule": "q_learning",
+      "ablation": "mission_only",
+      "rl_win_rate": 0.39025,
+      "baseline_win_rate": 0.33125,
+      "mcnemar_p_value": 3.455966609225981e-09
+    },
+    {
+      "player_count": 7,
+      "update_rule": "q_learning",
+      "ablation": "participant_only",
+      "rl_win_rate": 0.2825,
+      "baseline_win_rate": 0.33125,
+      "mcnemar_p_value": 1.1344360670156572e-06
+    },
+    {
+      "player_count": 7,
+      "update_rule": "q_learning",
+      "ablation": "joint",
+      "rl_win_rate": 0.39025,
+      "baseline_win_rate": 0.33125,
+      "mcnemar_p_value": 1.3502835389107531e-08
+    },
+    {
+      "player_count": 7,
+      "update_rule": "sarsa",
+      "ablation": "mission_only",
+      "rl_win_rate": 0.429,
+      "baseline_win_rate": 0.33125,
+      "mcnemar_p_value": 1.5001441326301881e-21
+    },
+    {
+      "player_count": 7,
+      "update_rule": "sarsa",
+      "ablation": "participant_only",
+      "rl_win_rate": 0.29325,
+      "baseline_win_rate": 0.33125,
+      "mcnemar_p_value": 0.00010304788403311473
+    },
+    {
+      "player_count": 7,
+      "update_rule": "sarsa",
+      "ablation": "joint",
+      "rl_win_rate": 0.37175,
+      "baseline_win_rate": 0.33125,
+      "mcnemar_p_value": 8.318598606023482e-05
+    },
+    {
+      "player_count": 8,
+      "update_rule": "q_learning",
+      "ablation": "mission_only",
+      "rl_win_rate": 0.507,
+      "baseline_win_rate": 0.4085,
+      "mcnemar_p_value": 2.646956061590837e-20
+    },
+    {
+      "player_count": 8,
+      "update_rule": "q_learning",
+      "ablation": "participant_only",
+      "rl_win_rate": 0.36375,
+      "baseline_win_rate": 0.4085,
+      "mcnemar_p_value": 2.2422082559074892e-05
+    },
+    {
+      "player_count": 8,
+      "update_rule": "q_learning",
+      "ablation": "joint",
+      "rl_win_rate": 0.40375,
+      "baseline_win_rate": 0.4085,
+      "mcnemar_p_value": 0.6683235265193914
+    },
+    {
+      "player_count": 8,
+      "update_rule": "sarsa",
+      "ablation": "mission_only",
+      "rl_win_rate": 0.51625,
+      "baseline_win_rate": 0.4085,
+      "mcnemar_p_value": 2.49404069663349e-24
+    },
+    {
+      "player_count": 8,
+      "update_rule": "sarsa",
+      "ablation": "participant_only",
+      "rl_win_rate": 0.31325,
+      "baseline_win_rate": 0.4085,
+      "mcnemar_p_value": 4.941927512102149e-20
+    },
+    {
+      "player_count": 8,
+      "update_rule": "sarsa",
+      "ablation": "joint",
+      "rl_win_rate": 0.43,
+      "baseline_win_rate": 0.4085,
+      "mcnemar_p_value": 0.03925033046769283
+    }
+  ]
+}

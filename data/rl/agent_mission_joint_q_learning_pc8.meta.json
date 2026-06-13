@@ -1,0 +1,20 @@
+{
+  "action_cardinality": 5,
+  "update_rule": "q_learning",
+  "schedules": {
+    "alpha_start": 0.5,
+    "alpha_end": 0.05,
+    "gamma": 0.95,
+    "epsilon_start": 1.0,
+    "epsilon_end": 0.02,
+    "epsilon_decay_episodes": 21000
+  },
+  "visited_state_count": 872,
+  "git_revision": "d86aefdc6192b27f0056d51ab04637a18c450a73",
+  "ablation": "joint",
+  "player_count": 8,
+  "n_episodes": 30000,
+  "train_base_seed": 1000,
+  "exploration_seed": 10802,
+  "decision": "mission"
+}
