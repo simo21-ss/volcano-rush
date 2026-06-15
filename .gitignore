@@ -28,3 +28,7 @@ build/
 .env
 *.key
 *.pem
+
+# Auto-generated agent-tool mirrors of CLAUDE.md / .claude (regenerable, not tracked)
+AGENTS.md
+.agents/
