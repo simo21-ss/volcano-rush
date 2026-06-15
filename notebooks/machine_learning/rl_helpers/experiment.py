@@ -8,11 +8,11 @@ this module and load the persisted artifacts rather than retraining on every run
 
 Run standalone to regenerate all artifacts:
 
-    python -m notebooks.machine_learning.helpers.experiment
+    python -m notebooks.machine_learning.rl_helpers.experiment
 
 or from a notebook:
 
-    import helpers.experiment as experiment
+    import rl_helpers.experiment as experiment
     experiment.train_and_evaluate_all()
 """
 
