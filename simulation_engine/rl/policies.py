@@ -54,7 +54,7 @@ class MissionPolicy:
             return self._choose(active_player, state, explore = False, recorder = None)
         return select
 
-    def training_selector(self, recorder: TrajectoryRecorder, shaping=None):
+    def training_selector(self, recorder: TrajectoryRecorder, shaping = None):
         """A MissionSelector that explores and records decisions (for training)."""
         def select(active_player: Player, state: GameState) -> Optional[MissionName]:
             if shaping is not None:
@@ -116,7 +116,7 @@ class ParticipantPolicy:
             return self._choose(active_player, mission, state, explore = False, recorder = None)
         return select
 
-    def training_selector(self, recorder: TrajectoryRecorder, shaping=None):
+    def training_selector(self, recorder: TrajectoryRecorder, shaping = None):
         """A ParticipantSelector that explores and records decisions (for training)."""
         def select(active_player: Player, mission: Mission, state: GameState) -> list[Player]:
             if shaping is not None:

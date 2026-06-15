@@ -1,7 +1,7 @@
 # Volcano Rush reinforcement learning artifacts
 
 This folder holds the trained tabular Q-tables and evaluation summaries produced by
-`notebooks/machine_learning/helpers/experiment.py` (`train_and_evaluate_all`). The
+`notebooks/machine_learning/rl_helpers/experiment.py` (`train_and_evaluate_all`). The
 machine learning notebooks load these artifacts and do not retrain on every run.
 
 The experiment matrix is: player counts {6, 7, 8} x update rules {`q_learning`, `sarsa`}

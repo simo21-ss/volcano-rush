@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 from ..engine.game import run_scenario
-from ..models import GameRecord, GameOutcome
+from ..models import GameOutcome
 from ..agents import MissionSelector, ParticipantSelector
 
 
