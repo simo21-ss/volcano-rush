@@ -24,6 +24,17 @@ UPDATE_RULE_LABEL = {
     "sarsa": "SARSA",
 }
 
+ABLATION_COLOUR = {
+    "mission_only": "#2ca02c",       # green
+    "participant_only": "#ff7f0e",   # orange
+    "joint": "#9467bd",              # purple
+}
+ABLATION_LABEL = {
+    "mission_only": "mission only",
+    "participant_only": "participant only",
+    "joint": "joint",
+}
+
 
 def plot_training_curves(curves_by_label, baseline_win_rate = None, title = None):
     """
@@ -72,46 +83,55 @@ def _interval_error_bars(point, interval):
     return [point - interval["lower"], interval["upper"] - point]
 
 
-def plot_winrate_comparison(summaries_by_player_count, title = None, learned_label = "learned"):
+def plot_ablation_comparison(summaries, player_counts, ablations, title = None):
     """
-    Grouped bar chart of baseline vs learned win rate by player count, with
-    Wilson 95% confidence intervals as error bars.
+    Grouped bar chart by player count: a rule-based baseline bar plus one learned
+    bar per ablation (mission-only, participant-only, joint), each with Wilson 95%
+    confidence-interval error bars.
 
-    summaries_by_player_count: dict player_count -> evaluation summary dict.
+    summaries: dict keyed by (ablation, player_count) -> evaluation summary dict.
+        The baseline win rate is identical across ablations, so it is read once
+        per player count from the first ablation's summary.
     """
-    player_counts = sorted(summaries_by_player_count)
-    figure, axis = plt.subplots(figsize = (8, 5))
-    bar_width = 0.38
-    positions = range(len(player_counts))
+    series_names = ["baseline"] + list(ablations)
+    series_count = len(series_names)
+    bar_width = 0.8 / series_count
+    positions = list(range(len(player_counts)))
 
-    baseline_rates = [summaries_by_player_count[player_count]["baseline_win_rate"] for player_count in player_counts]
-    learned_rates = [summaries_by_player_count[player_count]["rl_win_rate"] for player_count in player_counts]
+    figure, axis = plt.subplots(figsize = (10, 5.5))
+    every_rate = []
+    for series_index, series_name in enumerate(series_names):
+        rates = []
+        lower_errors = []
+        upper_errors = []
+        for player_count in player_counts:
+            reference_summary = summaries[(ablations[0], player_count)]
+            if series_name == "baseline":
+                rate = reference_summary["baseline_win_rate"]
+                interval = reference_summary["baseline_win_interval"]
+            else:
+                summary = summaries[(series_name, player_count)]
+                rate = summary["rl_win_rate"]
+                interval = summary["rl_win_interval"]
+            lower_error, upper_error = _interval_error_bars(rate, interval)
+            rates.append(rate)
+            lower_errors.append(lower_error)
+            upper_errors.append(upper_error)
+            every_rate.append(rate)
 
-    baseline_errors = [[], []]
-    learned_errors = [[], []]
-    for player_count in player_counts:
-        summary = summaries_by_player_count[player_count]
-        low, high = _interval_error_bars(summary["baseline_win_rate"], summary["baseline_win_interval"])
-        baseline_errors[0].append(low)
-        baseline_errors[1].append(high)
-        low, high = _interval_error_bars(summary["rl_win_rate"], summary["rl_win_interval"])
-        learned_errors[0].append(low)
-        learned_errors[1].append(high)
+        offset = (series_index - (series_count - 1) / 2) * bar_width
+        colour = BASELINE_COLOUR if series_name == "baseline" else ABLATION_COLOUR.get(series_name)
+        label = "rule-based baseline" if series_name == "baseline" else ABLATION_LABEL.get(series_name, series_name)
+        axis.bar(
+            [position + offset for position in positions], rates, bar_width,
+            yerr = [lower_errors, upper_errors], capsize = 3, color = colour, label = label,
+        )
 
-    axis.bar(
-        [position - bar_width / 2 for position in positions], baseline_rates, bar_width,
-        yerr = baseline_errors, capsize = 4, color = BASELINE_COLOUR, label = "rule-based baseline",
-    )
-    axis.bar(
-        [position + bar_width / 2 for position in positions], learned_rates, bar_width,
-        yerr = learned_errors, capsize = 4, color = Q_LEARNING_COLOUR, label = learned_label,
-    )
-
-    axis.set_xticks(list(positions))
+    axis.set_xticks(positions)
     axis.set_xticklabels([f"{player_count} players" for player_count in player_counts])
     axis.set_ylabel("win rate")
-    axis.set_ylim(0, max(max(baseline_rates), max(learned_rates)) * 1.3)
-    axis.legend()
+    axis.set_ylim(0, max(every_rate) * 1.25)
+    axis.legend(ncol = 2)
     if title:
         axis.set_title(title)
     figure.tight_layout()
